@@ -25,6 +25,21 @@ jstring StdStringToJString(JNIEnv* env, const std::string& str) {
     return env->NewStringUTF(str.c_str());
 }
 
+jobjectArray CreateEmptyObjectArray(JNIEnv* env, const char* class_name) {
+    jclass cls = env->FindClass(class_name);
+    if (!cls || env->ExceptionCheck()) {
+        env->ExceptionClear();
+        cls = env->FindClass("java/lang/Object");
+        if (!cls || env->ExceptionCheck()) {
+            env->ExceptionClear();
+            return nullptr;
+        }
+    }
+    jobjectArray arr = env->NewObjectArray(0, cls, nullptr);
+    env->DeleteLocalRef(cls);
+    return arr;
+}
+
 } // namespace
 
 // ============================================================================
@@ -163,8 +178,8 @@ JNIEXPORT jstring JNICALL Java_xyz_aethersx2_android_NativeLibrary_getBIOSDescri
 }
 
 JNIEXPORT jobjectArray JNICALL Java_xyz_aethersx2_android_NativeLibrary_getGameListEntries(
-    JNIEnv*, jclass) {
-    return nullptr;
+    JNIEnv* env, jclass) {
+    return CreateEmptyObjectArray(env, "xyz/aethersx2/android/GameListEntry");
 }
 
 JNIEXPORT jobject JNICALL Java_xyz_aethersx2_android_NativeLibrary_getGameListEntry(
@@ -228,13 +243,13 @@ JNIEXPORT jboolean JNICALL Java_xyz_aethersx2_android_NativeLibrary_hasAnyBindin
 }
 
 JNIEXPORT jobjectArray JNICALL Java_xyz_aethersx2_android_NativeLibrary_getPadBinds(
-    JNIEnv*, jclass, jstring, jboolean) {
-    return nullptr;
+    JNIEnv* env, jclass, jstring, jboolean) {
+    return CreateEmptyObjectArray(env, "xyz/aethersx2/android/InputBindingInfo");
 }
 
 JNIEXPORT jobjectArray JNICALL Java_xyz_aethersx2_android_NativeLibrary_getPadSettings(
-    JNIEnv*, jclass, jstring) {
-    return nullptr;
+    JNIEnv* env, jclass, jstring) {
+    return CreateEmptyObjectArray(env, "xyz/aethersx2/android/SettingInfo");
 }
 
 JNIEXPORT jint JNICALL Java_xyz_aethersx2_android_NativeLibrary_getPadVibrationCapabilities(
@@ -251,8 +266,8 @@ JNIEXPORT void JNICALL Java_xyz_aethersx2_android_NativeLibrary_setInputDevices(
 }
 
 JNIEXPORT jobjectArray JNICALL Java_xyz_aethersx2_android_NativeLibrary_getHotkeyInfoList(
-    JNIEnv*, jclass) {
-    return nullptr;
+    JNIEnv* env, jclass) {
+    return CreateEmptyObjectArray(env, "xyz/aethersx2/android/HotkeyInfo");
 }
 
 // ============================================================================
@@ -338,8 +353,8 @@ JNIEXPORT jobject JNICALL Java_xyz_aethersx2_android_NativeLibrary_readSaveState
 }
 
 JNIEXPORT jobjectArray JNICALL Java_xyz_aethersx2_android_NativeLibrary_getAvailableMemoryCards(
-    JNIEnv*, jclass, jboolean) {
-    return nullptr;
+    JNIEnv* env, jclass, jboolean) {
+    return CreateEmptyObjectArray(env, "xyz/aethersx2/android/MemoryCardInfo");
 }
 
 JNIEXPORT jobject JNICALL Java_xyz_aethersx2_android_NativeLibrary_getMemoryCardInfo(
@@ -386,8 +401,8 @@ JNIEXPORT jint JNICALL Java_xyz_aethersx2_android_NativeLibrary_getUnlockedCheev
 }
 
 JNIEXPORT jobjectArray JNICALL Java_xyz_aethersx2_android_NativeLibrary_getCheevoList(
-    JNIEnv*, jclass) {
-    return nullptr;
+    JNIEnv* env, jclass) {
+    return CreateEmptyObjectArray(env, "xyz/aethersx2/android/Achievement");
 }
 
 JNIEXPORT jstring JNICALL Java_xyz_aethersx2_android_NativeLibrary_getCheevoGameTitle(
@@ -421,13 +436,13 @@ JNIEXPORT jint JNICALL Java_xyz_aethersx2_android_NativeLibrary_getLeaderboardCo
 }
 
 JNIEXPORT jobjectArray JNICALL Java_xyz_aethersx2_android_NativeLibrary_getLeaderboardList(
-    JNIEnv*, jclass) {
-    return nullptr;
+    JNIEnv* env, jclass) {
+    return CreateEmptyObjectArray(env, "xyz/aethersx2/android/Leaderboard");
 }
 
 JNIEXPORT jobjectArray JNICALL Java_xyz_aethersx2_android_NativeLibrary_getLeaderboardEntryList(
-    JNIEnv*, jclass, jint) {
-    return nullptr;
+    JNIEnv* env, jclass, jint) {
+    return CreateEmptyObjectArray(env, "xyz/aethersx2/android/Leaderboard$Entry");
 }
 
 // ============================================================================
@@ -455,8 +470,8 @@ JNIEXPORT jlong JNICALL Java_xyz_aethersx2_android_NativeLibrary_getCurrentSessi
 }
 
 JNIEXPORT jobjectArray JNICALL Java_xyz_aethersx2_android_NativeLibrary_getUSBDeviceNames(
-    JNIEnv*, jclass, jboolean) {
-    return nullptr;
+    JNIEnv* env, jclass, jboolean) {
+    return CreateEmptyObjectArray(env, "java/lang/String");
 }
 
 JNIEXPORT jstring JNICALL Java_xyz_aethersx2_android_NativeLibrary_getUSBDeviceDisplayName(
@@ -465,18 +480,18 @@ JNIEXPORT jstring JNICALL Java_xyz_aethersx2_android_NativeLibrary_getUSBDeviceD
 }
 
 JNIEXPORT jobjectArray JNICALL Java_xyz_aethersx2_android_NativeLibrary_getUSBDeviceSubtypes(
-    JNIEnv*, jclass, jstring) {
-    return nullptr;
+    JNIEnv* env, jclass, jstring) {
+    return CreateEmptyObjectArray(env, "java/lang/String");
 }
 
 JNIEXPORT jobjectArray JNICALL Java_xyz_aethersx2_android_NativeLibrary_getUSBDeviceSettings(
-    JNIEnv*, jclass, jstring, jint) {
-    return nullptr;
+    JNIEnv* env, jclass, jstring, jint) {
+    return CreateEmptyObjectArray(env, "xyz/aethersx2/android/SettingInfo");
 }
 
 JNIEXPORT jobjectArray JNICALL Java_xyz_aethersx2_android_NativeLibrary_getUSBDeviceBinds(
-    JNIEnv*, jclass, jstring, jint, jboolean) {
-    return nullptr;
+    JNIEnv* env, jclass, jstring, jint, jboolean) {
+    return CreateEmptyObjectArray(env, "xyz/aethersx2/android/InputBindingInfo");
 }
 
 JNIEXPORT void JNICALL Java_xyz_aethersx2_android_NativeLibrary_setUSBDeviceBind(

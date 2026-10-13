@@ -672,6 +672,58 @@ def inject_updated_pcsx2_assets(work_dir: Path) -> None:
         print(f"  ✓ Cleaned up {deleted_props} residual Google Ad Services property files")
 
 
+def remove_dead_socials_and_telemetry(work_dir: Path) -> None:
+    """Remove dead Discord and Patreon buttons, URLs, and telemetry:
+    1. Remove action_show_news_updates (Patreon) and action_discord_server from menu_main_navigation.xml.
+    2. Strip dead Patreon URLs from update notes in classes*.dex.
+    3. Neutralize dead aethersx2.com URLs in classes*.dex.
+    """
+    # 1. Clean menu_main_navigation.xml
+    menus_cleaned = 0
+    for menu_path in work_dir.rglob("menu_main_navigation.xml"):
+        content = menu_path.read_text(encoding="utf-8")
+        orig = content
+        # Remove action_show_news_updates item
+        content = re.sub(r'\s*<item[^>]*android:id="@id/action_show_news_updates"[^>]*/>', '', content)
+        content = re.sub(r'\s*<item[^>]*android:id="@id/action_show_news_updates"[^>]*>.*?</item>', '', content, flags=re.DOTALL)
+        # Remove action_discord_server item
+        content = re.sub(r'\s*<item[^>]*android:id="@id/action_discord_server"[^>]*/>', '', content)
+        content = re.sub(r'\s*<item[^>]*android:id="@id/action_discord_server"[^>]*>.*?</item>', '', content, flags=re.DOTALL)
+        if content != orig:
+            menu_path.write_text(content, encoding="utf-8")
+            menus_cleaned += 1
+    if menus_cleaned > 0:
+        print(f"  ✓ Removed Discord and Patreon buttons from {menus_cleaned} navigation menu(s)")
+
+    # 2. Clean dead Patreon & social URLs in classes*.dex
+    link1 = b"<a href='https://www.patreon.com/posts/alpha-1658-input-65072912'>https://www.patreon.com/posts/alpha-1658-input-65072912</a>"
+    rep1 = b"Clean NetherSX2 input profiles support for custom per-game touch layouts.".ljust(len(link1))
+    link2 = b"<a href='https://www.patreon.com/posts/alpha-1481-macro-64285345'>https://www.patreon.com/posts/alpha-1481-macro-64285345</a>"
+    rep2 = b"Clean NetherSX2 macro buttons support for customized combo action buttons.".ljust(len(link2))
+
+    discord_url = b"https://www.aethersx2.com/discord.html"
+    discord_rep = b"https://github.com/mininxd/NetherSX2".ljust(len(discord_url))
+
+    updates_url = b"https://www.aethersx2.com/updates.html"
+    updates_rep = b"https://github.com/mininxd/NetherSX2".ljust(len(updates_url))
+
+    for dex_path in work_dir.rglob("classes*.dex"):
+        dex_data = bytearray(dex_path.read_bytes())
+        dex_modified = False
+        for target, replacement in [(link1, rep1), (link2, rep2), (discord_url, discord_rep), (updates_url, updates_rep)]:
+            if target in dex_data:
+                idx = dex_data.index(target)
+                dex_data[idx:idx+len(target)] = replacement
+                dex_modified = True
+        if dex_modified:
+            # Recompute DEX SHA-1 signature and Adler32 checksum
+            dex_data[12:32] = hashlib.sha1(dex_data[32:]).digest()
+            dex_data[8:12] = (zlib.adler32(dex_data[12:]) & 0xffffffff).to_bytes(4, "little")
+            dex_path.write_bytes(dex_data)
+            verify_dex_integrity(dex_data)
+            print(f"  ✓ Cleaned dead URLs & Patreon links in {dex_path.name}")
+
+
 def get_pcsx2_version() -> str:
     """Read version and commit hash from pcsx2 submodule or fallback."""
     pcsx2_dir = REPO_ROOT / "pcsx2"
@@ -804,6 +856,9 @@ def inject_scale_multiplier(input_apk: Path, output_apk: Path, work_name: str, i
 
     # Patch targetSdkVersion and compileSdkVersion to Android 14 (API 34) for full Android 15 compatibility
     patch_manifest_target_sdk(work_dir, target_sdk=34)
+
+    # Remove dead Discord and Patreon buttons, URLs, and telemetry
+    remove_dead_socials_and_telemetry(work_dir)
 
     # Check if newly built native core from PCSX2 source exists and should be injected
     custom_so = REPO_ROOT / "native" / "build" / "libemucore.so"
@@ -984,7 +1039,16 @@ def verify_all() -> None:
                 dex_bytes = z.read("classes.dex")
                 if b"PCSX2 Version:" not in dex_bytes:
                     raise SystemExit(f"ERROR: classes.dex in {apk.name} missing PCSX2 version string!")
+                if b"patreon.com" in dex_bytes:
+                    raise SystemExit(f"ERROR: Patreon links still present in {apk.name} classes.dex!")
                 verify_dex_integrity(dex_bytes)
+            for item in z.namelist():
+                if "menu_main_navigation" in item:
+                    menu_data = z.read(item)
+                    if b"action_discord_server" in menu_data:
+                        raise SystemExit(f"ERROR: action_discord_server still present in {item} of {apk.name}!")
+                    if b"action_show_news_updates" in menu_data:
+                        raise SystemExit(f"ERROR: action_show_news_updates still present in {item} of {apk.name}!")
         print(f"✓ {apk.name}: 0.05x, 0.1x, 0.25x (XML + unclamped libemucore.so) & targetSdkVersion 34 verified")
 
     if not ADRENO_FINAL_XDELTA.exists() or ADRENO_FINAL_XDELTA.stat().st_size == 0:
