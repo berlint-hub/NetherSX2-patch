@@ -85,8 +85,6 @@ jobs:
           fi
 
       - name: Build NetherSX2 and Patch APKs
-        env:
-          USE_CUSTOM_CORE: "1"
         run: python3 scripts/build.py
 
       - name: Upload Adreno APK

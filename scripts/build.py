@@ -834,7 +834,7 @@ def inject_scale_multiplier(input_apk: Path, output_apk: Path, work_name: str, i
 
     # Check if newly built native core from PCSX2 source exists and should be injected
     custom_so = REPO_ROOT / "native" / "build" / "libemucore.so"
-    use_custom_core = os.environ.get("USE_CUSTOM_CORE", "1" if custom_so.exists() else "0") == "1"
+    use_custom_core = os.environ.get("USE_CUSTOM_CORE", "0") == "1"
     has_custom_so = False
     if use_custom_core and custom_so.exists() and custom_so.stat().st_size > 0:
         injected = 0
@@ -967,7 +967,7 @@ def verify_all() -> None:
                 if scale_val not in arsc:
                     raise SystemExit(f"ERROR: {scale_val.decode()} render option missing in {apk.name}!")
             custom_so = REPO_ROOT / "native" / "build" / "libemucore.so"
-            use_custom_core = os.environ.get("USE_CUSTOM_CORE", "1" if custom_so.exists() else "0") == "1"
+            use_custom_core = os.environ.get("USE_CUSTOM_CORE", "0") == "1"
             if use_custom_core and custom_so.exists() and custom_so.stat().st_size > 0:
                 if "lib/arm64-v8a/libemucore.so" not in z.namelist():
                     raise SystemExit(f"ERROR: lib/arm64-v8a/libemucore.so missing in {apk.name}!")
