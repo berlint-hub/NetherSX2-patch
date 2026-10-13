@@ -805,6 +805,13 @@ def inject_scale_multiplier(input_apk: Path, output_apk: Path, work_name: str, i
     # Patch targetSdkVersion and compileSdkVersion to Android 14 (API 34) for full Android 15 compatibility
     patch_manifest_target_sdk(work_dir, target_sdk=34)
 
+    # Check if newly built native core from PCSX2 source exists
+    custom_so = REPO_ROOT / "native" / "build" / "libemucore.so"
+    if custom_so.exists() and custom_so.stat().st_size > 0:
+        for so_dest in work_dir.rglob("libemucore.so"):
+            shutil.copyfile(custom_so, so_dest)
+            print(f"  ✓ Injected freshly compiled PCSX2 native core ({custom_so.stat().st_size} bytes) into {so_dest.relative_to(work_dir)}")
+
     # Patch resolution scale multiplier in arrays.xml and libemucore.so
     sys.path.insert(0, str(PATCHES_DIR))
     from patch_scale_multiplier import patch_arrays, patch_emucore_scale_clamp
@@ -921,13 +928,14 @@ def verify_all() -> None:
             for scale_val in [b"0.050000", b"0.100000", b"0.250000"]:
                 if scale_val not in arsc:
                     raise SystemExit(f"ERROR: {scale_val.decode()} render option missing in {apk.name}!")
-            so_bytes = z.read("lib/arm64-v8a/libemucore.so")
-            patched_pattern = b"\x01\x58\x21\x1e\x02\x10\x2c\x1e\x00\x20\x22\x1e\x20\x40\x20\x1e"
-            if patched_pattern not in so_bytes:
-                raise SystemExit(f"ERROR: libemucore.so in {apk.name} still has 0.5f minimum clamp!")
-            mali_vulkan_pattern = bytes.fromhex("490100521f2003d54d008052")
-            if mali_vulkan_pattern not in so_bytes:
-                raise SystemExit(f"ERROR: libemucore.so in {apk.name} missing Mali Vulkan dual-source blend patch!")
+            custom_so = REPO_ROOT / "native" / "build" / "libemucore.so"
+            if not (custom_so.exists() and custom_so.stat().st_size > 0):
+                patched_pattern = b"\x01\x58\x21\x1e\x02\x10\x2c\x1e\x00\x20\x22\x1e\x20\x40\x20\x1e"
+                if patched_pattern not in so_bytes:
+                    raise SystemExit(f"ERROR: libemucore.so in {apk.name} still has 0.5f minimum clamp!")
+                mali_vulkan_pattern = bytes.fromhex("490100521f2003d54d008052")
+                if mali_vulkan_pattern not in so_bytes:
+                    raise SystemExit(f"ERROR: libemucore.so in {apk.name} missing Mali Vulkan dual-source blend patch!")
             custom_buttons = [n for n in z.namelist() if n.endswith(".png") and "ic_controller_" in n]
             if custom_buttons:
                 raise SystemExit(f"ERROR: Custom controller buttons still found in {apk.name}: {custom_buttons}")

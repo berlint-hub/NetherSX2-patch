@@ -64,6 +64,26 @@ jobs:
               print(f'Notice: Using repository committed PCSX2 assets ({e})')
           "
 
+      - name: Build Native libemucore.so (Android NDK)
+        run: |
+          NDK_PATH="${ANDROID_NDK_ROOT:-$ANDROID_NDK_HOME}"
+          if [ -z "$NDK_PATH" ] && [ -d "/usr/local/lib/android/sdk/ndk" ]; then
+            NDK_PATH=$(find /usr/local/lib/android/sdk/ndk -maxdepth 1 -mindepth 1 | sort -V | tail -n 1)
+          fi
+          if [ -n "$NDK_PATH" ] && [ -d "$NDK_PATH" ]; then
+            echo "Using Android NDK at: $NDK_PATH"
+            cmake -B native/build \
+              -DCMAKE_TOOLCHAIN_FILE="$NDK_PATH/build/cmake/android.toolchain.cmake" \
+              -DANDROID_ABI=arm64-v8a \
+              -DANDROID_PLATFORM=android-29 \
+              -DCMAKE_BUILD_TYPE=Release \
+              native
+            cmake --build native/build -j$(nproc)
+            echo "✓ Compiled libemucore.so successfully"
+          else
+            echo "Notice: Android NDK not detected, skipping native compilation"
+          fi
+
       - name: Build NetherSX2 and Patch APKs
         run: python3 scripts/build.py
 
@@ -94,3 +114,11 @@ jobs:
           name: xyz.aethersx2.android_.xdelta
           path: xyz.aethersx2.android_.xdelta
           if-no-files-found: error
+
+      - name: Upload libemucore.so
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: libemucore.so
+          path: native/build/libemucore.so
+          if-no-files-found: ignore
