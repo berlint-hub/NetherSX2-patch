@@ -695,34 +695,6 @@ def remove_dead_socials_and_telemetry(work_dir: Path) -> None:
     if menus_cleaned > 0:
         print(f"  ✓ Removed Discord and Patreon buttons from {menus_cleaned} navigation menu(s)")
 
-    # 2. Clean dead Patreon & social URLs in classes*.dex
-    link1 = b"<a href='https://www.patreon.com/posts/alpha-1658-input-65072912'>https://www.patreon.com/posts/alpha-1658-input-65072912</a>"
-    rep1 = b"Clean NetherSX2 input profiles support for custom per-game touch layouts.".ljust(len(link1))
-    link2 = b"<a href='https://www.patreon.com/posts/alpha-1481-macro-64285345'>https://www.patreon.com/posts/alpha-1481-macro-64285345</a>"
-    rep2 = b"Clean NetherSX2 macro buttons support for customized combo action buttons.".ljust(len(link2))
-
-    discord_url = b"https://www.aethersx2.com/discord.html"
-    discord_rep = b"https://github.com/mininxd/NetherSX2".ljust(len(discord_url))
-
-    updates_url = b"https://www.aethersx2.com/updates.html"
-    updates_rep = b"https://github.com/mininxd/NetherSX2".ljust(len(updates_url))
-
-    for dex_path in work_dir.rglob("classes*.dex"):
-        dex_data = bytearray(dex_path.read_bytes())
-        dex_modified = False
-        for target, replacement in [(link1, rep1), (link2, rep2), (discord_url, discord_rep), (updates_url, updates_rep)]:
-            if target in dex_data:
-                idx = dex_data.index(target)
-                dex_data[idx:idx+len(target)] = replacement
-                dex_modified = True
-        if dex_modified:
-            # Recompute DEX SHA-1 signature and Adler32 checksum
-            dex_data[12:32] = hashlib.sha1(dex_data[32:]).digest()
-            dex_data[8:12] = (zlib.adler32(dex_data[12:]) & 0xffffffff).to_bytes(4, "little")
-            dex_path.write_bytes(dex_data)
-            verify_dex_integrity(dex_data)
-            print(f"  ✓ Cleaned dead URLs & Patreon links in {dex_path.name}")
-
 
 def get_pcsx2_version() -> str:
     """Read version and commit hash from pcsx2 submodule or fallback."""
@@ -1039,8 +1011,6 @@ def verify_all() -> None:
                 dex_bytes = z.read("classes.dex")
                 if b"PCSX2 Version:" not in dex_bytes:
                     raise SystemExit(f"ERROR: classes.dex in {apk.name} missing PCSX2 version string!")
-                if b"patreon.com" in dex_bytes:
-                    raise SystemExit(f"ERROR: Patreon links still present in {apk.name} classes.dex!")
                 verify_dex_integrity(dex_bytes)
             for item in z.namelist():
                 if "menu_main_navigation" in item:
