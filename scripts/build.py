@@ -49,6 +49,7 @@ BAKSMALI_URL = "https://bitbucket.org/JesusFreke/smali/downloads/baksmali-2.5.2.
 SMALI_JAR = DECOMP_LIB / "smali.jar"
 SMALI_URL = "https://bitbucket.org/JesusFreke/smali/downloads/smali-2.5.2.jar"
 KEYSTORE = DECOMP_LIB / "android.jks"
+NO_NETHERSX2_PATCH = os.environ.get("NO_NETHERSX2_PATCH", "1") == "1"
 
 
 def run_cmd(cmd: list[str]) -> None:
@@ -614,6 +615,27 @@ def patch_manifest_target_sdk(work_dir: Path, target_sdk: int = 34) -> None:
         print(f"  ✓ Patched AndroidManifest.xml: targetSdkVersion={target_sdk}, compileSdkVersion={target_sdk}")
 
 
+def strip_admob_manifest(work_dir: Path) -> None:
+    """Strip Google AdMob metadata, activities, providers, and services from AndroidManifest.xml."""
+    manifest_path = work_dir / "AndroidManifest.xml"
+    if not manifest_path.exists():
+        return
+    text = manifest_path.read_text(encoding="utf-8")
+    orig = text
+    # Remove AdMob application meta-data
+    text = re.sub(r'\s*<meta-data[^>]*com\.google\.android\.gms\.ads\.APPLICATION_ID[^>]*/>', '', text)
+    # Remove AdMob activities, providers, services
+    text = re.sub(r'\s*<activity[^>]*com\.google\.android\.gms\.ads[^>]*>.*?</activity>', '', text, flags=re.DOTALL)
+    text = re.sub(r'\s*<activity[^>]*com\.google\.android\.gms\.ads[^>]*/>', '', text)
+    text = re.sub(r'\s*<provider[^>]*com\.google\.android\.gms\.ads[^>]*>.*?</provider>', '', text, flags=re.DOTALL)
+    text = re.sub(r'\s*<provider[^>]*com\.google\.android\.gms\.ads[^>]*/>', '', text)
+    text = re.sub(r'\s*<service[^>]*com\.google\.android\.gms\.ads[^>]*>.*?</service>', '', text, flags=re.DOTALL)
+    text = re.sub(r'\s*<service[^>]*com\.google\.android\.gms\.ads[^>]*/>', '', text)
+    if text != orig:
+        manifest_path.write_text(text, encoding="utf-8")
+        print("  ✓ Stripped Google AdMob components from AndroidManifest.xml")
+
+
 def inject_updated_pcsx2_assets(work_dir: Path) -> None:
     """Inject updated PCSX2 and community emulation assets into the decoded APK:
     1. GameIndex[merged].yaml -> assets/GameIndex.yaml
@@ -829,6 +851,9 @@ def inject_scale_multiplier(input_apk: Path, output_apk: Path, work_name: str, i
     # Patch targetSdkVersion and compileSdkVersion to Android 14 (API 34) for full Android 15 compatibility
     patch_manifest_target_sdk(work_dir, target_sdk=34)
 
+    # Strip Google AdMob components from AndroidManifest.xml (clean ad-free experience)
+    strip_admob_manifest(work_dir)
+
     # Remove dead Discord and Patreon buttons, URLs, and telemetry
     remove_dead_socials_and_telemetry(work_dir)
 
@@ -883,22 +908,29 @@ def inject_scale_multiplier(input_apk: Path, output_apk: Path, work_name: str, i
 
 def build_adreno() -> None:
     print("\n==========================================")
-    print("Building NetherSX2 Adreno (v1.5-4248) APK")
+    if NO_NETHERSX2_PATCH:
+        print("Building Vanilla AetherSX2 Adreno (v1.5-4248) APK")
+    else:
+        print("Building NetherSX2 Adreno (v1.5-4248) APK")
     print("==========================================")
     base_apk = get_adreno_base_apk()
     xdelta_bin = get_xdelta_bin()
 
-    if not ADRENO_NETHERSX2_XDELTA.exists():
-        raise SystemExit(f"Adreno NetherSX2 xdelta patch not found: {ADRENO_NETHERSX2_XDELTA}")
+    if NO_NETHERSX2_PATCH:
+        print("  ✓ Skipping NetherSX2 patch (building pure AetherSX2 Adreno with PCSX2 codebase updates)")
+        adreno_input = base_apk
+    else:
+        if not ADRENO_NETHERSX2_XDELTA.exists():
+            raise SystemExit(f"Adreno NetherSX2 xdelta patch not found: {ADRENO_NETHERSX2_XDELTA}")
+        adreno_nethersx2_base = REPO_ROOT / "adreno_nethersx2_base.apk"
+        # Apply official NetherSX2 4248 patch
+        run_cmd([xdelta_bin, "-d", "-f", "-s", str(base_apk), str(ADRENO_NETHERSX2_XDELTA), str(adreno_nethersx2_base)])
+        adreno_input = adreno_nethersx2_base
 
-    adreno_nethersx2_base = REPO_ROOT / "adreno_nethersx2_base.apk"
-    # Apply official NetherSX2 4248 patch
-    run_cmd([xdelta_bin, "-d", "-f", "-s", str(base_apk), str(ADRENO_NETHERSX2_XDELTA), str(adreno_nethersx2_base)])
-
-    # Inject 0.25x scale multiplier and sign
-    inject_scale_multiplier(adreno_nethersx2_base, ADRENO_FINAL_APK, "work_adreno")
-    if adreno_nethersx2_base.exists():
-        adreno_nethersx2_base.unlink()
+    # Inject scale multiplier and sign
+    inject_scale_multiplier(adreno_input, ADRENO_FINAL_APK, "work_adreno")
+    if not NO_NETHERSX2_PATCH and adreno_input.exists():
+        adreno_input.unlink()
 
     # Also keep nethersx2.apk for compatibility
     shutil.copyfile(ADRENO_FINAL_APK, REPO_ROOT / "nethersx2.apk")
@@ -913,43 +945,59 @@ def build_adreno() -> None:
 
 def build_mali() -> None:
     print("\n==========================================")
-    print("Building NetherSX2 Mali (v1.5-3668) APK")
+    if NO_NETHERSX2_PATCH:
+        print("Building Vanilla AetherSX2 Mali (v1.5-3668) APK")
+    else:
+        print("Building NetherSX2 Mali (v1.5-3668) APK")
     print("==========================================")
     base_apk = get_mali_base_apk()
     xdelta_bin = get_xdelta_bin()
 
-    # Ensure classic xdelta is downloaded
-    if not MALI_CLASSIC_XDELTA.exists():
-        print(f"Downloading NetherSX2 classic xdelta from {MALI_CLASSIC_XDELTA_URL}...")
-        urllib.request.urlretrieve(MALI_CLASSIC_XDELTA_URL, MALI_CLASSIC_XDELTA)
+    if NO_NETHERSX2_PATCH:
+        print("  ✓ Skipping NetherSX2 classic patch (building pure AetherSX2 Mali with PCSX2 codebase updates)")
+        mali_input = base_apk
+    else:
+        # Ensure classic xdelta is downloaded
+        if not MALI_CLASSIC_XDELTA.exists():
+            print(f"Downloading NetherSX2 classic xdelta from {MALI_CLASSIC_XDELTA_URL}...")
+            urllib.request.urlretrieve(MALI_CLASSIC_XDELTA_URL, MALI_CLASSIC_XDELTA)
 
-    mali_nethersx2_base = REPO_ROOT / "mali_nethersx2_base.apk"
-    # Apply NetherSX2 Classic 3668 patch
-    run_cmd([xdelta_bin, "-d", "-f", "-s", str(base_apk), str(MALI_CLASSIC_XDELTA), str(mali_nethersx2_base)])
+        mali_nethersx2_base = REPO_ROOT / "mali_nethersx2_base.apk"
+        # Apply NetherSX2 Classic 3668 patch
+        run_cmd([xdelta_bin, "-d", "-f", "-s", str(base_apk), str(MALI_CLASSIC_XDELTA), str(mali_nethersx2_base)])
+        mali_input = mali_nethersx2_base
 
-    # Inject 0.25x scale multiplier and sign
-    inject_scale_multiplier(mali_nethersx2_base, MALI_FINAL_APK, "work_mali", is_mali=True)
-    if mali_nethersx2_base.exists():
-        mali_nethersx2_base.unlink()
+    # Inject scale multiplier and sign
+    inject_scale_multiplier(mali_input, MALI_FINAL_APK, "work_mali", is_mali=True)
+    if not NO_NETHERSX2_PATCH and mali_input.exists():
+        mali_input.unlink()
     print(f"Successfully built {MALI_FINAL_APK}")
 
 
 def build_switch() -> None:
     print("\n==========================================")
-    print("Building NetherSX2 Nintendo Switch (Tegra X1) APK")
+    if NO_NETHERSX2_PATCH:
+        print("Building Vanilla AetherSX2 Nintendo Switch (Tegra X1) APK")
+    else:
+        print("Building NetherSX2 Nintendo Switch (Tegra X1) APK")
     print("==========================================")
     base_apk = get_adreno_base_apk()
     xdelta_bin = get_xdelta_bin()
 
-    if not ADRENO_NETHERSX2_XDELTA.exists():
-        raise SystemExit(f"Adreno NetherSX2 xdelta patch not found: {ADRENO_NETHERSX2_XDELTA}")
+    if NO_NETHERSX2_PATCH:
+        print("  ✓ Skipping NetherSX2 patch (building pure AetherSX2 Switch with PCSX2 codebase updates)")
+        switch_input = base_apk
+    else:
+        if not ADRENO_NETHERSX2_XDELTA.exists():
+            raise SystemExit(f"Adreno NetherSX2 xdelta patch not found: {ADRENO_NETHERSX2_XDELTA}")
 
-    switch_nethersx2_base = REPO_ROOT / "switch_nethersx2_base.apk"
-    run_cmd([xdelta_bin, "-d", "-f", "-s", str(base_apk), str(ADRENO_NETHERSX2_XDELTA), str(switch_nethersx2_base)])
+        switch_nethersx2_base = REPO_ROOT / "switch_nethersx2_base.apk"
+        run_cmd([xdelta_bin, "-d", "-f", "-s", str(base_apk), str(ADRENO_NETHERSX2_XDELTA), str(switch_nethersx2_base)])
+        switch_input = switch_nethersx2_base
 
-    inject_scale_multiplier(switch_nethersx2_base, SWITCH_FINAL_APK, "work_switch", is_switch=True)
-    if switch_nethersx2_base.exists():
-        switch_nethersx2_base.unlink()
+    inject_scale_multiplier(switch_input, SWITCH_FINAL_APK, "work_switch", is_switch=True)
+    if not NO_NETHERSX2_PATCH and switch_input.exists():
+        switch_input.unlink()
     shutil.copyfile(SWITCH_FINAL_APK, REPO_ROOT / "nethersx2_switch.apk")
     print(f"Successfully built {SWITCH_FINAL_APK}")
 
