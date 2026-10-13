@@ -29,6 +29,8 @@ include_directories(
 # Sources
 set(EMUCORE_SOURCES
     src/NativeLibrary.cpp
+    src/AndroidHost.cpp
+    src/AndroidSurface.cpp
 )
 
 # Build libemucore.so

@@ -806,13 +806,20 @@ def inject_scale_multiplier(input_apk: Path, output_apk: Path, work_name: str, i
     patch_manifest_target_sdk(work_dir, target_sdk=34)
 
     # Check if newly built native core from PCSX2 source exists and should be injected
-    use_custom_core = os.environ.get("USE_CUSTOM_CORE", "0") == "1"
     custom_so = REPO_ROOT / "native" / "build" / "libemucore.so"
+    use_custom_core = os.environ.get("USE_CUSTOM_CORE", "1" if custom_so.exists() else "0") == "1"
     has_custom_so = False
     if use_custom_core and custom_so.exists() and custom_so.stat().st_size > 0:
+        injected = 0
         for so_dest in work_dir.rglob("libemucore.so"):
             shutil.copyfile(custom_so, so_dest)
             print(f"  ✓ Injected freshly compiled PCSX2 native core ({custom_so.stat().st_size} bytes) into {so_dest.relative_to(work_dir)}")
+            injected += 1
+        if injected == 0:
+            target_so = work_dir / "lib" / "arm64-v8a" / "libemucore.so"
+            target_so.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(custom_so, target_so)
+            print(f"  ✓ Injected freshly compiled PCSX2 native core ({custom_so.stat().st_size} bytes) into {target_so.relative_to(work_dir)}")
         has_custom_so = True
 
     # Patch resolution scale multiplier in arrays.xml and libemucore.so
@@ -933,8 +940,17 @@ def verify_all() -> None:
                 if scale_val not in arsc:
                     raise SystemExit(f"ERROR: {scale_val.decode()} render option missing in {apk.name}!")
             custom_so = REPO_ROOT / "native" / "build" / "libemucore.so"
-            use_custom_core = os.environ.get("USE_CUSTOM_CORE", "0") == "1"
-            if not (use_custom_core and custom_so.exists() and custom_so.stat().st_size > 0):
+            use_custom_core = os.environ.get("USE_CUSTOM_CORE", "1" if custom_so.exists() else "0") == "1"
+            if use_custom_core and custom_so.exists() and custom_so.stat().st_size > 0:
+                if "lib/arm64-v8a/libemucore.so" not in z.namelist():
+                    raise SystemExit(f"ERROR: lib/arm64-v8a/libemucore.so missing in {apk.name}!")
+                so_bytes = z.read("lib/arm64-v8a/libemucore.so")
+                if len(so_bytes) != custom_so.stat().st_size:
+                    raise SystemExit(f"ERROR: libemucore.so in {apk.name} size ({len(so_bytes)}) doesn't match compiled size ({custom_so.stat().st_size})!")
+                if not so_bytes.startswith(b"\x7fELF") or so_bytes[0x12:0x14] != b"\xb7\x00":
+                    raise SystemExit(f"ERROR: libemucore.so in {apk.name} is not a valid arm64-v8a ELF binary!")
+                print(f"  ✓ Verified integrated libemucore.so in {apk.name} ({len(so_bytes)} bytes, arm64-v8a ELF)")
+            else:
                 so_bytes = z.read("lib/arm64-v8a/libemucore.so")
                 patched_pattern = b"\x01\x58\x21\x1e\x02\x10\x2c\x1e\x00\x20\x22\x1e\x20\x40\x20\x1e"
                 if patched_pattern not in so_bytes:

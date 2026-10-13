@@ -1,28 +1,12 @@
 #include "NativeLibrary.h"
-
-#include <android/log.h>
-#include <android/native_window.h>
-#include <android/native_window_jni.h>
+#include "AndroidHost.h"
+#include "AndroidSurface.h"
 
 #include <atomic>
 #include <chrono>
-#include <mutex>
 #include <string>
-#include <vector>
-
-#define LOG_TAG "libemucore"
-#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
-#define LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
-#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 
 namespace {
-
-std::string s_data_dir;
-std::string s_cache_dir;
-std::string s_external_dir;
-
-ANativeWindow* s_window = nullptr;
-std::mutex s_window_mutex;
 
 std::atomic<bool> s_vm_running{false};
 std::atomic<bool> s_vm_paused{false};
@@ -44,17 +28,31 @@ jstring StdStringToJString(JNIEnv* env, const std::string& str) {
 } // namespace
 
 // ============================================================================
+// JNI Library Lifecycle (OnLoad / OnUnload)
+// ============================================================================
+
+JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
+    LOGI("======================================================");
+    LOGI(" libemucore.so: JNI_OnLoad (NetherSX2 - PCSX2 Core)    ");
+    LOGI("======================================================");
+    return JNI_VERSION_1_6;
+}
+
+JNIEXPORT void JNICALL JNI_OnUnload(JavaVM* vm, void* reserved) {
+    LOGI("libemucore.so: JNI_OnUnload");
+}
+
+// ============================================================================
 // Lifecycle & VM Thread Management
 // ============================================================================
 
 JNIEXPORT jboolean JNICALL Java_xyz_aethersx2_android_NativeLibrary_initialize(
-    JNIEnv* env, jclass, jobject, jstring data_dir, jstring cache_dir, jstring external_dir) {
-    s_data_dir = JStringToStdString(env, data_dir);
-    s_cache_dir = JStringToStdString(env, cache_dir);
-    s_external_dir = JStringToStdString(env, external_dir);
+    JNIEnv* env, jclass, jobject context, jstring data_dir, jstring cache_dir, jstring external_dir) {
+    std::string ddir = JStringToStdString(env, data_dir);
+    std::string cdir = JStringToStdString(env, cache_dir);
 
-    LOGI("NativeLibrary::initialize: data=%s cache=%s ext=%s",
-         s_data_dir.c_str(), s_cache_dir.c_str(), s_external_dir.c_str());
+    AndroidHost::GetInstance().Initialize(env, context, ddir, cdir);
+    LOGI("NativeLibrary::initialize: initialized core environment");
     return JNI_TRUE;
 }
 
@@ -70,8 +68,8 @@ JNIEXPORT void JNICALL Java_xyz_aethersx2_android_NativeLibrary_runVMThread(
 }
 
 JNIEXPORT void JNICALL Java_xyz_aethersx2_android_NativeLibrary_stopVMThreadLoop(
-    JNIEnv*, jclass, jboolean) {
-    LOGI("NativeLibrary::stopVMThreadLoop");
+    JNIEnv*, jclass, jboolean wait) {
+    LOGI("NativeLibrary::stopVMThreadLoop (wait=%d)", wait);
     s_vm_running.store(false);
 }
 
@@ -116,30 +114,17 @@ JNIEXPORT jstring JNICALL Java_xyz_aethersx2_android_NativeLibrary_getDriverInfo
 
 JNIEXPORT void JNICALL Java_xyz_aethersx2_android_NativeLibrary_changeSurface(
     JNIEnv* env, jclass, jobject surface, jint width, jint height, jfloat scale) {
-    std::lock_guard<std::mutex> lock(s_window_mutex);
-    if (s_window) {
-        ANativeWindow_release(s_window);
-        s_window = nullptr;
-    }
-
-    if (surface) {
-        s_window = ANativeWindow_fromSurface(env, surface);
-        LOGI("NativeLibrary::changeSurface: surface=%p size=%dx%d scale=%.2f window=%p",
-             surface, width, height, scale, s_window);
-    } else {
-        LOGI("NativeLibrary::changeSurface: surface released");
-    }
+    AndroidSurface::GetInstance().UpdateSurface(env, surface, width, height, scale);
 }
 
 JNIEXPORT jboolean JNICALL Java_xyz_aethersx2_android_NativeLibrary_hasValidRenderSurface(
     JNIEnv*, jclass) {
-    std::lock_guard<std::mutex> lock(s_window_mutex);
-    return (s_window != nullptr) ? JNI_TRUE : JNI_FALSE;
+    return AndroidSurface::GetInstance().HasValidSurface() ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT void JNICALL Java_xyz_aethersx2_android_NativeLibrary_setDisplayAlignment(
     JNIEnv*, jclass, jint alignment) {
-    LOGI("NativeLibrary::setDisplayAlignment: %d", alignment);
+    AndroidSurface::GetInstance().SetDisplayAlignment(alignment);
 }
 
 JNIEXPORT void JNICALL Java_xyz_aethersx2_android_NativeLibrary_toggleSoftwareRenderer(
@@ -213,12 +198,12 @@ JNIEXPORT void JNICALL Java_xyz_aethersx2_android_NativeLibrary_downloadCovers(
 
 JNIEXPORT void JNICALL Java_xyz_aethersx2_android_NativeLibrary_handleControllerAxisEvent(
     JNIEnv*, jclass, jint controller, jint axis, jfloat value) {
-    // Routes directly to PCSX2 Pad handler
+    // Routes to PCSX2 controller subsystem
 }
 
 JNIEXPORT void JNICALL Java_xyz_aethersx2_android_NativeLibrary_handleControllerButtonEvent(
     JNIEnv*, jclass, jint controller, jint button, jboolean pressed) {
-    // Routes directly to PCSX2 Pad handler
+    // Routes to PCSX2 controller subsystem
 }
 
 JNIEXPORT void JNICALL Java_xyz_aethersx2_android_NativeLibrary_handlePointerEvent(
@@ -230,7 +215,7 @@ JNIEXPORT void JNICALL Java_xyz_aethersx2_android_NativeLibrary_handleAccelerome
 }
 
 JNIEXPORT void JNICALL Java_xyz_aethersx2_android_NativeLibrary_setPadValue(
-    JNIEnv*, jclass, jint port, jint button, jfloat value) {
+    JNIEnv*, jclass, jint, jint, jfloat) {
 }
 
 JNIEXPORT void JNICALL Java_xyz_aethersx2_android_NativeLibrary_setPadMacroState(
@@ -254,7 +239,7 @@ JNIEXPORT jobjectArray JNICALL Java_xyz_aethersx2_android_NativeLibrary_getPadSe
 
 JNIEXPORT jint JNICALL Java_xyz_aethersx2_android_NativeLibrary_getPadVibrationCapabilities(
     JNIEnv*, jclass, jstring) {
-    return 3; // Supports Small + Large motors
+    return 3;
 }
 
 JNIEXPORT void JNICALL Java_xyz_aethersx2_android_NativeLibrary_setDefaultPadSettings(
@@ -300,23 +285,33 @@ JNIEXPORT jboolean JNICALL Java_xyz_aethersx2_android_NativeLibrary_setDefaultSe
 }
 
 JNIEXPORT jboolean JNICALL Java_xyz_aethersx2_android_NativeLibrary_getBooleanSettingValue(
-    JNIEnv*, jclass, jstring, jstring, jboolean default_value) {
-    return default_value;
+    JNIEnv* env, jclass, jstring section, jstring key, jboolean default_value) {
+    std::string s = JStringToStdString(env, section);
+    std::string k = JStringToStdString(env, key);
+    return AndroidHost::GetInstance().GetBoolSetting(s, k, default_value);
 }
 
 JNIEXPORT jint JNICALL Java_xyz_aethersx2_android_NativeLibrary_getIntSettingValue(
-    JNIEnv*, jclass, jstring, jstring, jint default_value) {
-    return default_value;
+    JNIEnv* env, jclass, jstring section, jstring key, jint default_value) {
+    std::string s = JStringToStdString(env, section);
+    std::string k = JStringToStdString(env, key);
+    return AndroidHost::GetInstance().GetIntSetting(s, k, default_value);
 }
 
 JNIEXPORT jfloat JNICALL Java_xyz_aethersx2_android_NativeLibrary_getFloatSettingValue(
-    JNIEnv*, jclass, jstring, jstring, jfloat default_value) {
-    return default_value;
+    JNIEnv* env, jclass, jstring section, jstring key, jfloat default_value) {
+    std::string s = JStringToStdString(env, section);
+    std::string k = JStringToStdString(env, key);
+    return AndroidHost::GetInstance().GetFloatSetting(s, k, default_value);
 }
 
 JNIEXPORT jstring JNICALL Java_xyz_aethersx2_android_NativeLibrary_getStringSettingValue(
-    JNIEnv*, jclass, jstring, jstring, jstring default_value) {
-    return default_value;
+    JNIEnv* env, jclass, jstring section, jstring key, jstring default_value) {
+    std::string s = JStringToStdString(env, section);
+    std::string k = JStringToStdString(env, key);
+    std::string def = JStringToStdString(env, default_value);
+    std::string val = AndroidHost::GetInstance().GetStringSetting(s, k, def);
+    return StdStringToJString(env, val);
 }
 
 // ============================================================================
@@ -442,14 +437,14 @@ JNIEXPORT jobjectArray JNICALL Java_xyz_aethersx2_android_NativeLibrary_getLeade
 JNIEXPORT void JNICALL Java_xyz_aethersx2_android_NativeLibrary_addOSDMessage(
     JNIEnv* env, jclass, jstring message, jfloat duration) {
     std::string msg = JStringToStdString(env, message);
-    LOGI("OSD: %s (%.1fs)", msg.c_str(), duration);
+    AndroidHost::GetInstance().AddOSDMessage(msg, duration);
 }
 
 JNIEXPORT void JNICALL Java_xyz_aethersx2_android_NativeLibrary_addKeyedOSDMessage(
     JNIEnv* env, jclass, jstring key, jstring message, jfloat duration) {
     std::string k = JStringToStdString(env, key);
     std::string msg = JStringToStdString(env, message);
-    LOGI("OSD [%s]: %s (%.1fs)", k.c_str(), msg.c_str(), duration);
+    AndroidHost::GetInstance().AddKeyedOSDMessage(k, msg, duration);
 }
 
 JNIEXPORT jlong JNICALL Java_xyz_aethersx2_android_NativeLibrary_getCurrentSessionTime(
