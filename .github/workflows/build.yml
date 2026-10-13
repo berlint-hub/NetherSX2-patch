@@ -1,11 +1,21 @@
 name: Build NetherSX2 and Patch APKs
 
 on:
+  schedule:
+    - cron: '0 0 * * *'
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
+    inputs:
+      force_release:
+        description: 'Force creating a GitHub Release regardless of PCSX2 commit status'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -16,6 +26,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: 'true'
+          fetch-depth: 0
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -39,6 +50,51 @@ jobs:
           fi
           if [ ! -f decomp/lib/smali.jar ]; then
             curl -sL -o decomp/lib/smali.jar https://bitbucket.org/JesusFreke/smali/downloads/smali-2.5.2.jar
+          fi
+
+      - name: Sync PCSX2 Submodule to Latest Upstream
+        run: |
+          echo "Updating PCSX2 submodule to latest upstream master..."
+          git submodule update --init --remote --depth 1 pcsx2
+
+      - name: Check PCSX2 Upstream Commit Status
+        id: check_release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RECENT_COMMIT=$(git -C pcsx2 rev-parse --short HEAD)
+          RAW_VER=$(git -C pcsx2 describe --tags --always 2>/dev/null || echo "2.9.122")
+          PCSX2_VERSION="${RAW_VER#v}"
+          BUILD_DATE=$(date +'%d%m%Y')
+          TAG_NAME="${RECENT_COMMIT}-${PCSX2_VERSION}-${BUILD_DATE}"
+
+          echo "PCSX2 Commit: ${RECENT_COMMIT}"
+          echo "PCSX2 Version: ${PCSX2_VERSION}"
+          echo "Build Date: ${BUILD_DATE}"
+          echo "Proposed Release Tag: ${TAG_NAME}"
+
+          echo "RECENT_COMMIT=${RECENT_COMMIT}" >> $GITHUB_ENV
+          echo "PCSX2_VERSION=${PCSX2_VERSION}" >> $GITHUB_ENV
+          echo "BUILD_DATE=${BUILD_DATE}" >> $GITHUB_ENV
+          echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_ENV
+
+          # Check if any existing release tag starts with ${RECENT_COMMIT}-
+          EXISTING_RELEASE=$(gh release list -R "${{ github.repository }}" --limit 100 --json tagName -q ".[].tagName" 2>/dev/null | grep -E "^${RECENT_COMMIT}-" || true)
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "Pull request build: skipping release creation."
+            echo "SHOULD_RELEASE=false" >> $GITHUB_ENV
+          elif [ "${{ github.event.inputs.force_release }}" = "true" ]; then
+            echo "force_release requested via workflow_dispatch: release will be created."
+            echo "SHOULD_RELEASE=true" >> $GITHUB_ENV
+          elif [ -n "$EXISTING_RELEASE" ]; then
+            echo "No new PCSX2 commit: commit ${RECENT_COMMIT} already released in ${EXISTING_RELEASE}."
+            echo "Skipping release creation (APKs will be stored as artifacts)."
+            echo "SHOULD_RELEASE=false" >> $GITHUB_ENV
+          else
+            echo "New PCSX2 commit detected: ${RECENT_COMMIT} has not been released yet."
+            echo "Release will be created: ${TAG_NAME}"
+            echo "SHOULD_RELEASE=true" >> $GITHUB_ENV
           fi
 
       - name: Update PCSX2 Emulation Assets
@@ -87,20 +143,6 @@ jobs:
       - name: Build NetherSX2 and Patch APKs
         run: python3 scripts/build.py
 
-      - name: Upload Vanilla Adreno APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: xyz.aethersx2.android_adreno.apk
-          path: xyz.aethersx2.android_adreno.apk
-          if-no-files-found: error
-
-      - name: Upload Vanilla Mali APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: xyz.aethersx2.android_mali.apk
-          path: xyz.aethersx2.android_mali.apk
-          if-no-files-found: error
-
       - name: Upload NetherSX2 Adreno APK
         uses: actions/upload-artifact@v4
         with:
@@ -136,3 +178,17 @@ jobs:
           name: libemucore.so
           path: native/build/libemucore.so
           if-no-files-found: ignore
+
+      - name: Create GitHub Release
+        if: env.SHOULD_RELEASE == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Publishing GitHub Release ${TAG_NAME}..."
+          FILES_TO_RELEASE="xyz.nethersx2.android_adreno.apk xyz.nethersx2.android_mali.apk xyz.aethersx2.android_switch.apk xyz.aethersx2.android_.xdelta"
+          if [ -f "native/build/libemucore.so" ]; then
+            FILES_TO_RELEASE="$FILES_TO_RELEASE native/build/libemucore.so"
+          fi
+          gh release create "${TAG_NAME}" $FILES_TO_RELEASE \
+            --title "${TAG_NAME}" \
+            --notes "Automated NetherSX2 build with upstream PCSX2 ${PCSX2_VERSION} (${RECENT_COMMIT}) GameDB & enhancements."

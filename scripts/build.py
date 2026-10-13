@@ -1076,7 +1076,7 @@ def verify_all() -> None:
 
 
 def main() -> None:
-    target = os.environ.get("BUILD_TARGET", "all").lower()
+    target = os.environ.get("BUILD_TARGET", "nethersx2").lower()
     if target in ("all", "aethersx2", "vanilla"):
         print("\n==========================================")
         print("Building Variant 1: Pure Vanilla AetherSX2 + PCSX2")
@@ -1086,12 +1086,12 @@ def main() -> None:
 
     if target in ("all", "nethersx2", "patch"):
         print("\n==========================================")
-        print("Building Variant 2: NetherSX2 Patched + PCSX2")
+        print("Building NetherSX2 Patched + PCSX2 (Adreno & Mali)")
         print("==========================================")
         build_nethersx2_adreno()
         build_nethersx2_mali()
 
-    if target in ("all", "switch"):
+    if target in ("all", "nethersx2", "switch"):
         print("\n==========================================")
         print("Building Nintendo Switch (Tegra X1) Variant")
         print("==========================================")
