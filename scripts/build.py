@@ -805,12 +805,15 @@ def inject_scale_multiplier(input_apk: Path, output_apk: Path, work_name: str, i
     # Patch targetSdkVersion and compileSdkVersion to Android 14 (API 34) for full Android 15 compatibility
     patch_manifest_target_sdk(work_dir, target_sdk=34)
 
-    # Check if newly built native core from PCSX2 source exists
+    # Check if newly built native core from PCSX2 source exists and should be injected
+    use_custom_core = os.environ.get("USE_CUSTOM_CORE", "0") == "1"
     custom_so = REPO_ROOT / "native" / "build" / "libemucore.so"
-    if custom_so.exists() and custom_so.stat().st_size > 0:
+    has_custom_so = False
+    if use_custom_core and custom_so.exists() and custom_so.stat().st_size > 0:
         for so_dest in work_dir.rglob("libemucore.so"):
             shutil.copyfile(custom_so, so_dest)
             print(f"  ✓ Injected freshly compiled PCSX2 native core ({custom_so.stat().st_size} bytes) into {so_dest.relative_to(work_dir)}")
+        has_custom_so = True
 
     # Patch resolution scale multiplier in arrays.xml and libemucore.so
     sys.path.insert(0, str(PATCHES_DIR))
@@ -821,8 +824,9 @@ def inject_scale_multiplier(input_apk: Path, output_apk: Path, work_name: str, i
         if res_dir.is_dir():
             modified += patch_arrays(res_dir)
     print(f"Patched resolution scales (0.05x, 0.1x, 0.25x) in {modified} arrays.xml files inside {work_name}")
-    patch_emucore_scale_clamp(work_dir)
-    patch_mali_vulkan_core(work_dir)
+    if not has_custom_so:
+        patch_emucore_scale_clamp(work_dir)
+        patch_mali_vulkan_core(work_dir)
 
     # Rebuild with APKEditor (preserves original resource IDs)
     raw_rebuilt = REPO_ROOT / f"{work_name}_rebuilt.apk"
@@ -929,7 +933,9 @@ def verify_all() -> None:
                 if scale_val not in arsc:
                     raise SystemExit(f"ERROR: {scale_val.decode()} render option missing in {apk.name}!")
             custom_so = REPO_ROOT / "native" / "build" / "libemucore.so"
-            if not (custom_so.exists() and custom_so.stat().st_size > 0):
+            use_custom_core = os.environ.get("USE_CUSTOM_CORE", "0") == "1"
+            if not (use_custom_core and custom_so.exists() and custom_so.stat().st_size > 0):
+                so_bytes = z.read("lib/arm64-v8a/libemucore.so")
                 patched_pattern = b"\x01\x58\x21\x1e\x02\x10\x2c\x1e\x00\x20\x22\x1e\x20\x40\x20\x1e"
                 if patched_pattern not in so_bytes:
                     raise SystemExit(f"ERROR: libemucore.so in {apk.name} still has 0.5f minimum clamp!")

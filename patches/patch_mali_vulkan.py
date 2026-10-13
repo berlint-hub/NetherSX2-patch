@@ -37,9 +37,13 @@ FORMAT_BRANCH_TARGETS_4248 = [0x65b2dc, 0x65b2e4, 0x65b2ec, 0x65b2f4, 0x65b2fc, 
 
 def patch_format_checks(data: bytearray, branch_targets: list[int], search_start: int, search_end: int) -> int:
     """Find and NOP the 6 format check abort branches targeting branch_targets."""
+    if len(data) < search_end:
+        return 0
     patched = 0
     for target in branch_targets:
         for i in range(search_start, search_end, 4):
+            if i + 4 > len(data):
+                break
             w = struct.unpack("<I", data[i : i + 4])[0]
             # Match b.ne instruction: opcode 0x54000001 | (imm19 << 5)
             if (w & 0xFF00001F) == 0x54000001:
