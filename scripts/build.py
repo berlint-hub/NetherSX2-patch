@@ -9,6 +9,7 @@ import shutil
 import struct
 import subprocess
 import sys
+import tempfile
 import urllib.request
 import zipfile
 import zlib
@@ -43,6 +44,10 @@ SWITCH_FINAL_APK = REPO_ROOT / "xyz.aethersx2.android_switch.apk"
 APKEDITOR_JAR = DECOMP_LIB / "APKEditor.jar"
 APKEDITOR_URL = "https://github.com/REAndroid/APKEditor/releases/download/V1.4.9/APKEditor-1.4.9.jar"
 APKSIGNER_JAR = DECOMP_LIB / "apksigner.jar"
+BAKSMALI_JAR = DECOMP_LIB / "baksmali.jar"
+BAKSMALI_URL = "https://bitbucket.org/JesusFreke/smali/downloads/baksmali-2.5.2.jar"
+SMALI_JAR = DECOMP_LIB / "smali.jar"
+SMALI_URL = "https://bitbucket.org/JesusFreke/smali/downloads/smali-2.5.2.jar"
 KEYSTORE = DECOMP_LIB / "android.jks"
 
 
@@ -63,6 +68,26 @@ def ensure_apkeditor() -> Path:
         print(f"Downloading APKEditor from {APKEDITOR_URL}...")
         urllib.request.urlretrieve(APKEDITOR_URL, APKEDITOR_JAR)
     return APKEDITOR_JAR
+
+
+def ensure_baksmali() -> list[str]:
+    if shutil.which("baksmali"):
+        return ["baksmali"]
+    if not BAKSMALI_JAR.exists():
+        print(f"Downloading baksmali from {BAKSMALI_URL}...")
+        BAKSMALI_JAR.parent.mkdir(parents=True, exist_ok=True)
+        urllib.request.urlretrieve(BAKSMALI_URL, BAKSMALI_JAR)
+    return ["java", "-jar", str(BAKSMALI_JAR)]
+
+
+def ensure_smali() -> list[str]:
+    if shutil.which("smali"):
+        return ["smali"]
+    if not SMALI_JAR.exists():
+        print(f"Downloading smali from {SMALI_URL}...")
+        SMALI_JAR.parent.mkdir(parents=True, exist_ok=True)
+        urllib.request.urlretrieve(SMALI_URL, SMALI_JAR)
+    return ["java", "-jar", str(SMALI_JAR)]
 
 
 def align_apk(input_apk: Path, output_apk: Path, alignment: int = 4) -> None:
@@ -667,54 +692,84 @@ def get_pcsx2_version() -> str:
     return "v2.9.122 (0f71e66)"
 
 
-def patch_dex_pcsx2_version(work_dir: Path) -> None:
-    """Inject PCSX2 upstream version into the Show Version dialog in classes.dex."""
-    pcsx2_ver = get_pcsx2_version()
-    new_str = f"\nPCSX2 Version: {pcsx2_ver}\nNative Version:\n"
+def verify_dex_integrity(dex_bytes: bytes) -> None:
+    """Verifies that classes.dex conforms to Android ART DexFileVerifier rules (no missing data map entries)."""
+    if len(dex_bytes) < 0x70:
+        return
+    map_off = struct.unpack("<I", dex_bytes[0x34:0x38])[0]
+    string_ids_size, string_ids_off = struct.unpack("<II", dex_bytes[0x38:0x40])
+    map_count = struct.unpack("<I", dex_bytes[map_off:map_off+4])[0]
 
-    def encode_uleb128(val: int) -> bytes:
-        res = bytearray()
-        while True:
-            b = val & 0x7F
-            val >>= 7
-            if val != 0:
-                res.append(b | 0x80)
-            else:
-                res.append(b)
-                break
-        return bytes(res)
-
-    new_item = encode_uleb128(len(new_str)) + new_str.encode("utf-8") + b"\0"
-    target_str = "\nNative Version:\n".encode("utf-8")
-
-    patched_count = 0
-    for dex_path in work_dir.rglob("classes*.dex"):
-        dex_data = bytearray(dex_path.read_bytes())
-        if len(dex_data) < 0x70:
-            continue
-        size, off = struct.unpack("<II", dex_data[0x38:0x40])
-        target_id = None
-        for i in range(size):
-            data_off = struct.unpack("<I", dex_data[off + i * 4 : off + (i + 1) * 4])[0]
-            p = data_off
-            while p < len(dex_data) and dex_data[p] & 0x80:
+    offset_to_type = {}
+    for i in range(map_count):
+        mtype, munused, msize, moffset = struct.unpack("<HHII", dex_bytes[map_off+4+i*12:map_off+16+i*12])
+        if mtype == 0x2002:  # TYPE_STRING_DATA_ITEM
+            p = moffset
+            for _ in range(msize):
+                offset_to_type[p] = mtype
+                while p < len(dex_bytes) and (dex_bytes[p] & 0x80):
+                    p += 1
                 p += 1
-            p += 1
-            end = dex_data.find(b"\0", p)
-            if end != -1 and dex_data[p:end] == target_str:
-                target_id = i
-                break
+                while p < len(dex_bytes) and dex_bytes[p] != 0:
+                    p += 1
+                p += 1
 
-        if target_id is not None:
-            new_str_off = len(dex_data)
-            dex_data.extend(new_item)
-            dex_data[off + target_id * 4 : off + (target_id + 1) * 4] = struct.pack("<I", new_str_off)
-            dex_data[0x20:0x24] = struct.pack("<I", len(dex_data))
-            dex_data[12:32] = hashlib.sha1(dex_data[32:]).digest()
-            dex_data[8:12] = (zlib.adler32(dex_data[12:]) & 0xFFFFFFFF).to_bytes(4, "little")
-            dex_path.write_bytes(dex_data)
-            patched_count += 1
-            print(f"  ✓ Injected PCSX2 version ({pcsx2_ver}) after Java Version in {dex_path.name}")
+    for i in range(string_ids_size):
+        s_off = struct.unpack("<I", dex_bytes[string_ids_off + i*4 : string_ids_off + (i+1)*4])[0]
+        if s_off not in offset_to_type:
+            raise ValueError(f"DEX verification failed: string_id[{i}] at 0x{s_off:x} has no data map entry (expected 0x2002)")
+
+
+_DEX_CACHE: dict[str, bytes] = {}
+
+
+def patch_dex_pcsx2_version(work_dir: Path) -> None:
+    """Inject PCSX2 upstream version into the Show Version dialog in classes.dex using baksmali/smali."""
+    pcsx2_ver = get_pcsx2_version()
+    target_needle = 'const-string v0, "\\nNative Version:\\n"'
+    replacement = f'const-string v0, "\\nPCSX2 Version: {pcsx2_ver}\\nNative Version:\\n"'
+
+    dex_files = list(work_dir.rglob("classes*.dex"))
+    if not dex_files:
+        return
+
+    baksmali_cmd = ensure_baksmali()
+    smali_cmd = ensure_smali()
+
+    for dex_path in dex_files:
+        original_bytes = dex_path.read_bytes()
+        dex_md5 = hashlib.md5(original_bytes).hexdigest()
+        cache_key = f"{dex_md5}_{pcsx2_ver}"
+
+        if cache_key in _DEX_CACHE:
+            patched_bytes = _DEX_CACHE[cache_key]
+            dex_path.write_bytes(patched_bytes)
+            verify_dex_integrity(patched_bytes)
+            print(f"  ✓ Applied cached PCSX2 version ({pcsx2_ver}) DEX to {dex_path.name}")
+            continue
+
+        temp_dir = Path(tempfile.mkdtemp(prefix="dex_patch_"))
+        try:
+            smali_out = temp_dir / "smali"
+            print(f"  Disassembling {dex_path.name} with baksmali...")
+            run_cmd(baksmali_cmd + ["disassemble", str(dex_path), "-o", str(smali_out)])
+
+            main_activity = smali_out / "xyz" / "aethersx2" / "android" / "MainActivity.smali"
+            if main_activity.exists():
+                content = main_activity.read_text(encoding="utf-8")
+                if target_needle in content:
+                    content = content.replace(target_needle, replacement, 1)
+                    main_activity.write_text(content, encoding="utf-8")
+                    print(f"  Reassembling {dex_path.name} with smali...")
+                    patched_dex = temp_dir / "classes.dex"
+                    run_cmd(smali_cmd + ["assemble", str(smali_out), "-o", str(patched_dex)])
+                    patched_bytes = patched_dex.read_bytes()
+                    verify_dex_integrity(patched_bytes)
+                    _DEX_CACHE[cache_key] = patched_bytes
+                    dex_path.write_bytes(patched_bytes)
+                    print(f"  ✓ Injected PCSX2 version ({pcsx2_ver}) after Java Version into {dex_path.name}")
+        finally:
+            shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 def inject_scale_multiplier(input_apk: Path, output_apk: Path, work_name: str, is_mali: bool = False, is_switch: bool = False) -> None:
@@ -899,6 +954,7 @@ def verify_all() -> None:
                 dex_bytes = z.read("classes.dex")
                 if b"PCSX2 Version:" not in dex_bytes:
                     raise SystemExit(f"ERROR: classes.dex in {apk.name} missing PCSX2 version string!")
+                verify_dex_integrity(dex_bytes)
         print(f"✓ {apk.name}: 0.05x, 0.1x, 0.25x (XML + unclamped libemucore.so) & targetSdkVersion 34 verified")
 
     if not ADRENO_FINAL_XDELTA.exists() or ADRENO_FINAL_XDELTA.stat().st_size == 0:

@@ -33,6 +33,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y xdelta3 zipalign
           pip install ruamel.yaml
+          mkdir -p decomp/lib
+          if [ ! -f decomp/lib/baksmali.jar ]; then
+            curl -sL -o decomp/lib/baksmali.jar https://bitbucket.org/JesusFreke/smali/downloads/baksmali-2.5.2.jar
+          fi
+          if [ ! -f decomp/lib/smali.jar ]; then
+            curl -sL -o decomp/lib/smali.jar https://bitbucket.org/JesusFreke/smali/downloads/smali-2.5.2.jar
+          fi
 
       - name: Update PCSX2 Emulation Assets
         run: |
