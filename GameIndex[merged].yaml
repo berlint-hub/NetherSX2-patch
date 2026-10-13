@@ -133,6 +133,7 @@ PAPX-90020:
     autoFlush: 1 # Fixes light bloom intensity.
     estimateTextureRegion: 1 # Improves performance and reduces hash cache size.
     halfPixelOffset: 2 # Aligns post effects.
+    textureInsideRT: 1 # Fixes post shuffles.
 PAPX-90201:
   name: "Fantavision [Trial]"
   region: "NTSC-J"
@@ -142,7 +143,7 @@ PAPX-90202:
 PAPX-90203:
   name: "Gran Turismo 2000 [Trial]"
   region: "NTSC-J"
-  gsHWFixes:
+  gsHWFixes: &gran-turismo-3-gs-fixes
     halfPixelOffset: 2 # Fixes edge bleed and lines.
     autoFlush: 1 # Fixes missing lens flare and intensity.
 PAPX-90204:
@@ -159,12 +160,15 @@ PAPX-90206:
 PAPX-90207:
   name: "Gran Turismo 3 - A-Spec - Autobacs Gentei Replay Theater"
   region: "NTSC-J"
+  gsHWFixes: *gran-turismo-3-gs-fixes
 PAPX-90208:
   name: "Gran Turismo 3 - A-Spec - Replay Theater"
   region: "NTSC-J"
+  gsHWFixes: *gran-turismo-3-gs-fixes
 PAPX-90209:
   name: "Gran Turismo 3 - A-Spec - Netz TOYOTA - Replay Theater Disc"
   region: "NTSC-J"
+  gsHWFixes: *gran-turismo-3-gs-fixes
 PAPX-90210:
   name: "Yappa RPG desho. [Original Movie Disk]"
   region: "NTSC-J"
@@ -282,9 +286,7 @@ PAPX-90503:
 PAPX-90504:
   name: "Gran Turismo Concept - Airtrek Turbo Special Edition [Trial]"
   region: "NTSC-J"
-  gsHWFixes:
-    halfPixelOffset: 2 # Fixes weird edge shadows and depth bleed which happens on the edge as well.
-    autoFlush: 1 # Helps lens flare and sun occlusion somewhat but doesn't full fix it.
+  gsHWFixes: *gran-turismo-3-gs-fixes
 PAPX-90505:
   name: "2002 Natsu no Osusume Soft Otameshi Disc"
   region: "NTSC-J"
@@ -303,11 +305,13 @@ PAPX-90507:
   name: "Official Demo Disc 2003"
   region: "NTSC-J"
 PAPX-90508:
-  name: "GRAN TURISMO 4 - LUPO CUP Training Version"
+  name: "GRAN TURISMO Concept - LUPO CUP Training Version"
   region: "NTSC-J"
-  gsHWFixes:
-    halfPixelOffset: 2 # Fixes weird edge shadows and depth bleed which happens on the edge as well.
-    autoFlush: 1 # Helps lens flare and sun occlusion somewhat but doesn't full fix it.
+  gsHWFixes: *gran-turismo-3-gs-fixes
+PAPX-90509:
+  name: "GRAN TURISMO Concept - LUPO CUP Training Version 2"
+  region: "NTSC-J"
+  gsHWFixes: *gran-turismo-3-gs-fixes
 PAPX-90511:
   name: "Siren [Trial]"
   region: "NTSC-J"
@@ -315,7 +319,7 @@ PAPX-90511:
     roundSprite: 1 # Fixes gaps between menu options.
     cpuSpriteRenderBW: 4 # Fixes sky rendering.
 PAPX-90512:
-  name: "GRAN TURISMO 4 - TOYOTA Prius [Trial]"
+  name: "Gran Turismo 4 - TOYOTA Prius [Trial]"
   region: "NTSC-J"
   clampModes:
     vuClampMode: 2 # Text in GT mode works.
@@ -359,9 +363,12 @@ PAPX-90522:
 PAPX-90523:
   name: "Gran Turismo 4 - Online Test Version"
   region: "NTSC-J"
-  gsHWFixes:
+  clampModes: &gran-turismo-4-clamp-modes
+    vuClampMode: 2 # In GT4, text in GT mode works. In TT, fixes SPS in TT Mode menu caused by the moving tooltips.
+  gsHWFixes: &gran-turismo-4-gs-fixes
+    <<: &gran-turismo-4-prologue-gs-fixes
+      <<: *gran-turismo-3-gs-fixes
     halfPixelOffset: 2 # Fixes weird edge shadows and depth bleed which happens on the edge as well.
-    autoFlush: 1 # Helps lens flare and sun occlusion somewhat but doesn't full fix it.
 PAPX-90524:
   name: "Wild Arms - The Vth Vanguard [Trial]"
   region: "NTSC-J"
@@ -474,11 +481,16 @@ PBPX-95501:
   name: "PS2 Linux Beta Release 1"
   region: "NTSC-J"
 PBPX-95502:
-  name: "GRAN TURISMO 3 - A-Spec [PS2 Bundle]"
+  name: "Gran Turismo 3 - A-Spec [PS2 Bundle]"
   region: "NTSC-J"
+  gsHWFixes: *gran-turismo-3-gs-fixes
+  memcardFilters:
+    - "PBPX-95502"
+    - "SCPS-15009"
 PBPX-95503:
   name: "Gran Turismo 3 - A-Spec [PS2 Bundle]"
   region: "NTSC-U"
+  gsHWFixes: *gran-turismo-3-gs-fixes
   memcardFilters:
     - "PBPX-95503"
     - "SCUS-97102"
@@ -553,7 +565,7 @@ PBPX-95525:
   name: "FINAL FANTASY XII [PS2 Bundle]"
   region: "NTSC-J-K"
 PBPX-95601:
-  name: "GRAN TURISMO 4 [PS2 Bundle]"
+  name: "Gran Turismo 4 [PS2 Bundle]"
   region: "NTSC-J"
   compat: 5
   clampModes:
@@ -595,6 +607,7 @@ PCPX-96306:
 PCPX-96309:
   name: "GRAN TURISMO 3 Netz TOYOTA [Demo]"
   region: "NTSC-J"
+  gsHWFixes: *gran-turismo-3-gs-fixes
 PCPX-96310:
   name: "X-treme Racing SSX [Trial]"
   region: "NTSC-J"
@@ -603,9 +616,11 @@ PCPX-96310:
 PCPX-96311:
   name: "Gran Turismo 3 Trial Disk Volume 1"
   region: "NTSC-J"
+  gsHWFixes: *gran-turismo-3-gs-fixes
 PCPX-96312:
   name: "Gran Turismo 3 - A-Spec - Autobacs Tentou Shiyuu Disc"
   region: "NTSC-J"
+  gsHWFixes: *gran-turismo-3-gs-fixes
 PCPX-96314:
   name: "The Sky Odyssey [Trial]"
   region: "NTSC-J"
@@ -696,6 +711,7 @@ PCPX-96608:
 PCPX-96609:
   name: "Gran Turismo 3 - A-Spec - Tentou Shiyuu Disc Vol. 2"
   region: "NTSC-J"
+  gsHWFixes: *gran-turismo-3-gs-fixes
 PCPX-96610:
   name: "MiruMiru 2001-nen 2-gatsudo Juchuugou"
   region: "NTSC-J"
@@ -740,6 +756,7 @@ PCPX-96622:
 PCPX-96624:
   name: "GRAN TURISMO Concept 2001 Tokyo"
   region: "NTSC-J"
+  gsHWFixes: *gran-turismo-3-gs-fixes
 PCPX-96625:
   name: "Play-Pre 2 Volume 4 - 2002 April"
   region: "NTSC-J"
@@ -768,11 +785,9 @@ PCPX-96633:
   name: "Play-Pre 2 Volume 7 - 2003 April - CM Collection"
   region: "NTSC-J"
 PCPX-96634:
-  name: "Gran Tourismo - SUBARU Driving Simulator ver."
+  name: "Gran Turismo - SUBARU Driving Simulator Version"
   region: "NTSC-J"
-  gsHWFixes:
-    halfPixelOffset: 2 # Fixes weird edge shadows and depth bleed which happens on the edge as well.
-    autoFlush: 1 # Helps lens flare and sun occlusion somewhat but doesn't full fix it.
+  gsHWFixes: *gran-turismo-3-gs-fixes
 PCPX-96635:
   name: "Play-Pre 2 Volume 8 - 2003 August"
   region: "NTSC-J"
@@ -792,7 +807,7 @@ PCPX-96646:
   name: "Play-Pre 2 Volume 11 - 2004 August"
   region: "NTSC-J"
 PCPX-96649:
-  name: "Gran Tourismo 4 [Trial]"
+  name: "Gran Turismo 4 [Trial]"
   region: "NTSC-J"
   compat: 5
   clampModes:
@@ -833,6 +848,7 @@ PCPX-96660:
   region: "NTSC-J"
   clampModes:
     vuClampMode: 2 # Fixes SPS in TT Mode menu caused by the moving tooltips.
+  gsHWFixes: *gran-turismo-4-gs-fixes
 PCPX-98017:
   name: "Ratchet & Clank 4th - GiriGiri Ginga no Giga Battle [Trial]"
   region: "NTSC-J"
@@ -1940,7 +1956,7 @@ SCAJ-20163:
   compat: 5
   gsHWFixes:
     halfPixelOffset: 2 # Fixes ghosting.
-    autoFlush: 1 # Fixes post lighting.
+    autoFlush: 0 # Fixes post lighting.
   patches:
     default:
       content: |-
@@ -1991,6 +2007,7 @@ SCAJ-20170:
   compat: 5
   clampModes:
     vuClampMode: 2 # Fixes SPS in TT Mode menu caused by the moving tooltips.
+  gsHWFixes: *gran-turismo-4-gs-fixes
 SCAJ-20171:
   name: "Zettai Zetsumei Toshi 2 - Itetsuita Kioku Tachi"
   region: "NTSC-J"
@@ -2448,6 +2465,7 @@ SCCS-60001:
 SCCS-60002:
   name: "Gran Turismo 4 [Review Copy]"
   region: "NTSC-C"
+  clampModes: *gran-turismo-4-clamp-modes
   gsHWFixes:
     mipmap: 2 # Mipmap + trilinear, improves ground textures to match sw renderer.
     trilinearFiltering: 1
@@ -2863,9 +2881,7 @@ SCED-51351:
 SCED-51352:
   name: "Gran Turismo - Nissan Micra Edition [Demo]"
   region: "PAL-E"
-  gsHWFixes:
-    halfPixelOffset: 2 # Fixes weird edge shadows and depth bleed which happens on the edge as well.
-    autoFlush: 1 # Helps lens flare and sun occlusion somewhat but doesn't full fix it.
+  gsHWFixes: *gran-turismo-3-gs-fixes
 SCED-51359:
   name: "Official PS2 Magazine Demo 27"
   region: "PAL-M5"
@@ -3430,9 +3446,7 @@ SCED-52452:
 SCED-52455:
   name: "Gran Turismo Special Edition 2004 Geneva Version"
   region: "PAL-E"
-  gsHWFixes:
-    halfPixelOffset: 2 # Fixes weird edge shadows and depth bleed which happens on the edge as well.
-  # vuClampMode = 2  Text in GT mode works.
+  gsHWFixes: *gran-turismo-4-prologue-gs-fixes
 SCED-52461:
   name: "SingStar [Press Kit]"
   region: "PAL-E"
@@ -4412,6 +4426,7 @@ SCES-50294:
   name: "Gran Turismo 3 - A-Spec"
   region: "PAL-M5"
   compat: 5
+  gsHWFixes: *gran-turismo-3-gs-fixes
 SCES-50295:
   name: "Dark Cloud"
   region: "PAL-M5"
@@ -4687,6 +4702,7 @@ SCES-50858:
   name: "Gran Turismo - Concept 2002 Tokyo-Geneva"
   region: "PAL-M6"
   compat: 5
+  gsHWFixes: *gran-turismo-3-gs-fixes
   memcardFilters:
     - "SCES-50858"
     - "SCES-50294"
@@ -5720,6 +5736,7 @@ SCES-53372:
   compat: 5
   clampModes:
     vuClampMode: 2 # Fixes SPS in TT Mode menu caused by the moving tooltips.
+  gsHWFixes: *gran-turismo-4-gs-fixes
 SCES-53397:
   name: "SingStar - Popworld Events Code"
   region: "PAL-Unk"
@@ -6856,6 +6873,44 @@ SCKA-20027:
     getSkipCount: "GSC_GiTS"
     textureInsideRT: 1
     estimateTextureRegion: 1
+  patches:
+    A3643EB1:
+      content: |-
+        comment=Rearranging COP2 ops to avoid macflag bad stuff.
+        // Solves door problems, possibly other issues later on.
+        patch=0,EE,0010bc88,word,48468800
+        patch=0,EE,0010bc8c,word,4BEC682C
+        patch=0,EE,0010bc94,word,4B8D617D
+        patch=0,EE,0010bc98,word,4A0002FF
+        patch=0,EE,0012a358,word,48468800
+        patch=0,EE,0012a35c,word,4BEC682C
+        patch=0,EE,0012a364,word,4B8D617D
+        patch=0,EE,0012a368,word,4A0002FF
+        patch=0,EE,0012a680,word,48468800
+        patch=0,EE,0012a684,word,4BEC682C
+        patch=0,EE,0012a68c,word,4B8D617D
+        patch=0,EE,0012a690,word,4A0002FF
+        patch=0,EE,0012aafc,word,48468800
+        patch=0,EE,0012ab00,word,4BEC682C
+        patch=0,EE,0012ab04,word,4B8D617D
+        patch=0,EE,0012ab08,word,4A6D617C
+        patch=0,EE,0012ab0c,word,4A0002FF
+        patch=0,EE,001644cc,word,48468800
+        patch=0,EE,001644d0,word,4BEC682C
+        patch=0,EE,001644d8,word,4B8D617D
+        patch=0,EE,001644dc,word,4A0002FF
+        patch=0,EE,001ae958,word,48468800
+        patch=0,EE,001ae95c,word,4BEC682C
+        patch=0,EE,001ae960,word,4BED617D
+        patch=0,EE,001ae968,word,4A0002FF
+        patch=0,EE,001bd410,word,48588800
+        patch=0,EE,001bd41c,word,4A5DEF40
+        patch=0,EE,001bd62c,word,48588800
+        patch=0,EE,001bd638,word,4A5DEF40
+        patch=0,EE,001bd9cc,word,48588800
+        patch=0,EE,001bd9d8,word,4A5DEF40
+        patch=0,EE,001bdf90,word,48588800
+        patch=0,EE,001bdf9c,word,4A5DEF40
 SCKA-20028:
   name: "Ico [PS2 BigHit Series]"
   region: "NTSC-K"
@@ -6870,6 +6925,7 @@ SCKA-20028:
 SCKA-20029:
   name: "Gran Turismo Concept - 2002 Tokyo-Seoul [PS2 BigHit Series]"
   region: "NTSC-K"
+  gsHWFixes: *gran-turismo-3-gs-fixes
 SCKA-20030:
   name: "Sly Cooper - In Search of the Legendary Secret Manual [PS2 BigHit Series]"
   region: "NTSC-K"
@@ -7661,11 +7717,8 @@ SCKA-30003:
 SCKA-30004:
   name: "Gran Turismo 4 [PS2 BigHit Series]"
   region: "NTSC-K"
-  clampModes:
-    vuClampMode: 2 # Text in GT mode works.
-  gsHWFixes:
-    halfPixelOffset: 2 # Fixes weird edge shadows and depth bleed which happens on the edge as well.
-    autoFlush: 1 # Helps lens flare and sun occlusion somewhat but doesn't full fix it.
+  clampModes: *gran-turismo-4-clamp-modes
+  gsHWFixes: *gran-turismo-4-gs-fixes
 SCKA-30005:
   name: "Rogue Galaxy"
   region: "NTSC-K"
@@ -7742,9 +7795,7 @@ SCPM-85101:
 SCPM-85301:
   name: "GRAN TURISMO Concept - COPEN Special Edition [Demo]"
   region: "NTSC-J"
-  gsHWFixes:
-    halfPixelOffset: 2 # Fixes weird edge shadows and depth bleed which happens on the edge as well.
-    autoFlush: 1 # Helps lens flare and sun occlusion somewhat but doesn't full fix it.
+  gsHWFixes: *gran-turismo-3-gs-fixes
 SCPM-85302:
   name: "Minna no Golf Online"
   region: "NTSC-J"
@@ -7754,9 +7805,7 @@ SCPM-85303:
 SCPM-85304:
   name: "GRAN TURISMO 4 - First Preview -"
   region: "NTSC-J"
-  gsHWFixes:
-    halfPixelOffset: 2 # Fixes weird edge shadows and depth bleed which happens on the edge as well.
-    autoFlush: 1 # Helps lens flare and sun occlusion somewhat but doesn't full fix it.
+  gsHWFixes: *gran-turismo-4-gs-fixes
 SCPN-60101:
   name: "PlayStation BB Navigator - Version 0.10 [Prerelease] [Disc 1]"
   region: "NTSC-J"
@@ -7968,10 +8017,15 @@ SCPS-15008:
 SCPS-15009:
   name: "GRAN TURISMO3 A-spec"
   region: "NTSC-J"
+  gsHWFixes: *gran-turismo-3-gs-fixes
+  memcardFilters:
+    - "PBPX-95502"
+    - "SCPS-15009"
 SCPS-15010:
   name: "GRAN TURISMO Concept 2001 Tokyo"
   region: "NTSC-J"
   compat: 5
+  gsHWFixes: *gran-turismo-3-gs-fixes
 SCPS-15011:
   name: "EXTERMINATION"
   region: "NTSC-J"
@@ -8289,6 +8343,7 @@ SCPS-15064:
     - SoftwareRendererFMVHack # Fixes hash cache disabling itself.
   gsHWFixes:
     getSkipCount: "GSC_GiTS"
+    textureInsideRT: 1
     estimateTextureRegion: 1
     halfPixelOffset: 2
   patches:
@@ -8584,6 +8639,7 @@ SCPS-15105:
   region: "NTSC-J"
   clampModes:
     vuClampMode: 2 # Fixes SPS in TT Mode menu caused by the moving tooltips.
+  gsHWFixes: *gran-turismo-4-gs-fixes
 SCPS-15106:
   name: "SIREN2"
   region: "NTSC-J"
@@ -8734,23 +8790,23 @@ SCPS-17002:
 SCPS-17008:
   name: "NIKE/ GRAN TURISMO Limited Edition [8inch]"
   region: "NTSC-J"
-  gsHWFixes:
-    halfPixelOffset: 2 # Fixes weird edge shadows and depth bleed which happens on the edge as well.
+  clampModes: *gran-turismo-4-clamp-modes
+  gsHWFixes: *gran-turismo-4-gs-fixes
 SCPS-17009:
   name: "NIKE/ GRAN TURISMO Limited Edition [9inch]"
   region: "NTSC-J"
-  gsHWFixes:
-    halfPixelOffset: 2 # Fixes weird edge shadows and depth bleed which happens on the edge as well.
+  clampModes: *gran-turismo-4-clamp-modes
+  gsHWFixes: *gran-turismo-4-gs-fixes
 SCPS-17010:
   name: "NIKE/ GRAN TURISMO Limited Edition [10inch]"
   region: "NTSC-J"
-  gsHWFixes:
-    halfPixelOffset: 2 # Fixes weird edge shadows and depth bleed which happens on the edge as well.
+  clampModes: *gran-turismo-4-clamp-modes
+  gsHWFixes: *gran-turismo-4-gs-fixes
 SCPS-17011:
   name: "NIKE/ GRAN TURISMO Limited Edition [11inch]"
   region: "NTSC-J"
-  gsHWFixes:
-    halfPixelOffset: 2 # Fixes weird edge shadows and depth bleed which happens on the edge as well.
+  clampModes: *gran-turismo-4-clamp-modes
+  gsHWFixes: *gran-turismo-4-gs-fixes
 SCPS-17013:
   name: "Rogue Galaxy [Director's Cut]"
   region: "NTSC-J"
@@ -8872,6 +8928,7 @@ SCPS-19207:
 SCPS-19208:
   name: "GRAN TURISMO Concept 2001 Tokyo [PS2 the Best]"
   region: "NTSC-J"
+  gsHWFixes: *gran-turismo-3-gs-fixes
 SCPS-19209:
   name: "Boku no Summer Vacation 2 [PS2 the Best]"
   region: "NTSC-J"
@@ -9180,6 +9237,7 @@ SCPS-19324:
   region: "NTSC-J"
   clampModes:
     vuClampMode: 2 # Fixes SPS in TT Mode menu caused by the moving tooltips.
+  gsHWFixes: *gran-turismo-4-gs-fixes
 SCPS-19325:
   name: "Saru! Get You! - Million Monkeys [PS2 the Best]"
   region: "NTSC-J"
@@ -9343,6 +9401,7 @@ SCPS-55004:
 SCPS-55005:
   name: "GRAN TURISMO Concept 2001 Tokyo"
   region: "NTSC-J"
+  gsHWFixes: *gran-turismo-3-gs-fixes
 SCPS-55006:
   name: "Wild ARMs - Advanced 3rd"
   region: "NTSC-J"
@@ -9352,6 +9411,7 @@ SCPS-55006:
 SCPS-55007:
   name: "GRAN TURISMO 3 - A-Spec"
   region: "NTSC-J"
+  gsHWFixes: *gran-turismo-3-gs-fixes
 SCPS-55008:
   name: "Thunderstrike"
   region: "NTSC-J"
@@ -9615,9 +9675,11 @@ SCPS-55901:
 SCPS-55902:
   name: "GRAN TURISMO - Concept 2002 Tokyo-Geneva"
   region: "NTSC-J"
+  gsHWFixes: *gran-turismo-3-gs-fixes
 SCPS-55903:
   name: "GRAN TURISMO - Concept 2002 Tokyo-Geneva"
   region: "NTSC-J"
+  gsHWFixes: *gran-turismo-3-gs-fixes
 SCPS-56001:
   name: "Ico"
   region: "NTSC-K"
@@ -9649,6 +9711,7 @@ SCPS-56004:
 SCPS-56005:
   name: "Gran Turismo Concept - 2002 Tokyo-Seoul"
   region: "NTSC-K"
+  gsHWFixes: *gran-turismo-3-gs-fixes
 SCPS-56006:
   name: "Tekken 4"
   region: "NTSC-K"
@@ -9712,6 +9775,7 @@ SCPS-56016:
 SCPS-72001:
   name: "GRAN TURISMO3 A-spec [MEGA HITS!]"
   region: "NTSC-J"
+  gsHWFixes: *gran-turismo-3-gs-fixes
 SCPS-72002:
   name: "Minna no Golf 3 [MEGA HITS!]"
   region: "NTSC-J"
@@ -9776,6 +9840,11 @@ SCUS-97102:
   name: "Gran Turismo 3 - A-Spec"
   region: "NTSC-U"
   compat: 5
+  gsHWFixes: *gran-turismo-3-gs-fixes
+  memcardFilters:
+    - "PBPX-95503"
+    - "SCUS-97102"
+    - "SCUS-97512"
 SCUS-97104:
   name: "ATV Offroad Fury"
   region: "NTSC-U"
@@ -9836,6 +9905,7 @@ SCUS-97114:
 SCUS-97115:
   name: "Gran Turismo 3 - A-Spec [Demo]"
   region: "NTSC-U"
+  gsHWFixes: *gran-turismo-3-gs-fixes
 SCUS-97116:
   name: "Kiosk Disc 2.1"
   region: "NTSC-U"
@@ -10092,11 +10162,10 @@ SCUS-97176:
   region: "NTSC-U"
 SCUS-97177:
   name: "Downhill Domination"
-  region: "NTSC-U"
   compat: 5
   gsHWFixes:
-    autoFlush: 0 # Fixes speed effect intensity.
-    minimumBlendingLevel: 2 # Fixes cloud depth rendering.
+    autoFlush: 0
+    minimumBlendingLevel: 2
   patches:
     default:
       content: |-
@@ -10288,8 +10357,9 @@ SCUS-97218:
   name: "Kiosk Demo Disc 2.6"
   region: "NTSC-U"
 SCUS-97219:
-  name: "Gran Turismo 3 - A-Spec - Nissan 350Z Edition"
+  name: "Gran Turismo Concept - Nissan 350Z Edition"
   region: "NTSC-U"
+  gsHWFixes: *gran-turismo-3-gs-fixes
   memcardFilters:
     - "SCUS-97219"
     - "SCUS-97102"
@@ -10834,9 +10904,7 @@ SCUS-97383:
 SCUS-97384:
   name: "Gran Turismo Special Edition 2004 Toyota [Demo]"
   region: "NTSC-U"
-  gsHWFixes:
-    halfPixelOffset: 2 # Fixes weird edge shadows and depth bleed which happens on the edge as well.
-    autoFlush: 1 # Helps lens flare and sun occlusion somewhat but doesn't full fix it.
+  gsHWFixes: *gran-turismo-4-prologue-gs-fixes
 SCUS-97392:
   name: "NBA '06 featuring The Life Vol.1 [Demo]"
   region: "NTSC-U"
@@ -11425,6 +11493,7 @@ SCUS-97502:
   compat: 5
   clampModes:
     vuClampMode: 2 # Fixes SPS in TT Mode menu caused by the moving tooltips.
+  gsHWFixes: *gran-turismo-4-gs-fixes
 SCUS-97503:
   name: "MLB '06 - The Show [Demo]"
   region: "NTSC-U"
@@ -11473,6 +11542,7 @@ SCUS-97511:
 SCUS-97512:
   name: "Gran Turismo 3 - A-Spec [Greatest Hits]"
   region: "NTSC-U"
+  gsHWFixes: *gran-turismo-3-gs-fixes
   memcardFilters:
     - "SCUS-97512"
     - "SCUS-97102"
@@ -11678,10 +11748,8 @@ SCUS-97560:
 SCUS-97563:
   name: "Gran Turismo 4"
   region: "NTSC-U"
-  clampModes:
-    vuClampMode: 2 # Text in GT mode works.
-  gsHWFixes:
-    halfPixelOffset: 2 # Fixes weird edge shadows and depth bleed which happens on the edge as well.
+  clampModes: *gran-turismo-4-clamp-modes
+  gsHWFixes: *gran-turismo-4-gs-fixes
 SCUS-97564:
   name: "Jampack Demo Disc Vol.15 [T-Rated]"
   region: "NTSC-U"
@@ -11741,6 +11809,7 @@ SCUS-97584:
   gsHWFixes:
     autoFlush: 1
     preloadFrameData: 1
+    halfPixelOffset: 2
 SCUS-97589:
   name: "NBA '08 featuring The Life Vol.3"
   region: "NTSC-U"
@@ -12200,12 +12269,13 @@ SLAJ-25077:
     - "SLPM-74249"
 SLAJ-25078:
   name: "Black"
-  region: "NTSC-Unk"
+  compat: 5
   clampModes:
     vuClampMode: 3 # Fixes SPS.
   gsHWFixes:
     autoFlush: 1 # Properly diffuses light instead of strips of light.
     roundSprite: 1 # Fixes lighting misalignment such as the street poles and the sun.
+    minimumBlendingLevel: 2 # Fixes building and object lighting with Minimum global blend.
     mipmap: 2 # Fixes over sharpening.
     trilinearFiltering: 1 # Smoothes out mipmapping.
     getSkipCount: "GSC_BlackAndBurnoutSky"
@@ -12741,6 +12811,7 @@ SLED-52979:
   region: "PAL-E"
   gsHWFixes:
     autoFlush: 1 # Fixes missing lighting.
+    textureInsideRT: 1 # Fixes binoculars.
     # halfPixelOffset: 1 # Fixes lighting misalignment. Do not enable this, it breaks a lot of graphics.
 SLED-53066:
   name: "TimeSplitters - Future Perfect"
@@ -13900,6 +13971,14 @@ SLES-50275:
 SLES-50276:
   name: "The Gift"
   region: "PAL-E"
+  patches:
+    CC76CD02:
+      content: |-
+        // Sound RPC races because of shared send/receive buffers with badly
+        // placed wait loop, fix by forcing all sound rpc to be synchronous.
+        // Ideal fix would be moving the rpc wait loop though.
+        author=Ziemas
+        patch=0,EE,002159e0,word,00000000
 SLES-50277:
   name: "Red Faction"
   region: "PAL-E"
@@ -17769,6 +17848,8 @@ SLES-51877:
 SLES-51879:
   name: "Hot Wheels World Race"
   region: "PAL-E"
+  gsHWFixes:
+    targetPageRearranging: 1 # Fixes top of screen corruption due to game bug.
 SLES-51881:
   name: "World Racing"
   region: "PAL-F-G"
@@ -18508,11 +18589,10 @@ SLES-52190:
     halfPixelOffset: 2 # Corrects post-processing positioning.
 SLES-52202:
   name: "Downhill Domination"
-  region: "PAL-M5"
   compat: 5
   gsHWFixes:
-    autoFlush: 0 # Fixes speed effect intensity.
-    minimumBlendingLevel: 2 # Fixes cloud depth rendering.
+    autoFlush: 0
+    minimumBlendingLevel: 2
 SLES-52203:
   name: "Silent Line - Armored Core"
   region: "PAL-E"
@@ -19542,6 +19622,9 @@ SLES-52584:
     gpuTargetCLUT: 1 # Fixes sun penetrating bridges (along with HPO special).
     getSkipCount: "GSC_BurnoutGames"
     beforeDraw: "OI_BurnoutGames"
+  memcardFilters: # Used for storage of network information on the memory card.
+    - "SLES-52584"
+    - "PSCD-20001"
 SLES-52585:
   name: "Burnout 3 - Takedown"
   region: "PAL-F-G-I"
@@ -19555,6 +19638,9 @@ SLES-52585:
     gpuTargetCLUT: 1 # Fixes sun penetrating bridges (along with HPO special).
     getSkipCount: "GSC_BurnoutGames"
     beforeDraw: "OI_BurnoutGames"
+  memcardFilters: # Used for storage of network information on the memory card.
+    - "SLES-52585"
+    - "PSCD-20001"
 SLES-52587:
   name: "Army Men - Sarge's War"
   region: "PAL-M5"
@@ -19566,6 +19652,7 @@ SLES-52588:
     halfBottomOverride: 1 # Bottom screen has wrong colors.
     autoFlush: 1 # Fixes missing lighting.
     # halfPixelOffset: 1 # Fixes lighting misalignment. Do not enable this, it breaks a lot of graphics.
+    textureInsideRT: 1
 SLES-52589:
   name: "Mercenaries - Playground of Destruction"
   region: "PAL-F"
@@ -19573,6 +19660,7 @@ SLES-52589:
     halfBottomOverride: 1 # Bottom screen has wrong colors.
     autoFlush: 1 # Fixes missing lighting.
     # halfPixelOffset: 1 # Fixes lighting misalignment. Do not enable this, it breaks a lot of graphics.
+    textureInsideRT: 1
 SLES-52590:
   name: "Mercenaries - Playground of Destruction"
   region: "PAL-G"
@@ -19580,6 +19668,7 @@ SLES-52590:
     halfBottomOverride: 1 # Bottom screen has wrong colors.
     autoFlush: 1 # Fixes missing lighting.
     # halfPixelOffset: 1 # Fixes lighting misalignment. Do not enable this, it breaks a lot of graphics.
+    textureInsideRT: 1
 SLES-52591:
   name: "Dynasty Warriors 4 - Empires"
   region: "PAL-E"
@@ -20633,22 +20722,36 @@ SLES-52941:
   region: "PAL-M3"
 SLES-52942:
   name: "Midnight Club 3 - DUB Edition"
-  region: "PAL-M5"
+  compat: 5
   gsHWFixes:
-    getSkipCount: "GSC_MidnightClub3"
     preloadFrameData: 1
     textureInsideRT: 1
     halfPixelOffset: 2
+    getSkipCount: "GSC_MidnightClub3"
   patches:
+    default:
+      content: |-
+        author=Community
+        comment=Disable Motion Blur
+        patch=1,EE,201CC3D4,extended,00000000
+        patch=1,EE,201CC3D8,extended,00000000
+        patch=1,EE,201CC3E0,extended,00000000
+        patch=1,EE,201CC3E8,extended,00000000
+        patch=1,EE,201CC38C,extended,00000000
+        patch=1,EE,201CC39C,extended,00000000
     EBE1972D:
       content: |-
-        comment=Patch by Refraction and Prafull
-        // Patches a CTC2 write to FBRST to not set the T-Bit enable
-        // Fixes slow speed in MTVU due to developers leaving T-Bit enabled and not using it
-        // PCSX2 has to sync more when T-Bit is enabled so the game spends more time waiting
-        // for VU1 to finish, which reduces the advantage of MTVU to basically zero.
+        comment=Patch by Refraction, Prafull & Community
+        // Fixes slow speed in MTVU
         patch=1,EE,D0525A1C,extended,00000800
         patch=1,EE,20525A1C,extended,00000000
+        // Disable Motion Blur
+        patch=1,EE,201CC3D4,extended,00000000
+        patch=1,EE,201CC3D8,extended,00000000
+        patch=1,EE,201CC3E0,extended,00000000
+        patch=1,EE,201CC3E8,extended,00000000
+        patch=1,EE,201CC38C,extended,00000000
+        patch=1,EE,201CC39C,extended,00000000
 SLES-52943:
   name: "ESPN NFL 2K5"
   region: "PAL-E"
@@ -20865,6 +20968,7 @@ SLES-53008:
     halfBottomOverride: 1 # Bottom screen has wrong colors.
     autoFlush: 1 # Fixes missing lighting.
     # halfPixelOffset: 1 # Fixes lighting misalignment. Do not enable this, it breaks a lot of graphics.
+    textureInsideRT: 1
 SLES-53009:
   name: "Dance Factory"
   region: "PAL-M5"
@@ -23149,22 +23253,36 @@ SLES-53716:
   region: "PAL-M5"
 SLES-53717:
   name: "Midnight Club 3 - DUB Edition Remix"
-  region: "PAL-M5"
+  compat: 5
   gsHWFixes:
-    getSkipCount: "GSC_MidnightClub3"
     preloadFrameData: 1
     textureInsideRT: 1
     halfPixelOffset: 2
+    getSkipCount: "GSC_MidnightClub3"
   patches:
+    default:
+      content: |-
+        author=Community
+        comment=Disable Motion Blur
+        patch=1,EE,201CC3D4,extended,00000000
+        patch=1,EE,201CC3D8,extended,00000000
+        patch=1,EE,201CC3E0,extended,00000000
+        patch=1,EE,201CC3E8,extended,00000000
+        patch=1,EE,201CC38C,extended,00000000
+        patch=1,EE,201CC39C,extended,00000000
     208183AF:
       content: |-
-        comment=Patch by Refraction
-        // Patches a CTC2 write to FBRST to not set the T-Bit enable
-        // Fixes slow speed in MTVU due to developers leaving T-Bit enabled and not using it
-        // PCSX2 has to sync more when T-Bit is enabled so the game spends more time waiting
-        // for VU1 to finish, which reduces the advantage of MTVU to basically zero.
+        comment=Patch by Refraction & Community
+        // Fixes slow speed in MTVU
         patch=1,EE,D0529074,extended,00000800
         patch=1,EE,20529074,extended,00000000
+        // Disable Motion Blur
+        patch=1,EE,201CC3D4,extended,00000000
+        patch=1,EE,201CC3D8,extended,00000000
+        patch=1,EE,201CC3E0,extended,00000000
+        patch=1,EE,201CC3E8,extended,00000000
+        patch=1,EE,201CC38C,extended,00000000
+        patch=1,EE,201CC39C,extended,00000000
   memcardFilters: # Saves from the non-Remix release can be imported.
     - "SLES-52942"
     - "SLES-53717"
@@ -23637,6 +23755,9 @@ SLES-53869:
   name: "Crazy Frog Racer"
   region: "PAL-M5"
   compat: 5
+  gsHWFixes:
+    deinterlace: 9 # Game requires AdaptiveBFF de-interlacing.
+    halfPixelOffset: 2 # Aligns shadows.
 SLES-53870:
   name: "Devil Kings"
   region: "PAL-M5"
@@ -23664,15 +23785,15 @@ SLES-53885:
   region: "PAL-A"
 SLES-53886:
   name: "Black"
-  region: "PAL-M5"
   compat: 5
   clampModes:
-    vuClampMode: 3 # Fixes SPS.
+    vuClampMode: 3
   gsHWFixes:
-    autoFlush: 1 # Properly diffuses light instead of strips of light.
-    roundSprite: 1 # Fixes lighting misalignment such as the street poles and the sun.
-    mipmap: 2 # Fixes over sharpening.
-    trilinearFiltering: 1 # Smoothes out mipmapping.
+    autoFlush: 1
+    roundSprite: 1
+    minimumBlendingLevel: 2
+    mipmap: 2
+    trilinearFiltering: 1
     getSkipCount: "GSC_BlackAndBurnoutSky"
     beforeDraw: "OI_BurnoutGames"
     halfPixelOffset: 2
@@ -24099,15 +24220,15 @@ SLES-54027:
     halfPixelOffset: 2
 SLES-54030:
   name: "Black"
-  region: "PAL-E"
   compat: 5
   clampModes:
-    vuClampMode: 3 # Fixes SPS.
+    vuClampMode: 3
   gsHWFixes:
-    autoFlush: 1 # Properly diffuses light instead of strips of light.
-    roundSprite: 1 # Fixes lighting misalignment such as the street poles and the sun.
-    mipmap: 2 # Fixes over sharpening.
-    trilinearFiltering: 1 # Smoothes out mipmapping.
+    autoFlush: 1
+    roundSprite: 1
+    minimumBlendingLevel: 2
+    mipmap: 2
+    trilinearFiltering: 1
     getSkipCount: "GSC_BlackAndBurnoutSky"
     beforeDraw: "OI_BurnoutGames"
     halfPixelOffset: 2
@@ -28308,6 +28429,8 @@ SLES-55355:
     InstantVU1SpeedHack: 0 # Corrects note board position.
   gsHWFixes:
     halfPixelOffset: 2 # Mostly aligns post-processing.
+    targetPageRearranging: 1 # Fixes half screen issues.
+    preloadFrameData: 1 # Makes button text visible.
 SLES-55356:
   name: "Bratz - Girlz Really Rock"
   region: "PAL-M3"
@@ -30314,6 +30437,9 @@ SLKA-25206:
     gpuTargetCLUT: 1 # Fixes sun penetrating bridges (along with HPO special).
     getSkipCount: "GSC_BurnoutGames"
     beforeDraw: "OI_BurnoutGames"
+  memcardFilters: # Used for storage of network information on the memory card.
+    - "SLKA-25206"
+    - "PSCD-30001"
 SLKA-25207:
   name: "Sakura Taisen V - Episode 0 - Samurai Girl of Wild"
   region: "NTSC-K"
@@ -30553,6 +30679,9 @@ SLKA-25254:
 SLKA-25255:
   name: "Mobile Suit Gundam Seed - Never Ending Tomorrow"
   region: "NTSC-K"
+SLKA-25256:
+  name: "UEFA Champions League 2006-2007"
+  region: "NTSC-K"
 SLKA-25257:
   name: "Fu-un Bakumatsu-den"
   region: "NTSC-K"
@@ -30726,7 +30855,7 @@ SLKA-25299:
   region: "NTSC-K"
 SLKA-25300:
   name: "Digital Devil Saga - Avatar Tuner [Special Package]"
-  region: "NTSC-J-K"
+  region: "NTSC-K"
   compat: 5
   gameFixes:
     - EETimingHack
@@ -33117,7 +33246,7 @@ SLPM-60254:
     halfPixelOffset: 2
     minimumBlendingLevel: 2
 SLPM-60255:
-  name: "Ponkotsu Roeman Daikatsugeki Bumpy Trot [Trial]"
+  name: "Ponkotsu Roman Daikatsugeki Bumpy Trot [Trial]"
   region: "NTSC-J"
   roundModes:
     eeRoundMode: 0 # Fixes broken load triggers.
@@ -33168,7 +33297,7 @@ SLPM-60265:
     halfPixelOffset: 2 # Reduces post misalignment.
     autoFlush: 1 # Fixes post alignment.
 SLPM-60266:
-  name: "Ponkotsu Roeman Daikatsugeki Bumpy Trot [Trial]"
+  name: "Ponkotsu Roman Daikatsugeki Bumpy Trot [Trial]"
   region: "NTSC-J"
   roundModes:
     eeRoundMode: 0 # Fixes broken load triggers.
@@ -38069,6 +38198,9 @@ SLPM-65374:
     MTVUSpeedHack: 0
   gsHWFixes:
     autoFlush: 1 # Corrects post-processing effect on jet exhausts.
+  memcardFilters:
+    - SLPM-65177 # Energy Airforce (previous title)
+    - SLPM-65374 # aimStrike
 SLPM-65375:
   name: "Shin Sangoku Musou 3 & Shin Sangoku Musou 3 - [Disc 1] [Premium Pack]"
   region: "NTSC-J"
@@ -39391,6 +39523,9 @@ SLPM-65719:
     gpuTargetCLUT: 1 # Fixes sun penetrating bridges (along with HPO special).
     getSkipCount: "GSC_BurnoutGames"
     beforeDraw: "OI_BurnoutGames"
+  memcardFilters: # Used for storage of network information on the memory card.
+    - "SLPM-65719"
+    - "PSCD-00004"
 SLPM-65720:
   name: "Shin Sangoku Musou 2 - Moushouden [Koei the Best]"
   region: "NTSC-J"
@@ -40284,6 +40419,7 @@ SLPM-65942:
     halfBottomOverride: 1 # Bottom screen has wrong colors.
     autoFlush: 1 # Fixes missing lighting.
     # halfPixelOffset: 1 # Fixes lighting misalignment. Do not enable this, it breaks a lot of graphics.
+    textureInsideRT: 1
 SLPM-65943:
   name: "Angel's Feather"
   region: "NTSC-J"
@@ -42137,15 +42273,15 @@ SLPM-66353:
   region: "NTSC-J"
 SLPM-66354:
   name: "BLACK"
-  region: "NTSC-J"
   compat: 5
   clampModes:
-    vuClampMode: 3 # Fixes SPS.
+    vuClampMode: 3
   gsHWFixes:
-    autoFlush: 1 # Properly diffuses light instead of strips of light.
-    roundSprite: 1 # Fixes lighting misalignment such as the street poles and the sun.
-    mipmap: 2 # Fixes over sharpening.
-    trilinearFiltering: 1 # Smoothes out mipmapping.
+    autoFlush: 1
+    roundSprite: 1
+    minimumBlendingLevel: 2
+    mipmap: 2
+    trilinearFiltering: 1
     getSkipCount: "GSC_BlackAndBurnoutSky"
     beforeDraw: "OI_BurnoutGames"
     halfPixelOffset: 2
@@ -42629,6 +42765,7 @@ SLPM-66465:
     halfBottomOverride: 1 # Bottom screen has wrong colors.
     autoFlush: 1 # Fixes missing lighting.
     # halfPixelOffset: 1 # Fixes lighting misalignment. Do not enable this, it breaks a lot of graphics.
+    textureInsideRT: 1
 SLPM-66467:
   name: "Midway Arcade Treasures - The Game Center of USA"
   region: "NTSC-J"
@@ -43896,6 +44033,8 @@ SLPM-66748:
   gameFixes:
     - DMABusyHack
     - SoftwareRendererFMVHack # Vertical lines in FMV.
+  gsHWFixes:
+    roundSprite: 1 # Fixes misalignment of textures in the Pause Menu.
 SLPM-66749:
   name: "Wizardry X 2 - Mugen no Gakuto [Wonder Price]"
   region: "NTSC-J"
@@ -44813,6 +44952,10 @@ SLPM-66994:
   gameFixes:
     - DMABusyHack
     - SoftwareRendererFMVHack # Vertical lines in FMV.
+  gsHWFixes:
+    roundSprite: 1 # Fixes misalignment of textures in the Pause Menu.
+  memcardFilters:
+    - SLPM-66748 # Original Version
 SLPM-66995:
   name: "Beatmania IIDX 14 - Gold"
   region: "NTSC-J"
@@ -47101,6 +47244,7 @@ SLPS-20380:
   region: "NTSC-J"
   gsHWFixes:
     halfPixelOffset: 2 # Fixes ghosting.
+    targetPageRearranging: 1 # Fixes garbage on screen.
 SLPS-20381:
   name: "Monkey Turn V"
   region: "NTSC-J"
@@ -47681,7 +47825,7 @@ SLPS-25022:
   name: "COOL BOARDERS - CODE ALIEN"
   region: "NTSC-J"
 SLPS-25023:
-  name: "Bouncer, The"
+  name: "The Bouncer"
   region: "NTSC-J"
 SLPS-25024:
   name: "Disney's Dinosaur"
@@ -48867,7 +49011,7 @@ SLPS-25298:
   name: "Tentama 1st - Sunny Side"
   region: "NTSC-J"
 SLPS-25299:
-  name: "Shinseiki Evangelions 2"
+  name: "Shinseiki Evangelion 2"
   region: "NTSC-J"
 SLPS-25300:
   name: "R:RACING EVOLUTION"
@@ -49587,7 +49731,7 @@ SLPS-25456:
     roundSprite: 1 # Fixes bloom misalignment still a bit misaligned.
     cpuCLUTRender: 1 # Fixes sun background on the windows when selecting your 'race'.
 SLPS-25457:
-  name: "Ponkotsu Roeman Daikatsugeki Bumpy Trot"
+  name: "Ponkotsu Roman Daikatsugeki Bumpy Trot"
   region: "NTSC-J"
   roundModes:
     eeRoundMode: 0 # Fixes broken load triggers.
@@ -50593,7 +50737,7 @@ SLPS-25691:
     halfPixelOffset: 1 # Fixes extreme ghosting.
     wildArmsHack: 1 # Aligns vertical blurring.
 SLPS-25693:
-  name: "Shinseiki GPX - Road to the Infinity 3 [First Limited Edition]"
+  name: "Princess Princess [First Limited Edition]"
   region: "NTSC-J"
 SLPS-25694:
   name: "Princess Princess [Standard Edition]"
@@ -51851,6 +51995,7 @@ SLPS-71502:
     roundSprite: 1 # Fixes ui and hud alignment.
     gpuPaletteConversion: 2 # Lots of CLUTs in large textures.
     cpuSpriteRenderBW: 1 # Fixes car textures.
+    rewriteLargeSTCoords: 1 # Fix reflections on cars.
 SLPS-72501:
   name: "Final Fantasy X [MEGA HITS!]"
   region: "NTSC-J"
@@ -52418,6 +52563,9 @@ SLPS-73269:
 SLPS-73270:
   name: "Super Robot Taisen Z [PS2 the Best]"
   region: "NTSC-J"
+  memcardFilters:
+    - "SLPS-73270"
+    - "SLPS-25887"
 SLPS-73401:
   name: "Victorious Boxers - Championship Edition [PS2 the Best]"
   region: "NTSC-J"
@@ -56267,6 +56415,8 @@ SLUS-20737:
   name: "Hot Wheels - World Race"
   region: "NTSC-U"
   compat: 5
+  gsHWFixes:
+    targetPageRearranging: 1 # Fixes top of screen corruption due to game bug.
 SLUS-20738:
   name: "Van Helsing"
   region: "NTSC-U"
@@ -57364,6 +57514,7 @@ SLUS-20932:
     halfBottomOverride: 1 # Bottom screen has wrong colors.
     autoFlush: 1 # Fixes missing lighting.
     # halfPixelOffset: 1 # Fixes lighting misalignment. Do not enable this, it breaks a lot of graphics.
+    textureInsideRT: 1
 SLUS-20933:
   name: "Smash Court Pro Tournament Tennis 2"
   region: "NTSC-U"
@@ -57989,32 +58140,49 @@ SLUS-21028:
   compat: 5
 SLUS-21029:
   name: "Midnight Club 3 - DUB Edition"
-  region: "NTSC-U"
   compat: 5
   gsHWFixes:
-    getSkipCount: "GSC_MidnightClub3"
     preloadFrameData: 1
     textureInsideRT: 1
     halfPixelOffset: 2
+    getSkipCount: "GSC_MidnightClub3"
   patches:
+    default:
+      content: |-
+        author=Community
+        comment=Disable Motion Blur
+        patch=1,EE,201CC3D4,extended,00000000
+        patch=1,EE,201CC3D8,extended,00000000
+        patch=1,EE,201CC3E0,extended,00000000
+        patch=1,EE,201CC3E8,extended,00000000
+        patch=1,EE,201CC38C,extended,00000000
+        patch=1,EE,201CC39C,extended,00000000
     0DD3417A:
       content: |-
-        comment=Patch by Refraction
-        // Patches a CTC2 write to FBRST to not set the T-Bit enable
-        // Fixes slow speed in MTVU due to developers leaving T-Bit enabled and not using it
-        // PCSX2 has to sync more when T-Bit is enabled so the game spends more time waiting
-        // for VU1 to finish, which reduces the advantage of MTVU to basically zero.
+        comment=Patch by Refraction & Community
+        // Fixes slow speed in MTVU
         patch=1,EE,D0525B3C,extended,00000800
         patch=1,EE,20525B3C,extended,00000000
+        // Disable Motion Blur
+        patch=1,EE,201CC3D4,extended,00000000
+        patch=1,EE,201CC3D8,extended,00000000
+        patch=1,EE,201CC3E0,extended,00000000
+        patch=1,EE,201CC3E8,extended,00000000
+        patch=1,EE,201CC38C,extended,00000000
+        patch=1,EE,201CC39C,extended,00000000
     4A0E5B3A:
       content: |-
-        comment=Patch by Refraction
-        // Patches a CTC2 write to FBRST to not set the T-Bit enable
-        // Fixes slow speed in MTVU due to developers leaving T-Bit enabled and not using it
-        // PCSX2 has to sync more when T-Bit is enabled so the game spends more time waiting
-        // for VU1 to finish, which reduces the advantage of MTVU to basically zero.
+        comment=Patch by Refraction & Community
+        // Fixes slow speed in MTVU
         patch=1,EE,D05257FC,extended,00000800
         patch=1,EE,205257FC,extended,00000000
+        // Disable Motion Blur
+        patch=1,EE,201CC3D4,extended,00000000
+        patch=1,EE,201CC3D8,extended,00000000
+        patch=1,EE,201CC3E0,extended,00000000
+        patch=1,EE,201CC3E8,extended,00000000
+        patch=1,EE,201CC38C,extended,00000000
+        patch=1,EE,201CC39C,extended,00000000
 SLUS-21030:
   name: "Outlaw Golf 2"
   region: "NTSC-U"
@@ -58148,6 +58316,9 @@ SLUS-21050:
     gpuTargetCLUT: 1 # Fixes sun penetrating bridges (along with HPO special).
     getSkipCount: "GSC_BurnoutGames"
     beforeDraw: "OI_BurnoutGames"
+  memcardFilters: # Used for storage of network information on the memory card.
+    - "SLUS-21050"
+    - "PSCD10088"
 SLUS-21051:
   name: "FIFA Soccer 2005"
   region: "NTSC-U"
@@ -58852,6 +59023,8 @@ SLUS-21181:
   name: "D.I.C.E. - DNA Integrated Cybernetic Enterprises"
   region: "NTSC-U"
   compat: 5
+  gsHWFixes:
+    targetPageRearranging: 1 # Fixes some on-screen garbage.
 SLUS-21182:
   name: "TOCA Race Driver 3 - The Ultimate Racing Simulator"
   region: "NTSC-U"
@@ -60116,23 +60289,36 @@ SLUS-21354:
   region: "NTSC-U"
 SLUS-21355:
   name: "Midnight Club 3 - DUB Edition Remix"
-  region: "NTSC-U"
   compat: 5
   gsHWFixes:
-    getSkipCount: "GSC_MidnightClub3"
     preloadFrameData: 1
     textureInsideRT: 1
     halfPixelOffset: 2
+    getSkipCount: "GSC_MidnightClub3"
   patches:
+    default:
+      content: |-
+        author=Community
+        comment=Disable Motion Blur
+        patch=1,EE,201CC3D4,extended,00000000
+        patch=1,EE,201CC3D8,extended,00000000
+        patch=1,EE,201CC3E0,extended,00000000
+        patch=1,EE,201CC3E8,extended,00000000
+        patch=1,EE,201CC38C,extended,00000000
+        patch=1,EE,201CC39C,extended,00000000
     60A42FF5:
       content: |-
-        comment=Patch by Refraction
-        // Patches a CTC2 write to FBRST to not set the T-Bit enable
-        // Fixes slow speed in MTVU due to developers leaving T-Bit enabled and not using it
-        // PCSX2 has to sync more when T-Bit is enabled so the game spends more time waiting
-        // for VU1 to finish, which reduces the advantage of MTVU to basically zero.
+        comment=Patch by Refraction & Community
+        // Fixes slow speed in MTVU
         patch=1,EE,D052907C,extended,00000800
         patch=1,EE,2052907C,extended,00000000
+        // Disable Motion Blur
+        patch=1,EE,201CC3D4,extended,00000000
+        patch=1,EE,201CC3D8,extended,00000000
+        patch=1,EE,201CC3E0,extended,00000000
+        patch=1,EE,201CC3E8,extended,00000000
+        patch=1,EE,201CC38C,extended,00000000
+        patch=1,EE,201CC39C,extended,00000000
   memcardFilters: # Saves from the non-Remix release can be imported.
     - "SLUS-21029"
     - "SLUS-21355"
@@ -60268,15 +60454,15 @@ SLUS-21375:
     vuClampMode: 2 # For SPS with microVU.
 SLUS-21376:
   name: "Black"
-  region: "NTSC-U"
   compat: 5
   clampModes:
-    vuClampMode: 3 # Fixes SPS.
+    vuClampMode: 3
   gsHWFixes:
-    autoFlush: 1 # Properly diffuses light instead of strips of light.
-    roundSprite: 1 # Fixes lighting misalignment such as the street poles and the sun.
-    mipmap: 2 # Fixes over sharpening.
-    trilinearFiltering: 1 # Smoothes out mipmapping.
+    autoFlush: 1
+    roundSprite: 1
+    minimumBlendingLevel: 2
+    mipmap: 2
+    trilinearFiltering: 1
     getSkipCount: "GSC_BlackAndBurnoutSky"
     beforeDraw: "OI_BurnoutGames"
     halfPixelOffset: 2
@@ -60353,7 +60539,7 @@ SLUS-21386:
   compat: 5
   gsHWFixes:
     halfPixelOffset: 2 # Fixes ghosting.
-    autoFlush: 1 # Fixes post lighting.
+    autoFlush: 0 # Fixes post lighting.
   patches:
     default:
       content: |-
@@ -62541,6 +62727,8 @@ SLUS-21781:
     InstantVU1SpeedHack: 0 # Corrects note board position.
   gsHWFixes:
     halfPixelOffset: 2 # Mostly aligns post-processing.
+    targetPageRearranging: 1 # Fixes half screen issues.
+    preloadFrameData: 1 # Makes button text visible.
 SLUS-21782:
   name: "Shin Megami Tensei - Persona 4"
   region: "NTSC-U"
@@ -63111,10 +63299,13 @@ SLUS-21898:
   name: "Band Hero"
   region: "NTSC-U"
   compat: 5
+  roundModes:
+    vu1RoundMode: 0 # Fixes VU size spam and potential graphical issues.
   gsHWFixes:
     autoFlush: 1 # Fixes character shadow misalignment.
     preloadFrameData: 1 # Fixes icons.
     halfPixelOffset: 2 # Aligns UI and other elements.
+    targetPageRearranging: 1 # Fixes some texture errors.
 SLUS-21899:
   name: "Silent Hill - Shattered Memories"
   region: "NTSC-U"
@@ -64111,6 +64302,7 @@ SLUS-29137:
     halfBottomOverride: 1 # Bottom screen has wrong colors.
     autoFlush: 1 # Fixes missing lighting.
     # halfPixelOffset: 1 # Fixes lighting misalignment. Do not enable this, it breaks a lot of graphics.
+    textureInsideRT: 1
 SLUS-29138:
   name: "The Punisher [Demo]"
   region: "NTSC-U"

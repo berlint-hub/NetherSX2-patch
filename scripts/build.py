@@ -588,6 +588,64 @@ def patch_manifest_target_sdk(work_dir: Path, target_sdk: int = 34) -> None:
         print(f"  ✓ Patched AndroidManifest.xml: targetSdkVersion={target_sdk}, compileSdkVersion={target_sdk}")
 
 
+def inject_updated_pcsx2_assets(work_dir: Path) -> None:
+    """Inject updated PCSX2 and community emulation assets into the decoded APK:
+    1. GameIndex[merged].yaml -> assets/GameIndex.yaml
+    2. assets/game_controller_db.txt -> assets/game_controller_db.txt
+    3. assets/cheats_ws.zip -> assets/cheats_ws.zip
+    4. assets/cheats_ni.zip -> assets/cheats_ni.zip
+    5. assets/3rdparty.html -> assets/3rdparty.html
+    6. assets/faq.html -> assets/faq.html
+    7. Clean up residual Google Ad Services property files
+    """
+    assets_dir = REPO_ROOT / "assets"
+    merged_gameindex = REPO_ROOT / "GameIndex[merged].yaml"
+
+    # Find or create assets directory in decoded APK
+    apk_assets_dirs = [p for p in work_dir.rglob("assets") if p.is_dir()]
+    if not apk_assets_dirs:
+        primary_assets = work_dir / "assets"
+        primary_assets.mkdir(parents=True, exist_ok=True)
+        apk_assets_dirs = [primary_assets]
+
+    # 1. Inject updated GameIndex.yaml from GameIndex[merged].yaml
+    if merged_gameindex.exists():
+        gi_updated = 0
+        for ad in apk_assets_dirs:
+            shutil.copyfile(merged_gameindex, ad / "GameIndex.yaml")
+            gi_updated += 1
+        for p in work_dir.rglob("GameIndex.yaml"):
+            shutil.copyfile(merged_gameindex, p)
+            gi_updated += 1
+        print(f"  ✓ Injected updated PCSX2 GameDB ({merged_gameindex.stat().st_size} bytes)")
+
+    # 2. Inject controller database
+    controller_db = assets_dir / "game_controller_db.txt"
+    if controller_db.exists():
+        for ad in apk_assets_dirs:
+            shutil.copyfile(controller_db, ad / "game_controller_db.txt")
+        for p in work_dir.rglob("game_controller_db.txt"):
+            shutil.copyfile(controller_db, p)
+        print(f"  ✓ Injected updated SDL Controller DB ({controller_db.stat().st_size} bytes)")
+
+    # 3. Inject cheats and info assets
+    for asset_name in ["cheats_ws.zip", "cheats_ni.zip", "3rdparty.html", "faq.html"]:
+        src = assets_dir / asset_name
+        if src.exists():
+            for ad in apk_assets_dirs:
+                shutil.copyfile(src, ad / asset_name)
+            print(f"  ✓ Injected {asset_name} into APK assets")
+
+    # 4. Remove residual ad services property files
+    deleted_props = 0
+    for prop in list(work_dir.rglob("*.properties")):
+        if any(ad_key in prop.name for ad_key in ["play-services-ads", "user-messaging-platform"]):
+            prop.unlink()
+            deleted_props += 1
+    if deleted_props > 0:
+        print(f"  ✓ Cleaned up {deleted_props} residual Google Ad Services property files")
+
+
 def inject_scale_multiplier(input_apk: Path, output_apk: Path, work_name: str, is_mali: bool = False, is_switch: bool = False) -> None:
     work_dir = REPO_ROOT / work_name
     if work_dir.exists():
@@ -599,6 +657,9 @@ def inject_scale_multiplier(input_apk: Path, output_apk: Path, work_name: str, i
 
     # Delete all custom controller PNG buttons entirely and restore clean original vector buttons
     remove_custom_controller_buttons(work_dir)
+
+    # Inject updated PCSX2 GameDB, controller DB, cheats, and strip ad leftovers
+    inject_updated_pcsx2_assets(work_dir)
 
     # Patch GameIndex.yaml with database optimizations (Black, Downhill Domination)
     patch_gameindex(work_dir)
@@ -752,6 +813,14 @@ def verify_all() -> None:
                 out = subprocess.check_output(["aapt", "dump", "badging", str(apk)]).decode("utf-8", errors="ignore")
                 if "targetSdkVersion:'34'" not in out:
                     raise SystemExit(f"ERROR: targetSdkVersion is not 34 in {apk.name}!")
+            if "assets/GameIndex.yaml" in z.namelist():
+                gi_bytes = z.read("assets/GameIndex.yaml")
+                if len(gi_bytes) < 1500000:
+                    raise SystemExit(f"ERROR: assets/GameIndex.yaml in {apk.name} is smaller than expected ({len(gi_bytes)} bytes)!")
+            if "assets/game_controller_db.txt" in z.namelist():
+                db_bytes = z.read("assets/game_controller_db.txt")
+                if len(db_bytes) < 400000:
+                    raise SystemExit(f"ERROR: assets/game_controller_db.txt in {apk.name} is smaller than expected ({len(db_bytes)} bytes)!")
         print(f"✓ {apk.name}: 0.05x, 0.1x, 0.25x (XML + unclamped libemucore.so) & targetSdkVersion 34 verified")
 
     if not ADRENO_FINAL_XDELTA.exists() or ADRENO_FINAL_XDELTA.stat().st_size == 0:

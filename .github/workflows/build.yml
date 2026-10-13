@@ -30,6 +30,25 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y xdelta3 zipalign
+          pip install ruamel.yaml
+
+      - name: Update PCSX2 Emulation Assets
+        run: |
+          python3 -c "
+          import urllib.request, subprocess, os
+          try:
+              print('Fetching latest GameIndex.yaml from PCSX2 upstream...')
+              urllib.request.urlretrieve('https://raw.githubusercontent.com/pcsx2/pcsx2/master/bin/resources/GameIndex.yaml', 'GameIndex_upstream.yaml')
+              print('Fetching latest gamecontrollerdb.txt from SDL upstream...')
+              urllib.request.urlretrieve('https://raw.githubusercontent.com/mdqinc/SDL_GameControllerDB/master/gamecontrollerdb.txt', 'assets/game_controller_db.txt')
+              print('Converting updated PCSX2 GameDB...')
+              subprocess.run(['python3', 'gamedb-convert.py', 'GameIndex_upstream.yaml'], check=True)
+              if os.path.exists('GameIndex_upstream.yaml'):
+                  os.remove('GameIndex_upstream.yaml')
+              print('✓ Upstream PCSX2 emulation system updated successfully')
+          except Exception as e:
+              print(f'Notice: Using repository committed PCSX2 assets ({e})')
+          "
 
       - name: Build NetherSX2 and Patch APKs
         run: python3 scripts/build.py
