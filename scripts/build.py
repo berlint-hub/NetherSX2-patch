@@ -646,6 +646,76 @@ def inject_updated_pcsx2_assets(work_dir: Path) -> None:
         print(f"  ✓ Cleaned up {deleted_props} residual Google Ad Services property files")
 
 
+def get_pcsx2_version() -> str:
+    """Read version and commit hash from pcsx2 submodule or fallback."""
+    pcsx2_dir = REPO_ROOT / "pcsx2"
+    if (pcsx2_dir / ".git").exists() or pcsx2_dir.is_dir():
+        try:
+            desc = subprocess.check_output(
+                ["git", "-C", str(pcsx2_dir), "describe", "--tags", "--always"],
+                text=True, stderr=subprocess.DEVNULL
+            ).strip()
+            rev = subprocess.check_output(
+                ["git", "-C", str(pcsx2_dir), "rev-parse", "--short", "HEAD"],
+                text=True, stderr=subprocess.DEVNULL
+            ).strip()
+            if desc and rev:
+                return f"{desc} ({rev})"
+        except Exception:
+            pass
+    return "v2.9.122 (0f71e66)"
+
+
+def patch_dex_pcsx2_version(work_dir: Path) -> None:
+    """Inject PCSX2 upstream version into the Show Version dialog in classes.dex."""
+    pcsx2_ver = get_pcsx2_version()
+    new_str = f"\nPCSX2 Version: {pcsx2_ver}\nNative Version:\n"
+
+    def encode_uleb128(val: int) -> bytes:
+        res = bytearray()
+        while True:
+            b = val & 0x7F
+            val >>= 7
+            if val != 0:
+                res.append(b | 0x80)
+            else:
+                res.append(b)
+                break
+        return bytes(res)
+
+    new_item = encode_uleb128(len(new_str)) + new_str.encode("utf-8") + b"\0"
+    target_str = "\nNative Version:\n".encode("utf-8")
+
+    patched_count = 0
+    for dex_path in work_dir.rglob("classes*.dex"):
+        dex_data = bytearray(dex_path.read_bytes())
+        if len(dex_data) < 0x70:
+            continue
+        size, off = struct.unpack("<II", dex_data[0x38:0x40])
+        target_id = None
+        for i in range(size):
+            data_off = struct.unpack("<I", dex_data[off + i * 4 : off + (i + 1) * 4])[0]
+            p = data_off
+            while p < len(dex_data) and dex_data[p] & 0x80:
+                p += 1
+            p += 1
+            end = dex_data.find(b"\0", p)
+            if end != -1 and dex_data[p:end] == target_str:
+                target_id = i
+                break
+
+        if target_id is not None:
+            new_str_off = len(dex_data)
+            dex_data.extend(new_item)
+            dex_data[off + target_id * 4 : off + (target_id + 1) * 4] = struct.pack("<I", new_str_off)
+            dex_data[0x20:0x24] = struct.pack("<I", len(dex_data))
+            dex_data[12:32] = hashlib.sha1(dex_data[32:]).digest()
+            dex_data[8:12] = (zlib.adler32(dex_data[12:]) & 0xFFFFFFFF).to_bytes(4, "little")
+            dex_path.write_bytes(dex_data)
+            patched_count += 1
+            print(f"  ✓ Injected PCSX2 version ({pcsx2_ver}) after Java Version in {dex_path.name}")
+
+
 def inject_scale_multiplier(input_apk: Path, output_apk: Path, work_name: str, is_mali: bool = False, is_switch: bool = False) -> None:
     work_dir = REPO_ROOT / work_name
     if work_dir.exists():
@@ -660,6 +730,9 @@ def inject_scale_multiplier(input_apk: Path, output_apk: Path, work_name: str, i
 
     # Inject updated PCSX2 GameDB, controller DB, cheats, and strip ad leftovers
     inject_updated_pcsx2_assets(work_dir)
+
+    # Patch DEX to show PCSX2 version in Show Version dialog
+    patch_dex_pcsx2_version(work_dir)
 
     # Patch GameIndex.yaml with database optimizations (Black, Downhill Domination)
     patch_gameindex(work_dir)
@@ -821,6 +894,10 @@ def verify_all() -> None:
                 db_bytes = z.read("assets/game_controller_db.txt")
                 if len(db_bytes) < 400000:
                     raise SystemExit(f"ERROR: assets/game_controller_db.txt in {apk.name} is smaller than expected ({len(db_bytes)} bytes)!")
+            if "classes.dex" in z.namelist():
+                dex_bytes = z.read("classes.dex")
+                if b"PCSX2 Version:" not in dex_bytes:
+                    raise SystemExit(f"ERROR: classes.dex in {apk.name} missing PCSX2 version string!")
         print(f"✓ {apk.name}: 0.05x, 0.1x, 0.25x (XML + unclamped libemucore.so) & targetSdkVersion 34 verified")
 
     if not ADRENO_FINAL_XDELTA.exists() or ADRENO_FINAL_XDELTA.stat().st_size == 0:
