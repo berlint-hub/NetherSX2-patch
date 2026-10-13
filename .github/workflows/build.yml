@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          submodules: 'true'
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -37,12 +39,17 @@ jobs:
           python3 -c "
           import urllib.request, subprocess, os
           try:
-              print('Fetching latest GameIndex.yaml from PCSX2 upstream...')
-              urllib.request.urlretrieve('https://raw.githubusercontent.com/pcsx2/pcsx2/master/bin/resources/GameIndex.yaml', 'GameIndex_upstream.yaml')
+              if os.path.exists('pcsx2/bin/resources/GameIndex.yaml'):
+                  print('Using GameIndex.yaml from PCSX2 submodule...')
+                  gamedb_src = 'pcsx2/bin/resources/GameIndex.yaml'
+              else:
+                  print('Fetching latest GameIndex.yaml from PCSX2 upstream...')
+                  urllib.request.urlretrieve('https://raw.githubusercontent.com/pcsx2/pcsx2/master/bin/resources/GameIndex.yaml', 'GameIndex_upstream.yaml')
+                  gamedb_src = 'GameIndex_upstream.yaml'
               print('Fetching latest gamecontrollerdb.txt from SDL upstream...')
               urllib.request.urlretrieve('https://raw.githubusercontent.com/mdqinc/SDL_GameControllerDB/master/gamecontrollerdb.txt', 'assets/game_controller_db.txt')
               print('Converting updated PCSX2 GameDB...')
-              subprocess.run(['python3', 'gamedb-convert.py', 'GameIndex_upstream.yaml'], check=True)
+              subprocess.run(['python3', 'gamedb-convert.py', gamedb_src], check=True)
               if os.path.exists('GameIndex_upstream.yaml'):
                   os.remove('GameIndex_upstream.yaml')
               print('✓ Upstream PCSX2 emulation system updated successfully')
