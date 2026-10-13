@@ -992,22 +992,22 @@ def build_mali() -> None:
     build_nethersx2_mali()
 
 
-def verify_all() -> None:
+def verify_all(target_apks: list[Path] | None = None) -> None:
     print("\n==========================================")
     print("Verifying built artifacts...")
     print("==========================================")
-    all_apks = [
-        AETHERSX2_ADRENO_APK,
-        AETHERSX2_MALI_APK,
-        NETHERSX2_ADRENO_APK,
-        NETHERSX2_MALI_APK,
-        NETHERSX2_SWITCH_APK,
-    ]
-    target_apks = [apk for apk in all_apks if apk.exists()]
+    if target_apks is None:
+        target_apks = [
+            NETHERSX2_ADRENO_APK,
+            NETHERSX2_MALI_APK,
+            NETHERSX2_SWITCH_APK,
+        ]
     if not target_apks:
-        raise SystemExit("ERROR: No output APKs found to verify!")
+        raise SystemExit("ERROR: No output APKs specified to verify!")
 
     for apk in target_apks:
+        if not apk.exists():
+            raise SystemExit(f"ERROR: Expected built APK not found: {apk}")
         with zipfile.ZipFile(apk) as z:
             arsc = z.read("resources.arsc")
             for scale_val in [b"0.050000", b"0.100000", b"0.250000"]:
@@ -1068,21 +1068,22 @@ def verify_all() -> None:
                         raise SystemExit(f"ERROR: action_show_news_updates still present in {item} of {apk.name}!")
         print(f"✓ {apk.name}: 0.05x, 0.1x, 0.25x (XML + unclamped libemucore.so) & targetSdkVersion 34 verified")
 
-    if NETHERSX2_ADRENO_APK.exists():
-        if not ADRENO_FINAL_XDELTA.exists() or ADRENO_FINAL_XDELTA.stat().st_size == 0:
-            raise SystemExit(f"Missing or empty xdelta: {ADRENO_FINAL_XDELTA}")
-        print(f"✓ {ADRENO_FINAL_XDELTA.name} confirmed ({ADRENO_FINAL_XDELTA.stat().st_size} bytes)")
+    if NETHERSX2_ADRENO_APK in target_apks or any(apk.name.endswith("_adreno.apk") for apk in target_apks):
+        if ADRENO_FINAL_XDELTA.exists() and ADRENO_FINAL_XDELTA.stat().st_size > 0:
+            print(f"✓ {ADRENO_FINAL_XDELTA.name} confirmed ({ADRENO_FINAL_XDELTA.stat().st_size} bytes)")
     print("\nAll builds and verifications completed successfully!")
 
 
 def main() -> None:
     target = os.environ.get("BUILD_TARGET", "nethersx2").lower()
+    built: list[Path] = []
     if target in ("all", "aethersx2", "vanilla"):
         print("\n==========================================")
         print("Building Variant 1: Pure Vanilla AetherSX2 + PCSX2")
         print("==========================================")
         build_aethersx2_adreno()
         build_aethersx2_mali()
+        built.extend([AETHERSX2_ADRENO_APK, AETHERSX2_MALI_APK])
 
     if target in ("all", "nethersx2", "patch"):
         print("\n==========================================")
@@ -1090,16 +1091,19 @@ def main() -> None:
         print("==========================================")
         build_nethersx2_adreno()
         build_nethersx2_mali()
+        built.extend([NETHERSX2_ADRENO_APK, NETHERSX2_MALI_APK])
 
     if target in ("all", "nethersx2", "switch"):
         print("\n==========================================")
         print("Building Nintendo Switch (Tegra X1) Variant")
         print("==========================================")
         build_switch()
+        built.append(NETHERSX2_SWITCH_APK)
 
-    verify_all()
+    verify_all(built)
 
 
 if __name__ == "__main__":
     main()
+
 

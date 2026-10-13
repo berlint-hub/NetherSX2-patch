@@ -179,6 +179,38 @@ jobs:
           path: native/build/libemucore.so
           if-no-files-found: ignore
 
+      - name: Generate Detailed Release Notes
+        if: env.SHOULD_RELEASE == 'true'
+        run: |
+          cat << EOF > release_notes.md
+          ## NetherSX2 Automated Release — Upstream PCSX2 Synchronization
+
+          ### Upstream PCSX2 Core & Database Integration
+          * **Upstream PCSX2 Version**: \`${PCSX2_VERSION}\`
+          * **Upstream Commit**: [\`${RECENT_COMMIT}\`](https://github.com/pcsx2/pcsx2/commit/${RECENT_COMMIT})
+          * **Build Date**: \`${BUILD_DATE}\`
+
+          ### Emulation Engine & Assets Highlights
+          * **Synchronized PCSX2 GameDB**: Converted and merged latest GameIndex database definitions from upstream PCSX2 master, providing updated compatibility patches, clamp/round modes, and per-game speedhacks.
+          * **Upstream SDL Controller Database**: Updated gamepad mappings directly from SDL upstream for plug-and-play controller compatibility.
+          * **Unlocked Resolution Scales**: Includes 0.05x, 0.1x, and 0.25x internal resolution multiplier options (patched in XML resources and unclamped in arm64 native core) for ultra low-end performance gains.
+          * **ARM Mali GPU Vulkan Compatibility**: Unlocked hardware dual-source blending and bypassed fatal format lockouts for smooth Vulkan rendering on MediaTek Dimensity, Exynos, and Google Tensor processors.
+          * **Modern Android 14/15 Support**: Target SDK updated to API 34 for full compatibility with Android 14 and Android 15.
+          * **Clean Interface**: Completely removed dead Discord server and Patreon navigation buttons, broken web links, and telemetry services.
+
+          ### Included APK Variants & Packages
+          | Package | Target Platform / GPU Architecture | Base Engine |
+          | :--- | :--- | :--- |
+          | **\`xyz.nethersx2.android_adreno.apk\`** | Qualcomm Snapdragon / Adreno GPUs | v1.5-4248 |
+          | **\`xyz.nethersx2.android_mali.apk\`** | MediaTek, Exynos, Google Tensor / ARM Mali GPUs | v1.5-3668 |
+          | **\`xyz.aethersx2.android_switch.apk\`** | Nintendo Switch (Android) / Nvidia Tegra X1 (Maxwell GM20B) | v1.5-4248 |
+          | **\`xyz.aethersx2.android_.xdelta\`** | Standalone XDelta Patch for base 4248 APK | — |
+          | **\`libemucore.so\`** | Compiled 64-bit Native Core Library (arm64-v8a) | — |
+
+          > [!NOTE]
+          > A legitimate PlayStation 2 BIOS dump dumped from your own console is required to boot games.
+          EOF
+
       - name: Create GitHub Release
         if: env.SHOULD_RELEASE == 'true'
         env:
@@ -191,4 +223,4 @@ jobs:
           fi
           gh release create "${TAG_NAME}" $FILES_TO_RELEASE \
             --title "${TAG_NAME}" \
-            --notes "Automated NetherSX2 build with upstream PCSX2 ${PCSX2_VERSION} (${RECENT_COMMIT}) GameDB & enhancements."
+            --notes-file release_notes.md
