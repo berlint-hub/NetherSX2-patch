@@ -871,7 +871,7 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
     for dex_path in dex_files:
         original_bytes = dex_path.read_bytes()
         dex_md5 = hashlib.md5(original_bytes).hexdigest()
-        cache_key = f"{dex_md5}_{pcsx2_ver}_data_dir_split_v3_{'mali' if is_mali else 'adreno'}"
+        cache_key = f"{dex_md5}_{pcsx2_ver}_data_dir_split_v4_{'mali' if is_mali else 'adreno'}"
 
         if cache_key in _DEX_CACHE:
             patched_bytes = _DEX_CACHE[cache_key]
@@ -982,7 +982,7 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
 
                 if target_cond6 in nl_txt:
                     nl_txt = nl_txt.replace(target_cond6, repl_cond6)
-                    nl_txt = nl_txt.replace("sput-object v2, Lxyz/aethersx2/android/NativeLibrary;->mDataDirectory:Ljava/lang/String;", "sput-object v2, Lxyz/aethersx2/android/NativeLibrary;->mDataDirectory:Ljava/lang/String;\n\n    :data_dir_ready", 1)
+                    nl_txt = nl_txt.replace("sput-object v2, Lxyz/aethersx2/android/NativeLibrary;->mDataDirectory:Ljava/lang/String;", "sput-object v2, Lxyz/aethersx2/android/NativeLibrary;->mDataDirectory:Ljava/lang/String;\n\n    :data_dir_ready\n    const/4 v0, 0x0", 1)
                 nat_lib.write_text(nl_txt, encoding="utf-8")
                 print(f"  ✓ Patched NativeLibrary data directory loader in {dex_path.name}")
 
