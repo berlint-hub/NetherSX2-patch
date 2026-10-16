@@ -549,3 +549,117 @@ SLES-52942:
         patch=1,EE,201CC3E8,extended,00000000
         patch=1,EE,201CC38C,extended,00000000
         patch=1,EE,201CC39C,extended,00000000
+SLUS-21134:
+  name: "Resident Evil 4"
+  region: "NTSC-U"
+  compat: 5
+  gameFixes:
+    - BlitInternalFPSHack
+  gsHWFixes:
+    halfPixelOffset: 2 # Normal/Special (Texture) fixes blurriness
+    minimumBlendingLevel: 2 # Enforces destination blending for color grading & fog (fixes gray/washed-out screen)
+    textureInsideRT: 1 # Syncs post-processing color grading pass with active render target
+SLES-53702:
+  name: "Resident Evil 4"
+  region: "PAL-M5"
+  compat: 5
+  gameFixes:
+    - BlitInternalFPSHack
+  gsHWFixes:
+    halfPixelOffset: 2
+    minimumBlendingLevel: 2
+    textureInsideRT: 1
+SLES-53756:
+  name: "Resident Evil 4"
+  region: "PAL-M5"
+  compat: 5
+  gameFixes:
+    - BlitInternalFPSHack
+  gsHWFixes:
+    halfPixelOffset: 2
+    minimumBlendingLevel: 2
+    textureInsideRT: 1
+SLPM-66213:
+  name: "バイオハザード4"
+  name-en: "BioHazard 4"
+  region: "NTSC-J"
+  compat: 5
+  gameFixes:
+    - BlitInternalFPSHack
+  gsHWFixes:
+    halfPixelOffset: 2
+    minimumBlendingLevel: 2
+    textureInsideRT: 1
+SLPM-74229:
+  name: "バイオハザード4 [PlayStation2 the Best]"
+  name-en: "BioHazard 4 [PlayStation2 the Best]"
+  region: "NTSC-J"
+  compat: 5
+  gameFixes:
+    - BlitInternalFPSHack
+  gsHWFixes:
+    halfPixelOffset: 2
+    minimumBlendingLevel: 2
+    textureInsideRT: 1
+SLPM-74262:
+  name: "バイオハザード4 [PlayStation2 the Best]"
+  name-en: "BioHazard 4 [PlayStation2 the Best]"
+  region: "NTSC-J"
+  compat: 5
+  gameFixes:
+    - BlitInternalFPSHack
+  gsHWFixes:
+    halfPixelOffset: 2
+    minimumBlendingLevel: 2
+    textureInsideRT: 1
+SLPM-74288:
+  name: "バイオハザード4 [PlayStation2 the Best]"
+  name-en: "BioHazard 4 [PlayStation2 the Best]"
+  region: "NTSC-J"
+  compat: 5
+  gameFixes:
+    - BlitInternalFPSHack
+  gsHWFixes:
+    halfPixelOffset: 2
+    minimumBlendingLevel: 2
+    textureInsideRT: 1
+SCKA-20089:
+  name: "BioHazard 4"
+  region: "NTSC-K"
+  compat: 5
+  gameFixes:
+    - BlitInternalFPSHack
+  gsHWFixes:
+    halfPixelOffset: 2
+    minimumBlendingLevel: 2
+    textureInsideRT: 1
+SLKA-25410:
+  name: "Biohazard 4 [PlayStation 2 BigHit Series]"
+  region: "NTSC-K"
+  compat: 5
+  gameFixes:
+    - BlitInternalFPSHack
+  gsHWFixes:
+    halfPixelOffset: 2
+    minimumBlendingLevel: 2
+    textureInsideRT: 1
+SLAJ-25073:
+  name: "BioHazard 4 [Asia Version]"
+  region: "NTSC-J"
+  compat: 5
+  gameFixes:
+    - BlitInternalFPSHack
+  gsHWFixes:
+    halfPixelOffset: 2
+    minimumBlendingLevel: 2
+    textureInsideRT: 1
+SLUS-29169:
+  name: "Resident Evil 4 [Demo]"
+  region: "NTSC-U"
+  compat: 5
+  gameFixes:
+    - BlitInternalFPSHack
+  gsHWFixes:
+    halfPixelOffset: 2
+    minimumBlendingLevel: 2
+    textureInsideRT: 1

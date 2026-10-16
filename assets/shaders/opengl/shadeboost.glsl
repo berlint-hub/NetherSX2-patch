@@ -40,11 +40,6 @@ vec4 ContrastSaturationBrightness(vec4 color)
     vec3 satColor = mix(intensity, brtColor, sat);
     vec3 conColor = mix(AvgLumin, satColor, con);
 
-    float gam = (params.w > 0.0) ? params.w : 1.0;
-    if (gam != 1.0) {
-        conColor = pow(max(conColor, vec3(0.0)), vec3(1.0 / gam));
-    }
-
     color.rgb = conColor;
     return color;
 }

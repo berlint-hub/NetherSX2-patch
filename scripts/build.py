@@ -579,10 +579,20 @@ def patch_gameindex(work_dir: Path) -> None:
         for s in ["SLUS-21355", "SLUS-21029", "SLES-53717", "SLES-52942"]:
             text = re.sub(rf"({s}:.*?\n)(?=[A-Z]{{4}}-[0-9]{{5}}:|\Z)", patch_mc3_block, text, flags=re.DOTALL)
 
+        # Ensure Resident Evil 4 / Biohazard 4 has minimumBlendingLevel: 2, textureInsideRT: 1, and halfPixelOffset: 2 (fixes gray/washed-out screen and fog)
+        re4_serials = ["SLUS-21134", "SLES-53702", "SLES-53756", "SLPM-66213", "SLPM-74229", "SLPM-74262", "SLPM-74288", "SCKA-20089", "SLKA-25410", "SLAJ-25073", "SLUS-29169"]
+        for s in re4_serials:
+            pattern_hpo = rf"({s}:.*?\n\s*gsHWFixes:\s*\n.*?halfPixelOffset:\s*)[0-9]+"
+            text = re.sub(pattern_hpo, r"\g<1>2", text, flags=re.DOTALL)
+            pattern_re4_blend = rf"({s}:.*?\n\s*gsHWFixes:\s*\n)(?!\s*minimumBlendingLevel:)"
+            text = re.sub(pattern_re4_blend, r"\g<1>    minimumBlendingLevel: 2 # Enforces destination reads for color grading & fog\n", text, flags=re.DOTALL)
+            pattern_re4_trt = rf"({s}:.*?\n\s*gsHWFixes:\s*\n)(?!\s*textureInsideRT:)"
+            text = re.sub(pattern_re4_trt, r"\g<1>    textureInsideRT: 1 # Syncs post-processing color grading pass with active render target\n", text, flags=re.DOTALL)
+
         if text != orig:
             p.write_text(text, encoding="utf-8")
             gi_updated += 1
-    print(f"  ✓ Patched GameIndex.yaml (optimized Black, Downhill Domination, Tales of the Abyss, and Midnight Club 3 in {gi_updated} files)")
+    print(f"  ✓ Patched GameIndex.yaml (optimized Black, Downhill Domination, Tales of the Abyss, Midnight Club 3, and Resident Evil 4 in {gi_updated} files)")
 
 
 def patch_manifest_target_sdk(work_dir: Path, target_sdk: int = 34) -> None:
@@ -676,13 +686,13 @@ def inject_updated_pcsx2_assets(work_dir: Path) -> None:
         shaders_injected = 0
         for ad in apk_assets_dirs:
             dest_shaders = ad / "shaders"
-            for shader_file in shaders_src.rglob("*.glsl"):
+            for shader_file in [p for p in shaders_src.rglob("*") if p.is_file()]:
                 rel_path = shader_file.relative_to(shaders_src)
                 target_dest = dest_shaders / rel_path
                 target_dest.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(shader_file, target_dest)
                 shaders_injected += 1
-        print(f"  ✓ Injected {shaders_injected} updated accurate GPU/CPU shaders into APK assets")
+        print(f"  ✓ Injected {shaders_injected} updated accurate GPU/CPU shaders and headers into APK assets")
 
     # 4. Remove residual ad services property files
     deleted_props = 0

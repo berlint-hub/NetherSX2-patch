@@ -7394,10 +7394,13 @@ SCKA-20088:
 SCKA-20089:
   name: "BioHazard 4"
   region: "NTSC-K"
+  compat: 5
   gameFixes:
-    - BlitInternalFPSHack # Fixes internal FPS detection.
+    - BlitInternalFPSHack
   gsHWFixes:
-    halfPixelOffset: 2 # Fixes blurriness.
+    halfPixelOffset: 2
+    minimumBlendingLevel: 2
+    textureInsideRT: 1
 SCKA-20090:
   compat: 5
   gsHWFixes:
@@ -12260,10 +12263,13 @@ SLAJ-25072:
 SLAJ-25073:
   name: "BioHazard 4 [Asia Version]"
   region: "NTSC-J"
+  compat: 5
   gameFixes:
-    - BlitInternalFPSHack # Fixes internal FPS detection.
+    - BlitInternalFPSHack
   gsHWFixes:
-    halfPixelOffset: 2 # Fixes blurriness.
+    halfPixelOffset: 2
+    minimumBlendingLevel: 2
+    textureInsideRT: 1
 SLAJ-25075:
   name: "Need for Speed - Most Wanted [Black Edition]"
   region: "NTSC-Unk"
@@ -23244,8 +23250,12 @@ SLES-53702:
   name: "Resident Evil 4"
   region: "PAL-M5"
   compat: 5
+  gameFixes:
+    - BlitInternalFPSHack
   gsHWFixes:
-    halfPixelOffset: 2 # Fixes blurriness.
+    halfPixelOffset: 2
+    minimumBlendingLevel: 2
+    textureInsideRT: 1
 SLES-53703:
   name: "Peter Jackson's King Kong - The Official Game of the Movie"
   region: "PAL-M10"
@@ -23498,8 +23508,13 @@ SLES-53755:
 SLES-53756:
   name: "Resident Evil 4"
   region: "PAL-M5"
+  compat: 5
+  gameFixes:
+    - BlitInternalFPSHack
   gsHWFixes:
-    halfPixelOffset: 2 # Fixes blurriness.
+    halfPixelOffset: 2
+    minimumBlendingLevel: 2
+    textureInsideRT: 1
 SLES-53758:
   name: "Sniper Elite [Pre-Production]"
   region: "PAL-E"
@@ -31438,10 +31453,13 @@ SLKA-25409:
 SLKA-25410:
   name: "Biohazard 4 [PS2 BigHit Series]"
   region: "NTSC-K"
+  compat: 5
   gameFixes:
-    - BlitInternalFPSHack # Fixes internal FPS detection.
+    - BlitInternalFPSHack
   gsHWFixes:
-    halfPixelOffset: 2 # Fixes blurriness.
+    halfPixelOffset: 2
+    minimumBlendingLevel: 2
+    textureInsideRT: 1
 SLKA-25411:
   name: "Need for Speed - ProStreet"
   region: "NTSC-K"
@@ -41688,9 +41706,11 @@ SLPM-66213:
   region: "NTSC-J"
   compat: 5
   gameFixes:
-    - BlitInternalFPSHack # Fixes internal FPS detection.
+    - BlitInternalFPSHack
   gsHWFixes:
-    halfPixelOffset: 2 # Fixes blurriness.
+    halfPixelOffset: 2
+    minimumBlendingLevel: 2
+    textureInsideRT: 1
 SLPM-66214:
   name: "White Clarity - And, the Tears Became You [First Print Limited Edition]"
   region: "NTSC-J"
@@ -45669,10 +45689,13 @@ SLPM-74228:
 SLPM-74229:
   name: "BioHazard 4 [PS2 the Best]"
   region: "NTSC-J"
+  compat: 5
   gameFixes:
-    - BlitInternalFPSHack # Fixes internal FPS detection.
+    - BlitInternalFPSHack
   gsHWFixes:
-    halfPixelOffset: 2 # Fixes blurriness.
+    halfPixelOffset: 2
+    minimumBlendingLevel: 2
+    textureInsideRT: 1
 SLPM-74230:
   name: "Devil May Cry [PS2 the Best]"
   region: "NTSC-J"
@@ -45884,10 +45907,13 @@ SLPM-74261:
 SLPM-74262:
   name: "BioHazard 4 [PS2 the Best]"
   region: "NTSC-J"
+  compat: 5
   gameFixes:
-    - BlitInternalFPSHack # Fixes internal FPS detection.
+    - BlitInternalFPSHack
   gsHWFixes:
-    halfPixelOffset: 2 # Fixes blurriness.
+    halfPixelOffset: 2
+    minimumBlendingLevel: 2
+    textureInsideRT: 1
 SLPM-74263:
   name: "Nobunaga no Yabou - Tenka Sousei [PS2 the Best]"
   region: "NTSC-J"
@@ -45964,10 +45990,13 @@ SLPM-74287:
 SLPM-74288:
   name: "BioHazard 4 [PS2 the Best]"
   region: "NTSC-J"
+  compat: 5
   gameFixes:
-    - BlitInternalFPSHack # Fixes internal FPS detection.
+    - BlitInternalFPSHack
   gsHWFixes:
-    halfPixelOffset: 2 # Fixes blurriness.
+    halfPixelOffset: 2
+    minimumBlendingLevel: 2
+    textureInsideRT: 1
 SLPM-74301:
   name: "Ryu ga Gotoku 2 [with Trailer DVD] [PS2 the Best - Reprint]"
   region: "NTSC-J"
@@ -58871,9 +58900,11 @@ SLUS-21134:
   region: "NTSC-U"
   compat: 5
   gameFixes:
-    - BlitInternalFPSHack # Fixes internal FPS detection.
+    - BlitInternalFPSHack
   gsHWFixes:
-    halfPixelOffset: 2 # Fixes blurriness.
+    halfPixelOffset: 2 # Normal/Special (Texture) fixes blurriness
+    minimumBlendingLevel: 2 # Enforces destination blending for color grading & fog (fixes gray/washed-out screen)
+    textureInsideRT: 1 # Syncs post-processing color grading pass with active render target
 SLUS-21135:
   name: "MVP Baseball 2005"
   region: "NTSC-U"
@@ -64558,10 +64589,13 @@ SLUS-29168:
 SLUS-29169:
   name: "Resident Evil 4 [Demo]"
   region: "NTSC-U"
+  compat: 5
   gameFixes:
-    - BlitInternalFPSHack # Fixes internal FPS detection.
+    - BlitInternalFPSHack
   gsHWFixes:
-    halfPixelOffset: 2 # Fixes blurriness.
+    halfPixelOffset: 2
+    minimumBlendingLevel: 2
+    textureInsideRT: 1
 SLUS-29170:
   name: "Total Overdose - A Gunslinger's Tale in Mexico [Demo]"
   region: "NTSC-U"
