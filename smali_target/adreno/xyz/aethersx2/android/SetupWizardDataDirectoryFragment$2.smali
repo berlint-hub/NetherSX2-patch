@@ -25,7 +25,7 @@
 .method constructor <init>(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;)V
     .registers 2
 
-    .line 216
+    .line 229
     iput-object p1, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$2;->this$0:Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;
 
     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
@@ -38,11 +38,11 @@
 .method public onClick(Landroid/view/View;)V
     .registers 2
 
-    .line 219
+    .line 232
     iget-object p1, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$2;->this$0:Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;
 
     invoke-static {p1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->-$$Nest$mopenFolderPicker(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;)V
 
-    .line 220
+    .line 233
     return-void
 .end method

@@ -20,26 +20,22 @@
 # instance fields
 .field final synthetic this$0:Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;
 
-.field final synthetic val$fCtx:Landroid/content/Context;
-
-.field final synthetic val$pPath:Ljava/lang/String;
+.field final synthetic val$context:Landroid/content/Context;
 
 
 # direct methods
-.method constructor <init>(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;Landroid/content/Context;Ljava/lang/String;)V
-    .registers 4
+.method constructor <init>(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;Landroid/content/Context;)V
+    .registers 3
     .annotation system Ldalvik/annotation/Signature;
         value = {
             "()V"
         }
     .end annotation
 
-    .line 192
+    .line 176
     iput-object p1, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$1;->this$0:Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;
 
-    iput-object p2, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$1;->val$fCtx:Landroid/content/Context;
-
-    iput-object p3, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$1;->val$pPath:Ljava/lang/String;
+    iput-object p2, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$1;->val$context:Landroid/content/Context;
 
     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
 
@@ -49,17 +45,15 @@
 
 # virtual methods
 .method public onClick(Landroid/view/View;)V
-    .registers 4
+    .registers 3
 
-    .line 195
+    .line 179
     iget-object p1, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$1;->this$0:Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;
 
-    iget-object v0, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$1;->val$fCtx:Landroid/content/Context;
+    iget-object v0, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$1;->val$context:Landroid/content/Context;
 
-    iget-object v1, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$1;->val$pPath:Ljava/lang/String;
+    invoke-static {p1, v0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->-$$Nest$mselectDefault(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;Landroid/content/Context;)V
 
-    invoke-static {p1, v0, v1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->-$$Nest$mselectCustomPath(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;Landroid/content/Context;Ljava/lang/String;)V
-
-    .line 196
+    .line 180
     return-void
 .end method
