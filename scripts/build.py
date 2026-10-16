@@ -864,6 +864,31 @@ def remove_dead_socials_and_telemetry(work_dir: Path) -> None:
         print(f"  ✓ Removed Discord and Patreon buttons from {menus_cleaned} navigation menu(s)")
 
 
+def inject_check_update_menu(work_dir: Path) -> None:
+    """Inject 'Check Update' button at the bottom of the navigation menu."""
+    for id_file in work_dir.rglob("ids.xml"):
+        txt = id_file.read_text(encoding="utf-8")
+        if 'name="action_check_update"' not in txt:
+            new_txt = txt.replace("</resources>", '  <id name="action_check_update" />\n</resources>')
+            id_file.write_text(new_txt, encoding="utf-8")
+
+    check_update_item = """    <item android:icon="@drawable/ic_baseline_tips_and_updates_24"
+          android:id="@+id/action_check_update"
+          android:title="Check Update" />"""
+
+    injected = 0
+    for menu_path in work_dir.rglob("menu_main_navigation.xml"):
+        content = menu_path.read_text(encoding="utf-8")
+        if "action_check_update" not in content and "Check Update" not in content:
+            pattern = r"(<group\b[^>]*android:id=\"@id/support\"[^>]*>.*?)(\s*</group>)"
+            new_content, count = re.subn(pattern, rf"\g<1>\n{check_update_item}\g<2>", content, flags=re.DOTALL)
+            if count > 0:
+                menu_path.write_text(new_content, encoding="utf-8")
+                injected += count
+    if injected > 0:
+        print(f"  ✓ Injected 'Check Update' menu item into {injected} navigation menu(s)")
+
+
 def get_pcsx2_version() -> str:
     """Read version and commit hash from pcsx2 submodule or fallback."""
     pcsx2_dir = REPO_ROOT / "pcsx2"
@@ -931,7 +956,7 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
     for dex_path in dex_files:
         original_bytes = dex_path.read_bytes()
         dex_md5 = hashlib.md5(original_bytes).hexdigest()
-        cache_key = f"{dex_md5}_{pcsx2_ver}_data_dir_split_v7_{'mali' if is_mali else 'adreno'}"
+        cache_key = f"{dex_md5}_{pcsx2_ver}_data_dir_split_v10_{'mali' if is_mali else 'adreno'}"
 
         if cache_key in _DEX_CACHE:
             patched_bytes = _DEX_CACHE[cache_key]
@@ -1043,16 +1068,287 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
                 if target_cond6 in nl_txt:
                     nl_txt = nl_txt.replace(target_cond6, repl_cond6)
                     nl_txt = nl_txt.replace("sput-object v2, Lxyz/aethersx2/android/NativeLibrary;->mDataDirectory:Ljava/lang/String;", "sput-object v2, Lxyz/aethersx2/android/NativeLibrary;->mDataDirectory:Ljava/lang/String;\n\n    :data_dir_ready\n    const/4 v0, 0x0", 1)
-                nat_lib.write_text(nl_txt, encoding="utf-8")
-                print(f"  ✓ Patched NativeLibrary data directory loader in {dex_path.name}")
 
-            # 3. Patch MainActivity.smali: inject PCSX2 version
+                if "deduplicateEntries" not in nl_txt:
+                    dedup_method = """
+.method public static deduplicateEntries([Lxyz/aethersx2/android/GameListEntry;)[Lxyz/aethersx2/android/GameListEntry;
+    .registers 8
+
+    if-nez p0, :cond_dedup_null
+
+    const/4 p0, 0x0
+
+    return-object p0
+
+    :cond_dedup_null
+    new-instance v0, Ljava/util/ArrayList;
+
+    invoke-direct {v0}, Ljava/util/ArrayList;-><init>()V
+
+    new-instance v1, Ljava/util/HashSet;
+
+    invoke-direct {v1}, Ljava/util/HashSet;-><init>()V
+
+    const/4 v2, 0x0
+
+    :goto_dedup_loop
+    array-length v3, p0
+
+    if-ge v2, v3, :cond_dedup_done
+
+    aget-object v3, p0, v2
+
+    if-nez v3, :cond_dedup_valid
+
+    goto :goto_dedup_next
+
+    :cond_dedup_valid
+    invoke-virtual {v3}, Lxyz/aethersx2/android/GameListEntry;->getSerial()Ljava/lang/String;
+
+    move-result-object v4
+
+    invoke-virtual {v3}, Lxyz/aethersx2/android/GameListEntry;->getCRC()I
+
+    move-result v5
+
+    if-eqz v4, :cond_dedup_title
+
+    invoke-virtual {v4}, Ljava/lang/String;->isEmpty()Z
+
+    move-result v6
+
+    if-nez v6, :cond_dedup_title
+
+    new-instance v6, Ljava/lang/StringBuilder;
+
+    invoke-direct {v6}, Ljava/lang/StringBuilder;-><init>()V
+
+    invoke-virtual {v6, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+
+    move-result-object v4
+
+    const-string v6, "_"
+
+    invoke-virtual {v4, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+
+    move-result-object v4
+
+    invoke-virtual {v4, v5}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+
+    move-result-object v4
+
+    invoke-virtual {v4}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+
+    move-result-object v4
+
+    goto :goto_dedup_check
+
+    :cond_dedup_title
+    invoke-virtual {v3}, Lxyz/aethersx2/android/GameListEntry;->getTitle()Ljava/lang/String;
+
+    move-result-object v4
+
+    :goto_dedup_check
+    invoke-virtual {v1, v4}, Ljava/util/HashSet;->add(Ljava/lang/Object;)Z
+
+    move-result v4
+
+    if-eqz v4, :cond_dedup_next
+
+    invoke-virtual {v0, v3}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
+
+    :cond_dedup_next
+    :goto_dedup_next
+    add-int/lit8 v2, v2, 0x1
+
+    goto :goto_dedup_loop
+
+    :cond_dedup_done
+    invoke-virtual {v0}, Ljava/util/ArrayList;->size()I
+
+    move-result p0
+
+    new-array p0, p0, [Lxyz/aethersx2/android/GameListEntry;
+
+    invoke-virtual {v0, p0}, Ljava/util/ArrayList;->toArray([Ljava/lang/Object;)[Ljava/lang/Object;
+
+    move-result-object p0
+
+    check-cast p0, [Lxyz/aethersx2/android/GameListEntry;
+
+    return-object p0
+.end method
+"""
+                    nl_txt = nl_txt.replace(".method private static native initialize", dedup_method + "\n.method private static native initialize")
+
+                nat_lib.write_text(nl_txt, encoding="utf-8")
+                print(f"  ✓ Patched NativeLibrary data directory loader and deduplication in {dex_path.name}")
+
+            # Patch l6/n4.smali: apply deduplicateEntries after getGameListEntries()
+            n4_file = smali_out / "l6" / "n4.smali"
+            if n4_file.exists():
+                n4_txt = n4_file.read_text(encoding="utf-8")
+                orig_get_entries = "invoke-static {}, Lxyz/aethersx2/android/NativeLibrary;->getGameListEntries()[Lxyz/aethersx2/android/GameListEntry;\n\n    move-result-object v1"
+                repl_get_entries = orig_get_entries + "\n\n    invoke-static {v1}, Lxyz/aethersx2/android/NativeLibrary;->deduplicateEntries([Lxyz/aethersx2/android/GameListEntry;)[Lxyz/aethersx2/android/GameListEntry;\n\n    move-result-object v1"
+                if orig_get_entries in n4_txt and "deduplicateEntries" not in n4_txt:
+                    n4_txt = n4_txt.replace(orig_get_entries, repl_get_entries, 1)
+                    n4_file.write_text(n4_txt, encoding="utf-8")
+                    print(f"  ✓ Patched l6/n4.smali: deduplicate game list entries")
+
+            # Patch l6/p4.smali: resolve content:// URIs to canonical decoded POSIX paths
+            p4_file = smali_out / "l6" / "p4.smali"
+            if p4_file.exists():
+                p4_txt = p4_file.read_text(encoding="utf-8")
+                target_p4 = ".method public static z(Landroid/content/Context;Ljava/lang/String;Z)V\n    .registers 3\n\n    .line 1\n    invoke-static {p0}, Landroidx/preference/PreferenceManager;->getDefaultSharedPreferences(Landroid/content/Context;)Landroid/content/SharedPreferences;"
+                repl_p4 = """.method public static z(Landroid/content/Context;Ljava/lang/String;Z)V
+    .registers 6
+
+    if-eqz p1, :cond_resolve_done
+
+    const-string v0, "content://"
+
+    invoke-virtual {p1, v0}, Ljava/lang/String;->startsWith(Ljava/lang/String;)Z
+
+    move-result v0
+
+    if-eqz v0, :cond_resolve_done
+
+    :try_start_p4_res
+    invoke-static {p1}, Landroid/net/Uri;->parse(Ljava/lang/String;)Landroid/net/Uri;
+
+    move-result-object v0
+
+    invoke-static {v0, p0}, Lxyz/aethersx2/android/FileHelper;->getFullPathFromTreeUri(Landroid/net/Uri;Landroid/content/Context;)Ljava/lang/String;
+
+    move-result-object v0
+
+    if-eqz v0, :cond_resolve_done
+
+    invoke-virtual {v0}, Ljava/lang/String;->isEmpty()Z
+
+    move-result v1
+
+    if-nez v1, :cond_resolve_done
+
+    const-string v1, "/"
+
+    invoke-virtual {v1, v0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+
+    move-result v1
+
+    if-nez v1, :cond_resolve_done
+
+    const-string v1, "UTF-8"
+
+    invoke-static {v0, v1}, Ljava/net/URLDecoder;->decode(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+
+    move-result-object v0
+
+    new-instance v1, Ljava/io/File;
+
+    invoke-direct {v1, v0}, Ljava/io/File;-><init>(Ljava/lang/String;)V
+
+    invoke-virtual {v1}, Ljava/io/File;->exists()Z
+
+    move-result v1
+
+    if-eqz v1, :cond_resolve_done
+
+    move-object p1, v0
+    :try_end_p4_res
+    .catch Ljava/lang/Exception; {:try_start_p4_res .. :try_end_p4_res} :catch_p4_res
+
+    goto :cond_resolve_done
+
+    :catch_p4_res
+    nop
+
+    :cond_resolve_done
+    .line 1
+    invoke-static {p0}, Landroidx/preference/PreferenceManager;->getDefaultSharedPreferences(Landroid/content/Context;)Landroid/content/SharedPreferences;"""
+                if target_p4 in p4_txt:
+                    p4_txt = p4_txt.replace(target_p4, repl_p4, 1)
+                    p4_file.write_text(p4_txt, encoding="utf-8")
+                    print(f"  ✓ Patched l6/p4.smali: resolve content:// SAF tree URIs to POSIX paths")
+
+            # 3. Patch MainActivity.smali: inject PCSX2 version, Check Update button handler, and Setup Wizard restart
             main_activity = smali_out / "xyz" / "aethersx2" / "android" / "MainActivity.smali"
             if main_activity.exists():
                 content = main_activity.read_text(encoding="utf-8")
                 if target_needle in content:
                     content = content.replace(target_needle, replacement, 1)
                     print(f"  ✓ Injected PCSX2 version ({pcsx2_ver}) after Java Version into {dex_path.name}")
+
+                req_obj = "invoke-static {p0}, Ljava/util/Objects;->requireNonNull(Ljava/lang/Object;)Ljava/lang/Object;\n"
+                check_update_code = """    invoke-interface {p1}, Landroid/view/MenuItem;->getTitle()Ljava/lang/CharSequence;
+
+    move-result-object v0
+
+    if-eqz v0, :cond_check_update_skip
+
+    invoke-interface {v0}, Ljava/lang/CharSequence;->toString()Ljava/lang/String;
+
+    move-result-object v0
+
+    const-string v1, "Check Update"
+
+    invoke-virtual {v1, v0}, Ljava/lang/String;->equalsIgnoreCase(Ljava/lang/String;)Z
+
+    move-result v0
+
+    if-eqz v0, :cond_check_update_skip
+
+    invoke-virtual {p0}, Lxyz/aethersx2/android/MainActivity;->B()V
+
+    new-instance v0, Landroid/content/Intent;
+
+    const-string v1, "android.intent.action.VIEW"
+
+    const-string v2, "https://github.com/mininxd/NetherSX2-patch/releases/latest"
+
+    invoke-static {v2}, Landroid/net/Uri;->parse(Ljava/lang/String;)Landroid/net/Uri;
+
+    move-result-object v2
+
+    invoke-direct {v0, v1, v2}, Landroid/content/Intent;-><init>(Ljava/lang/String;Landroid/net/Uri;)V
+
+    invoke-virtual {p0, v0}, Landroid/content/Context;->startActivity(Landroid/content/Intent;)V
+
+    const/4 v0, 0x1
+
+    return v0
+
+    :cond_check_update_skip
+"""
+                if req_obj in content and "Check Update" not in content:
+                    content = content.replace(req_obj, req_obj + "\n" + check_update_code, 1)
+                    print(f"  ✓ Injected Check Update navigation handler into MainActivity.smali")
+
+                pattern_wizard_finish = r"(:pswitch_[0-9a-fA-F]+\n\s*iget-object v0, v1, Lxyz/aethersx2/android/MainActivity;->[A-Za-z0-9_]+:Lxyz/aethersx2/android/d;.*?:cond_[0-9a-fA-F]+\n\s*invoke-virtual/range \{p0 \.\. p0\}, Landroid/app/Activity;->recreate\(\)V)"
+                m_finish = re.search(pattern_wizard_finish, content, flags=re.DOTALL)
+                if m_finish:
+                    label = re.search(r":pswitch_[0-9a-fA-F]+", m_finish.group(1)).group(0)
+                    restart_code = label + """
+    new-instance v0, Landroid/content/Intent;
+
+    const-class v2, Lxyz/aethersx2/android/MainActivity;
+
+    invoke-direct {v0, v1, v2}, Landroid/content/Intent;-><init>(Landroid/content/Context;Ljava/lang/Class;)V
+
+    const v2, 0x14008000
+
+    invoke-virtual {v0, v2}, Landroid/content/Intent;->addFlags(I)Landroid/content/Intent;
+
+    invoke-virtual {v1, v0}, Landroid/content/Context;->startActivity(Landroid/content/Intent;)V
+
+    const/4 v0, 0x0
+
+    invoke-static {v0}, Ljava/lang/System;->exit(I)V
+
+    return-void"""
+                    content = content[:m_finish.start()] + restart_code + content[m_finish.end():]
+                    print(f"  ✓ Patched Setup Wizard completion in MainActivity.smali to restart process cleanly")
+
                 main_activity.write_text(content, encoding="utf-8")
 
             print(f"  Reassembling {dex_path.name} with smali...")
@@ -1108,6 +1404,9 @@ def inject_scale_multiplier(input_apk: Path, output_apk: Path, work_name: str, i
 
     # Remove dead Discord and Patreon buttons, URLs, and telemetry
     remove_dead_socials_and_telemetry(work_dir)
+
+    # Inject Check Update menu item into navigation drawer
+    inject_check_update_menu(work_dir)
 
     # Check if newly built native core from PCSX2 source exists and should be injected
     custom_so = REPO_ROOT / "native" / "build" / "libemucore.so"
@@ -1299,6 +1598,10 @@ def verify_all(target_apks: list[Path] | None = None) -> None:
                     raise SystemExit(f"ERROR: classes.dex in {apk.name} missing PCSX2 version string!")
                 if b"SetupWizardDataDirectoryFragment" not in dex_bytes:
                     raise SystemExit(f"ERROR: classes.dex in {apk.name} missing SetupWizardDataDirectoryFragment!")
+                if b"deduplicateEntries" not in dex_bytes:
+                    raise SystemExit(f"ERROR: classes.dex in {apk.name} missing deduplicateEntries!")
+                if b"https://github.com/mininxd/NetherSX2-patch/releases/latest" not in dex_bytes:
+                    raise SystemExit(f"ERROR: classes.dex in {apk.name} missing Check Update releases URL!")
                 verify_dex_integrity(dex_bytes)
             for item in z.namelist():
                 if "menu_main_navigation" in item:
@@ -1307,6 +1610,8 @@ def verify_all(target_apks: list[Path] | None = None) -> None:
                         raise SystemExit(f"ERROR: action_discord_server still present in {item} of {apk.name}!")
                     if b"action_show_news_updates" in menu_data:
                         raise SystemExit(f"ERROR: action_show_news_updates still present in {item} of {apk.name}!")
+                    if b"action_check_update" not in menu_data:
+                        raise SystemExit(f"ERROR: action_check_update missing in {item} of {apk.name}!")
         print(f"✓ {apk.name}: 0.05x, 0.1x, 0.25x (XML + unclamped libemucore.so) & targetSdkVersion 34 verified")
 
     if NETHERSX2_ADRENO_APK in target_apks or any(apk.name.endswith("_adreno.apk") for apk in target_apks):

@@ -25,7 +25,7 @@
 .method constructor <init>(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;)V
     .registers 2
 
-    .line 162
+    .line 161
     iput-object p1, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$2;->this$0:Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;
 
     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
@@ -38,19 +38,19 @@
 .method public onClick(Landroid/view/View;)V
     .registers 4
 
-    .line 165
+    .line 164
     iget-object p1, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$2;->this$0:Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;
 
     invoke-virtual {p1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getContext()Landroid/content/Context;
 
     move-result-object p1
 
-    .line 166
+    .line 165
     if-nez p1, :cond_9
 
     return-void
 
-    .line 167
+    .line 166
     :cond_9
     sget v0, Landroid/os/Build$VERSION;->SDK_INT:I
 
@@ -64,20 +64,20 @@
 
     if-nez v0, :cond_1b
 
-    .line 168
+    .line 167
     iget-object v0, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$2;->this$0:Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;
 
     invoke-static {v0, p1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->-$$Nest$mrequestAllFilesPermission(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;Landroid/content/Context;)V
 
-    .line 169
+    .line 168
     return-void
 
-    .line 171
+    .line 170
     :cond_1b
     iget-object p1, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$2;->this$0:Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;
 
     invoke-static {p1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->-$$Nest$mopenFolderPicker(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;)V
 
-    .line 172
+    .line 171
     return-void
 .end method

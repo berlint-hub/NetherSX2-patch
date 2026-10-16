@@ -25,7 +25,7 @@
 .method constructor <init>(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;)V
     .registers 2
 
-    .line 119
+    .line 118
     iput-object p1, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$1;->this$0:Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;
 
     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
@@ -38,7 +38,7 @@
 .method public onClick(Landroid/view/View;)V
     .registers 3
 
-    .line 122
+    .line 121
     iget-object p1, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$1;->this$0:Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;
 
     invoke-virtual {p1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getContext()Landroid/content/Context;
@@ -47,6 +47,6 @@
 
     invoke-static {p1, v0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->-$$Nest$mselectDefault(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;Landroid/content/Context;)V
 
-    .line 123
+    .line 122
     return-void
 .end method
