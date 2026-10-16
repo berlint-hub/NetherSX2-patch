@@ -5,6 +5,10 @@
 *.jar
 *.so
 pcsx2/
+armsx2/
+mali_gpu/
+adreno-gpu-vulkan-code-sample-framework/
+ps2/
 GameIndex[converted].yaml
 GameIndex[merged].yaml
 old/

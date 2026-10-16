@@ -661,6 +661,23 @@
     return-object v0
 .end method
 
+.method public static setDataDirectory(Ljava/lang/String;)V
+    .registers 3
+
+    sput-object p0, Lxyz/aethersx2/android/NativeLibrary;->mDataDirectory:Ljava/lang/String;
+
+    if-eqz p0, :cond_e
+
+    new-instance v0, Ljava/io/File;
+
+    invoke-direct {v0, p0}, Ljava/io/File;-><init>(Ljava/lang/String;)V
+
+    invoke-virtual {v0}, Ljava/io/File;->mkdirs()Z
+
+    :cond_e
+    return-void
+.end method
+
 .method public static native getDriverInfo()Ljava/lang/String;
 .end method
 
@@ -1642,6 +1659,45 @@
     return v1
 
     :cond_6
+    invoke-static {p0}, Landroidx/preference/PreferenceManager;->getDefaultSharedPreferences(Landroid/content/Context;)Landroid/content/SharedPreferences;
+
+    move-result-object v0
+
+    const-string v2, "UI/DataDirectory"
+
+    const/4 v3, 0x0
+
+    invoke-interface {v0, v2, v3}, Landroid/content/SharedPreferences;->getString(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+
+    move-result-object v0
+
+    if-eqz v0, :use_internal_storage
+
+    invoke-virtual {v0}, Ljava/lang/String;->isEmpty()Z
+
+    move-result v2
+
+    if-nez v2, :use_internal_storage
+
+    const-string v2, "internal"
+
+    invoke-virtual {v2, v0}, Ljava/lang/String;->equalsIgnoreCase(Ljava/lang/String;)Z
+
+    move-result v2
+
+    if-nez v2, :use_internal_storage
+
+    new-instance v2, Ljava/io/File;
+
+    invoke-direct {v2, v0}, Ljava/io/File;-><init>(Ljava/lang/String;)V
+
+    invoke-virtual {v2}, Ljava/io/File;->mkdirs()Z
+
+    sput-object v0, Lxyz/aethersx2/android/NativeLibrary;->mDataDirectory:Ljava/lang/String;
+
+    goto :data_dir_ready
+
+    :use_internal_storage
     const/4 v0, 0x0
 
     .line 2
@@ -1663,6 +1719,8 @@
     move-result-object v2
 
     sput-object v2, Lxyz/aethersx2/android/NativeLibrary;->mDataDirectory:Ljava/lang/String;
+
+    :data_dir_ready
 
     const/4 v2, 0x2
 

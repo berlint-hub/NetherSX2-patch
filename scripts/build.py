@@ -630,6 +630,82 @@ def patch_manifest_target_sdk(work_dir: Path, target_sdk: int = 34) -> None:
         print(f"  ✓ Patched AndroidManifest.xml: targetSdkVersion={target_sdk}, compileSdkVersion={target_sdk}")
 
 
+def patch_manifest_storage_permissions(work_dir: Path) -> None:
+    """Ensure MANAGE_EXTERNAL_STORAGE, READ/WRITE_EXTERNAL_STORAGE, and requestLegacyExternalStorage are in AndroidManifest.xml."""
+    manifest_path = work_dir / "AndroidManifest.xml"
+    if not manifest_path.exists():
+        return
+    text = manifest_path.read_text(encoding="utf-8")
+    orig = text
+
+    permissions = [
+        '<uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />',
+        '<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />',
+        '<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />',
+    ]
+    for perm in permissions:
+        perm_name = perm.split('"')[1]
+        if perm_name not in text:
+            text = text.replace("</manifest>", f"    {perm}\n</manifest>")
+
+    if 'android:requestLegacyExternalStorage=' not in text:
+        text = re.sub(r'(<application\b[^>]*)>', r'\g<1> android:requestLegacyExternalStorage="true">', text)
+
+    if text != orig:
+        manifest_path.write_text(text, encoding="utf-8")
+        print(f"  ✓ Injected storage permissions into AndroidManifest.xml")
+
+
+def patch_setup_wizard_xml(work_dir: Path) -> None:
+    """Update activity_setup_wizard.xml progressBar max to 6 for the 7 setup wizard steps."""
+    for p in work_dir.rglob("activity_setup_wizard.xml"):
+        txt = p.read_text(encoding="utf-8")
+        new_txt = txt.replace('android:max="5"', 'android:max="6"')
+        if new_txt != txt:
+            p.write_text(new_txt, encoding="utf-8")
+            print(f"  ✓ Updated progressBar android:max=\"6\" in {p.name}")
+
+
+def patch_libemucore_custom_data_dir(work_dir: Path) -> None:
+    """Patch libemucore.so to bypass package name restriction for custom data directories."""
+    adreno_patches = {
+        0x83A3EC: (bytes.fromhex("e0c200b4"), bytes.fromhex("ac000014")),
+        0x83A430: (bytes.fromhex("06060014"), bytes.fromhex("9b000014")),
+        0x83A790: (bytes.fromhex("c0a500b4"), bytes.fromhex("51000014")),
+        0x83A7D4: (bytes.fromhex("1d050014"), bytes.fromhex("40000014")),
+    }
+    mali_patches = {
+        0x82D0DC: (bytes.fromhex("00c300b4"), bytes.fromhex("ac000014")),
+        0x82D120: (bytes.fromhex("07060014"), bytes.fromhex("9b000014")),
+        0x82D480: (bytes.fromhex("e0a500b4"), bytes.fromhex("51000014")),
+        0x82D4C4: (bytes.fromhex("1e050014"), bytes.fromhex("40000014")),
+    }
+
+    for so_path in work_dir.rglob("libemucore.so"):
+        data = bytearray(so_path.read_bytes())
+        file_len = len(data)
+        patches = None
+        if file_len == 12162984:
+            patches = adreno_patches
+        elif file_len == 12094744:
+            patches = mali_patches
+        else:
+            if all(data[off:off+4] in (orig, repl) for off, (orig, repl) in adreno_patches.items()):
+                patches = adreno_patches
+            elif all(data[off:off+4] in (orig, repl) for off, (orig, repl) in mali_patches.items()):
+                patches = mali_patches
+
+        if patches:
+            applied = 0
+            for off, (orig, repl) in patches.items():
+                if data[off:off+4] == orig:
+                    data[off:off+4] = repl
+                    applied += 1
+                elif data[off:off+4] == repl:
+                    applied += 1
+            if applied == len(patches):
+                so_path.write_bytes(data)
+                print(f"  ✓ Patched {so_path.name} to allow arbitrary custom data directories")
 
 
 def inject_updated_pcsx2_assets(work_dir: Path) -> None:
@@ -791,18 +867,18 @@ def patch_dex_pcsx2_version(work_dir: Path) -> None:
 
     baksmali_cmd = ensure_baksmali()
     smali_cmd = ensure_smali()
-    db_smali_src = REPO_ROOT / "smali_target" / "xyz" / "aethersx2" / "android" / "GameListDatabase.smali"
+    smali_target_dir = REPO_ROOT / "smali_target"
 
     for dex_path in dex_files:
         original_bytes = dex_path.read_bytes()
         dex_md5 = hashlib.md5(original_bytes).hexdigest()
-        cache_key = f"{dex_md5}_{pcsx2_ver}_sqlite_v2"
+        cache_key = f"{dex_md5}_{pcsx2_ver}_data_dir_wizard_v1"
 
         if cache_key in _DEX_CACHE:
             patched_bytes = _DEX_CACHE[cache_key]
             dex_path.write_bytes(patched_bytes)
             verify_dex_integrity(patched_bytes)
-            print(f"  ✓ Applied cached PCSX2 version ({pcsx2_ver}) + SQLite GameList DEX to {dex_path.name}")
+            print(f"  ✓ Applied cached PCSX2 version ({pcsx2_ver}) + custom smali DEX to {dex_path.name}")
             continue
 
         temp_dir = Path(tempfile.mkdtemp(prefix="dex_patch_"))
@@ -811,12 +887,16 @@ def patch_dex_pcsx2_version(work_dir: Path) -> None:
             print(f"  Disassembling {dex_path.name} with baksmali...")
             run_cmd(baksmali_cmd + ["disassemble", str(dex_path), "-o", str(smali_out)])
 
-            # 1. Inject SQLite GameListDatabase.smali
-            if db_smali_src.exists():
-                db_dest = smali_out / "xyz" / "aethersx2" / "android" / "GameListDatabase.smali"
-                db_dest.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copyfile(db_smali_src, db_dest)
-                print(f"  ✓ Injected SQLite GameListDatabase into {dex_path.name}")
+            # 1. Inject all smali classes from smali_target (GameListDatabase, SetupWizardDataDirectoryFragment, SetupWizardActivity, NativeLibrary, etc.)
+            if smali_target_dir.exists():
+                injected_count = 0
+                for smali_file in smali_target_dir.rglob("*.smali"):
+                    rel = smali_file.relative_to(smali_target_dir)
+                    dest = smali_out / rel
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copyfile(smali_file, dest)
+                    injected_count += 1
+                print(f"  ✓ Injected {injected_count} custom/updated smali classes into {dex_path.name}")
 
             # 2. Patch runner to use GameListDatabase.getOrUpdateGameList (prevents rescanning on every open)
             runner_patched = False
@@ -872,7 +952,7 @@ def patch_dex_pcsx2_version(work_dir: Path) -> None:
             verify_dex_integrity(patched_bytes)
             _DEX_CACHE[cache_key] = patched_bytes
             dex_path.write_bytes(patched_bytes)
-            print(f"  ✓ Injected PCSX2 version ({pcsx2_ver}) and SQLite GameListDatabase into {dex_path.name}")
+            print(f"  ✓ Injected PCSX2 version ({pcsx2_ver}), Setup Wizard Data Directory & custom smali into {dex_path.name}")
         finally:
             shutil.rmtree(temp_dir, ignore_errors=True)
 
@@ -910,6 +990,12 @@ def inject_scale_multiplier(input_apk: Path, output_apk: Path, work_name: str, i
     # Patch targetSdkVersion and compileSdkVersion to Android 14 (API 34) for full Android 15 compatibility
     patch_manifest_target_sdk(work_dir, target_sdk=34)
 
+    # Inject storage permissions and legacy external storage flag
+    patch_manifest_storage_permissions(work_dir)
+
+    # Update setup wizard step count in layout XML
+    patch_setup_wizard_xml(work_dir)
+
     # Remove dead Discord and Patreon buttons, URLs, and telemetry
     remove_dead_socials_and_telemetry(work_dir)
 
@@ -942,6 +1028,7 @@ def inject_scale_multiplier(input_apk: Path, output_apk: Path, work_name: str, i
     if not has_custom_so:
         patch_emucore_scale_clamp(work_dir)
         patch_mali_vulkan_core(work_dir)
+        patch_libemucore_custom_data_dir(work_dir)
 
     # Rebuild with APKEditor (preserves original resource IDs)
     raw_rebuilt = REPO_ROOT / f"{work_name}_rebuilt.apk"
@@ -1093,6 +1180,8 @@ def verify_all(target_apks: list[Path] | None = None) -> None:
                     raise SystemExit(f"ERROR: classes.dex in {apk.name} missing PCSX2 version string!")
                 if b"GameListDatabase" not in dex_bytes or b"gamelist.db" not in dex_bytes:
                     raise SystemExit(f"ERROR: classes.dex in {apk.name} missing SQLite GameListDatabase!")
+                if b"SetupWizardDataDirectoryFragment" not in dex_bytes:
+                    raise SystemExit(f"ERROR: classes.dex in {apk.name} missing SetupWizardDataDirectoryFragment!")
                 verify_dex_integrity(dex_bytes)
             for item in z.namelist():
                 if "menu_main_navigation" in item:
