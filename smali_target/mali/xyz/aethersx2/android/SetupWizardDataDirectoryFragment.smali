@@ -1,5 +1,5 @@
 .class public Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;
-.super Landroidx/fragment/app/o;
+.super Landroidx/fragment/app/n;
 .source "SetupWizardDataDirectoryFragment.java"
 
 
@@ -52,7 +52,7 @@
     .registers 2
 
     .line 27
-    invoke-direct {p0}, Landroidx/fragment/app/o;-><init>()V
+    invoke-direct {p0}, Landroidx/fragment/app/n;-><init>()V
 
     .line 31
     const-string v0, ""
@@ -893,7 +893,7 @@
     .registers 6
 
     .line 238
-    invoke-super {p0, p1, p2, p3}, Landroidx/fragment/app/o;->onActivityResult(IILandroid/content/Intent;)V
+    invoke-super {p0, p1, p2, p3}, Landroidx/fragment/app/n;->onActivityResult(IILandroid/content/Intent;)V
 
     .line 239
     const/16 v0, 0x3ea
@@ -1715,7 +1715,7 @@
     .registers 1
 
     .line 182
-    invoke-super {p0}, Landroidx/fragment/app/o;->onResume()V
+    invoke-super {p0}, Landroidx/fragment/app/n;->onResume()V
 
     .line 183
     invoke-direct {p0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->updateUiState()V
