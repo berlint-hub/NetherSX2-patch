@@ -1093,7 +1093,7 @@ def main() -> None:
         build_nethersx2_mali()
         built.extend([NETHERSX2_ADRENO_APK, NETHERSX2_MALI_APK])
 
-    if target in ("all", "nethersx2", "switch"):
+    if target in ("all", "switch"):
         print("\n==========================================")
         print("Building Nintendo Switch (Tegra X1) Variant")
         print("==========================================")
