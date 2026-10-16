@@ -976,7 +976,7 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
     for dex_path in dex_files:
         original_bytes = dex_path.read_bytes()
         dex_md5 = hashlib.md5(original_bytes).hexdigest()
-        cache_key = f"{dex_md5}_{pcsx2_ver}_qol_features_v14_{'mali' if is_mali else 'adreno'}"
+        cache_key = f"{dex_md5}_{pcsx2_ver}_qol_features_v15_{'mali' if is_mali else 'adreno'}"
 
         if cache_key in _DEX_CACHE:
             patched_bytes = _DEX_CACHE[cache_key]
@@ -2472,8 +2472,9 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
                 if "ExternalControllerHelper" not in esv_content:
                     pattern_esv = (
                         r'(invoke-static \{([a-z0-9]+)\}, Lxyz/aethersx2/android/EmulationSurfaceView;->e\(Landroid/view/InputDevice;\)Z\s+'
-                        r'move-result ([a-z0-9]+)'
-                        r'[\s\S]*?'
+                        r'move-result ([a-z0-9]+)\s+'
+                        r'if-eqz \3, :cond_[0-9a-fA-F]+'
+                        r'(?:\s+\.line \d+)?\s+'
                         r'iput-boolean [a-z0-9]+,\s*([a-z0-9]+),\s*Lxyz/aethersx2/android/EmulationSurfaceView;->(?:d|j):Z)'
                     )
                     m_esv = re.search(pattern_esv, esv_content)
