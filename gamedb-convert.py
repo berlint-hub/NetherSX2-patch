@@ -207,6 +207,25 @@ with open('GameIndex[converted].yaml', encoding='utf8') as base, open('old/GameI
     print('Merging GameDB entries...')
     base_db.update(og_db)
     base_db.update(diff_db)
+
+    # Merge ARMSX2 mobile overrides if available
+    armsx2_overlay_path = 'assets/armsx2_overrides.yaml' if os.path.exists('assets/armsx2_overrides.yaml') else 'armsx2/bin/resources-overlay/armsx2_overrides.yaml'
+    if os.path.exists(armsx2_overlay_path):
+        print('Merging ARMSX2 mobile GPU overrides...')
+        with open(armsx2_overlay_path, encoding='utf8') as aov:
+            arms_db = yaml.load(aov)
+            if isinstance(arms_db, dict):
+                for k, v in list(arms_db.items()):
+                    if isinstance(v, dict) and 'gsHWFixes' in v and isinstance(v['gsHWFixes'], dict):
+                        hwf = v['gsHWFixes']
+                        if 'copyRoadMaximumBlendingLevel' in hwf:
+                            hwf['maximumBlendingLevel'] = hwf.pop('copyRoadMaximumBlendingLevel')
+                        if 'recommendedBlendingLevel' in hwf:
+                            hwf['minimumBlendingLevel'] = hwf.pop('recommendedBlendingLevel')
+                arms_db = process_dict(arms_db, base_db)
+                base_db.update(arms_db)
+                print(f'  ✓ Merged {len(arms_db)} mobile GPU GameDB overrides')
+
     print('Creating GameIndex[merged].yaml file...')
     yaml.dump(base_db, merged)
 process_db('GameIndex[merged].yaml', 'GameIndex[temp2].yaml')

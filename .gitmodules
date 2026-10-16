@@ -9,3 +9,9 @@
 [submodule "adreno-gpu-vulkan-code-sample-framework"]
 	path = adreno-gpu-vulkan-code-sample-framework
 	url = https://github.com/SnapdragonGameStudios/adreno-gpu-vulkan-code-sample-framework
+[submodule "armsx2"]
+	path = armsx2
+	url = https://github.com/armsx2/armsx2
+[submodule "ps2"]
+	path = ps2
+	url = https://github.com/libretro/ps2

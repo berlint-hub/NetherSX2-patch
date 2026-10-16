@@ -670,6 +670,20 @@ def inject_updated_pcsx2_assets(work_dir: Path) -> None:
                 shutil.copyfile(src, ad / asset_name)
             print(f"  ✓ Injected {asset_name} into APK assets")
 
+    # 4. Inject updated CPU/GPU accurate shaders (Vulkan and OpenGL)
+    shaders_src = assets_dir / "shaders"
+    if shaders_src.exists():
+        shaders_injected = 0
+        for ad in apk_assets_dirs:
+            dest_shaders = ad / "shaders"
+            for shader_file in shaders_src.rglob("*.glsl"):
+                rel_path = shader_file.relative_to(shaders_src)
+                target_dest = dest_shaders / rel_path
+                target_dest.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(shader_file, target_dest)
+                shaders_injected += 1
+        print(f"  ✓ Injected {shaders_injected} updated accurate GPU/CPU shaders into APK assets")
+
     # 4. Remove residual ad services property files
     deleted_props = 0
     for prop in list(work_dir.rglob("*.properties")):
