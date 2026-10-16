@@ -866,20 +866,13 @@ def remove_dead_socials_and_telemetry(work_dir: Path) -> None:
 
 def inject_check_update_menu(work_dir: Path) -> None:
     """Inject 'Check Update' button at the bottom of the navigation menu."""
-    for id_file in work_dir.rglob("ids.xml"):
-        txt = id_file.read_text(encoding="utf-8")
-        if 'name="action_check_update"' not in txt:
-            new_txt = txt.replace("</resources>", '  <id name="action_check_update" />\n</resources>')
-            id_file.write_text(new_txt, encoding="utf-8")
-
     check_update_item = """    <item android:icon="@drawable/ic_baseline_tips_and_updates_24"
-          android:id="@+id/action_check_update"
           android:title="Check Update" />"""
 
     injected = 0
     for menu_path in work_dir.rglob("menu_main_navigation.xml"):
         content = menu_path.read_text(encoding="utf-8")
-        if "action_check_update" not in content and "Check Update" not in content:
+        if "Check Update" not in content:
             pattern = r"(<group\b[^>]*android:id=\"@id/support\"[^>]*>.*?)(\s*</group>)"
             new_content, count = re.subn(pattern, rf"\g<1>\n{check_update_item}\g<2>", content, flags=re.DOTALL)
             if count > 0:
@@ -1610,8 +1603,8 @@ def verify_all(target_apks: list[Path] | None = None) -> None:
                         raise SystemExit(f"ERROR: action_discord_server still present in {item} of {apk.name}!")
                     if b"action_show_news_updates" in menu_data:
                         raise SystemExit(f"ERROR: action_show_news_updates still present in {item} of {apk.name}!")
-                    if b"action_check_update" not in menu_data:
-                        raise SystemExit(f"ERROR: action_check_update missing in {item} of {apk.name}!")
+                    if b"Check Update" not in menu_data:
+                        raise SystemExit(f"ERROR: 'Check Update' missing in {item} of {apk.name}!")
         print(f"✓ {apk.name}: 0.05x, 0.1x, 0.25x (XML + unclamped libemucore.so) & targetSdkVersion 34 verified")
 
     if NETHERSX2_ADRENO_APK in target_apks or any(apk.name.endswith("_adreno.apk") for apk in target_apks):
