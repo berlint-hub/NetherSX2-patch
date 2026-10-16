@@ -1032,9 +1032,12 @@ def verify_all(target_apks: list[Path] | None = None) -> None:
                 patched_pattern = b"\x01\x58\x21\x1e\x02\x10\x2c\x1e\x00\x20\x22\x1e\x20\x40\x20\x1e"
                 if patched_pattern not in so_bytes:
                     raise SystemExit(f"ERROR: libemucore.so in {apk.name} still has 0.5f minimum clamp!")
-                mali_vulkan_pattern = bytes.fromhex("490100521f2003d54d008052")
-                if mali_vulkan_pattern not in so_bytes:
-                    raise SystemExit(f"ERROR: libemucore.so in {apk.name} missing Mali Vulkan dual-source blend patch!")
+                mali_dsb_unlocked = bytes.fromhex("490100521f2003d54d008052")
+                if mali_dsb_unlocked in so_bytes:
+                    raise SystemExit(f"ERROR: libemucore.so in {apk.name} has dual-source blend unlocked for Mali (violates deactivation requirement)!")
+                arm64_nop = bytes.fromhex("1f2003d5")
+                if arm64_nop not in (so_bytes[0x65afa0:0x65afa4], so_bytes[0x681e7c:0x681e80]):
+                    raise SystemExit(f"ERROR: libemucore.so in {apk.name} missing Vulkan format check bypass!")
             custom_buttons = [n for n in z.namelist() if n.endswith(".png") and "ic_controller_" in n]
             if custom_buttons:
                 raise SystemExit(f"ERROR: Custom controller buttons still found in {apk.name}: {custom_buttons}")
