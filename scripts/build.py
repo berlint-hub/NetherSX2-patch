@@ -949,7 +949,7 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
     for dex_path in dex_files:
         original_bytes = dex_path.read_bytes()
         dex_md5 = hashlib.md5(original_bytes).hexdigest()
-        cache_key = f"{dex_md5}_{pcsx2_ver}_data_dir_split_v11_{'mali' if is_mali else 'adreno'}"
+        cache_key = f"{dex_md5}_{pcsx2_ver}_game_list_clean_v12_{'mali' if is_mali else 'adreno'}"
 
         if cache_key in _DEX_CACHE:
             patched_bytes = _DEX_CACHE[cache_key]
@@ -1014,6 +1014,8 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
     invoke-virtual {p0, v0}, Landroid/content/Context;->getExternalFilesDir(Ljava/lang/String;)Ljava/io/File;"""
 
                 repl_cond6 = """:cond_6
+    invoke-static {p0}, Lxyz/aethersx2/android/NativeLibrary;->sanitizeGameListPaths(Landroid/content/Context;)V
+
     invoke-static {p0}, Landroidx/preference/PreferenceManager;->getDefaultSharedPreferences(Landroid/content/Context;)Landroid/content/SharedPreferences;
 
     move-result-object v0
@@ -1065,7 +1067,7 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
                 if "deduplicateEntries" not in nl_txt:
                     dedup_method = """
 .method public static deduplicateEntries([Lxyz/aethersx2/android/GameListEntry;)[Lxyz/aethersx2/android/GameListEntry;
-    .registers 8
+    .registers 9
 
     if-nez p0, :cond_dedup_null
 
@@ -1074,96 +1076,129 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
     return-object p0
 
     :cond_dedup_null
-    new-instance v0, Ljava/util/ArrayList;
+    new-instance v0, Ljava/util/LinkedHashMap;
 
-    invoke-direct {v0}, Ljava/util/ArrayList;-><init>()V
+    invoke-direct {v0}, Ljava/util/LinkedHashMap;-><init>()V
 
-    new-instance v1, Ljava/util/HashSet;
-
-    invoke-direct {v1}, Ljava/util/HashSet;-><init>()V
-
-    const/4 v2, 0x0
+    const/4 v1, 0x0
 
     :goto_dedup_loop
-    array-length v3, p0
+    array-length v2, p0
 
-    if-ge v2, v3, :cond_dedup_done
+    if-ge v1, v2, :cond_dedup_done
 
-    aget-object v3, p0, v2
+    aget-object v2, p0, v1
 
-    if-nez v3, :cond_dedup_valid
+    if-nez v2, :cond_dedup_valid
 
     goto :goto_dedup_next
 
     :cond_dedup_valid
-    invoke-virtual {v3}, Lxyz/aethersx2/android/GameListEntry;->getSerial()Ljava/lang/String;
+    invoke-virtual {v2}, Lxyz/aethersx2/android/GameListEntry;->getTitle()Ljava/lang/String;
+
+    move-result-object v3
+
+    invoke-virtual {v2}, Lxyz/aethersx2/android/GameListEntry;->getRegion()Lxyz/aethersx2/android/GameListEntry$b;
+
+    invoke-virtual {v2}, Lxyz/aethersx2/android/GameListEntry;->getSerial()Ljava/lang/String;
 
     move-result-object v4
 
-    invoke-virtual {v3}, Lxyz/aethersx2/android/GameListEntry;->getCRC()I
+    const/4 v5, 0x0
 
-    move-result v5
-
-    if-eqz v4, :cond_dedup_title
+    if-eqz v4, :cond_dedup_by_title
 
     invoke-virtual {v4}, Ljava/lang/String;->isEmpty()Z
 
     move-result v6
 
-    if-nez v6, :cond_dedup_title
+    if-nez v6, :cond_dedup_by_title
 
-    new-instance v6, Ljava/lang/StringBuilder;
+    invoke-virtual {v4}, Ljava/lang/String;->toUpperCase()Ljava/lang/String;
 
-    invoke-direct {v6}, Ljava/lang/StringBuilder;-><init>()V
+    move-result-object v5
 
-    invoke-virtual {v6, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    :cond_dedup_by_title
+    if-nez v5, :cond_dedup_key_ready
 
-    move-result-object v4
+    if-eqz v3, :cond_dedup_key_ready
 
-    const-string v6, "_"
+    invoke-virtual {v3}, Ljava/lang/String;->toLowerCase()Ljava/lang/String;
 
-    invoke-virtual {v4, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    move-result-object v3
 
-    move-result-object v4
+    invoke-virtual {v3}, Ljava/lang/String;->trim()Ljava/lang/String;
 
-    invoke-virtual {v4, v5}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+    move-result-object v5
 
-    move-result-object v4
+    :cond_dedup_key_ready
+    if-nez v5, :cond_dedup_chk_key
 
-    invoke-virtual {v4}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    invoke-virtual {v2}, Lxyz/aethersx2/android/GameListEntry;->getPath()Ljava/lang/String;
 
-    move-result-object v4
+    move-result-object v5
 
-    goto :goto_dedup_check
+    :cond_dedup_chk_key
+    if-nez v5, :cond_dedup_put
 
-    :cond_dedup_title
-    invoke-virtual {v3}, Lxyz/aethersx2/android/GameListEntry;->getTitle()Ljava/lang/String;
+    goto :goto_dedup_next
 
-    move-result-object v4
+    :cond_dedup_put
+    invoke-virtual {v0, v5}, Ljava/util/LinkedHashMap;->containsKey(Ljava/lang/Object;)Z
 
-    :goto_dedup_check
-    invoke-virtual {v1, v4}, Ljava/util/HashSet;->add(Ljava/lang/Object;)Z
+    move-result v3
+
+    if-eqz v3, :cond_dedup_insert
+
+    invoke-virtual {v0, v5}, Ljava/util/LinkedHashMap;->get(Ljava/lang/Object;)Ljava/lang/Object;
+
+    move-result-object v3
+
+    check-cast v3, Lxyz/aethersx2/android/GameListEntry;
+
+    if-eqz v3, :cond_dedup_insert
+
+    invoke-virtual {v3}, Lxyz/aethersx2/android/GameListEntry;->getSerial()Ljava/lang/String;
+
+    move-result-object v3
+
+    if-eqz v4, :cond_goto_next
+
+    invoke-virtual {v4}, Ljava/lang/String;->isEmpty()Z
 
     move-result v4
 
-    if-eqz v4, :cond_dedup_next
+    if-nez v4, :cond_goto_next
 
-    invoke-virtual {v0, v3}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
+    if-eqz v3, :cond_dedup_insert
 
-    :cond_dedup_next
+    invoke-virtual {v3}, Ljava/lang/String;->isEmpty()Z
+
+    move-result v3
+
+    if-eqz v3, :cond_goto_next
+
+    :cond_dedup_insert
+    invoke-virtual {v0, v5, v2}, Ljava/util/LinkedHashMap;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+
+    :cond_goto_next
     :goto_dedup_next
-    add-int/lit8 v2, v2, 0x1
+    add-int/lit8 v1, v1, 0x1
 
     goto :goto_dedup_loop
 
     :cond_dedup_done
-    invoke-virtual {v0}, Ljava/util/ArrayList;->size()I
+    invoke-virtual {v0}, Ljava/util/LinkedHashMap;->values()Ljava/util/Collection;
 
-    move-result p0
+    move-result-object p0
 
-    new-array p0, p0, [Lxyz/aethersx2/android/GameListEntry;
+    invoke-interface {p0}, Ljava/util/Collection;->size()I
 
-    invoke-virtual {v0, p0}, Ljava/util/ArrayList;->toArray([Ljava/lang/Object;)[Ljava/lang/Object;
+    move-result v0
+
+    new-array v0, v0, [Lxyz/aethersx2/android/GameListEntry;
+
+    invoke-interface {p0, v0}, Ljava/util/Collection;->toArray([Ljava/lang/Object;)[Ljava/lang/Object;
 
     move-result-object p0
 
@@ -1172,27 +1207,975 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
     return-object p0
 .end method
 """
-                    nl_txt = nl_txt.replace(".method private static native initialize", dedup_method + "\n.method private static native initialize")
+
+                    sanitize_paths = """
+.method public static sanitizeGameListPaths(Landroid/content/Context;)V
+    .registers 13
+
+    if-nez p0, :cond_san_done
+
+    :try_start_san
+    invoke-static {p0}, Landroidx/preference/PreferenceManager;->getDefaultSharedPreferences(Landroid/content/Context;)Landroid/content/SharedPreferences;
+
+    move-result-object v0
+
+    if-nez v0, :cond_san_start
+
+    return-void
+
+    :cond_san_start
+    const/4 v1, 0x2
+
+    new-array v1, v1, [Ljava/lang/String;
+
+    const/4 v2, 0x0
+
+    const-string v3, "GameList/Paths"
+
+    aput-object v3, v1, v2
+
+    const/4 v3, 0x1
+
+    const-string v4, "GameList/RecursivePaths"
+
+    aput-object v4, v1, v3
+
+    const/4 v3, 0x0
+
+    :goto_san_keys
+    const/4 v4, 0x2
+
+    if-ge v3, v4, :cond_san_done
+
+    aget-object v4, v1, v3
+
+    const/4 v5, 0x0
+
+    invoke-interface {v0, v4, v5}, Landroid/content/SharedPreferences;->getStringSet(Ljava/lang/String;Ljava/util/Set;)Ljava/util/Set;
+
+    move-result-object v5
+
+    if-eqz v5, :cond_san_next_key
+
+    invoke-interface {v5}, Ljava/util/Set;->isEmpty()Z
+
+    move-result v6
+
+    if-nez v6, :cond_san_next_key
+
+    const/4 v6, 0x0
+
+    new-instance v7, Landroid/util/ArraySet;
+
+    invoke-direct {v7}, Landroid/util/ArraySet;-><init>()V
+
+    invoke-interface {v5}, Ljava/util/Set;->iterator()Ljava/util/Iterator;
+
+    move-result-object v5
+
+    :cond_san_loop
+    :goto_san_loop
+    invoke-interface {v5}, Ljava/util/Iterator;->hasNext()Z
+
+    move-result v8
+
+    if-eqz v8, :cond_san_commit
+
+    invoke-interface {v5}, Ljava/util/Iterator;->next()Ljava/lang/Object;
+
+    move-result-object v8
+
+    check-cast v8, Ljava/lang/String;
+
+    if-eqz v8, :cond_san_loop
+
+    invoke-virtual {v8}, Ljava/lang/String;->isEmpty()Z
+
+    move-result v9
+
+    if-eqz v9, :cond_san_check_p
+
+    goto :goto_san_loop
+
+    :cond_san_check_p
+    move-object v9, v8
+
+    const-string v10, "content://"
+
+    invoke-virtual {v8, v10}, Ljava/lang/String;->startsWith(Ljava/lang/String;)Z
+
+    move-result v10
+
+    if-eqz v10, :cond_san_chk_pct
+
+    :try_start_tree
+    invoke-static {v8}, Landroid/net/Uri;->parse(Ljava/lang/String;)Landroid/net/Uri;
+
+    move-result-object v10
+
+    invoke-static {v10, p0}, Lxyz/aethersx2/android/FileHelper;->getFullPathFromTreeUri(Landroid/net/Uri;Landroid/content/Context;)Ljava/lang/String;
+
+    move-result-object v10
+
+    if-eqz v10, :cond_san_chk_pct
+
+    invoke-virtual {v10}, Ljava/lang/String;->isEmpty()Z
+
+    move-result v11
+
+    if-nez v11, :cond_san_chk_pct
+
+    const-string v11, "/"
+
+    invoke-virtual {v11, v10}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+
+    move-result v11
+
+    if-nez v11, :cond_san_chk_pct
+
+    const-string v9, "UTF-8"
+
+    invoke-static {v10, v9}, Ljava/net/URLDecoder;->decode(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+
+    move-result-object v9
+
+    const/4 v6, 0x1
+    :try_end_tree
+    .catch Ljava/lang/Exception; {:try_start_tree .. :try_end_tree} :catch_tree
+
+    goto :cond_san_add
+
+    :catch_tree
+    nop
+
+    :cond_san_chk_pct
+    const-string v10, "%"
+
+    invoke-virtual {v9, v10}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v10
+
+    if-eqz v10, :cond_san_add
+
+    :try_start_url
+    const-string v10, "UTF-8"
+
+    invoke-static {v9, v10}, Ljava/net/URLDecoder;->decode(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+
+    move-result-object v9
+
+    const/4 v6, 0x1
+    :try_end_url
+    .catch Ljava/lang/Exception; {:try_start_url .. :try_end_url} :catch_url
+
+    goto :cond_san_add
+
+    :catch_url
+    nop
+
+    :cond_san_add
+    invoke-virtual {v7, v9}, Landroid/util/ArraySet;->add(Ljava/lang/Object;)Z
+
+    goto :goto_san_loop
+
+    :cond_san_commit
+    if-eqz v6, :cond_san_next_key
+
+    invoke-interface {v0}, Landroid/content/SharedPreferences;->edit()Landroid/content/SharedPreferences$Editor;
+
+    move-result-object v5
+
+    invoke-interface {v5, v4, v7}, Landroid/content/SharedPreferences$Editor;->putStringSet(Ljava/lang/String;Ljava/util/Set;)Landroid/content/SharedPreferences$Editor;
+
+    move-result-object v4
+
+    invoke-interface {v4}, Landroid/content/SharedPreferences$Editor;->commit()Z
+
+    :cond_san_next_key
+    add-int/lit8 v3, v3, 0x1
+
+    goto/16 :goto_san_keys
+    :try_end_san
+    .catch Ljava/lang/Exception; {:try_start_san .. :try_end_san} :catch_san
+
+    :catch_san
+    nop
+
+    :cond_san_done
+    return-void
+.end method
+"""
+                    nl_txt = nl_txt.replace(".method private static native initialize", dedup_method + "\n" + sanitize_paths + "\n.method private static native initialize")
 
                 nat_lib.write_text(nl_txt, encoding="utf-8")
                 print(f"  ✓ Patched NativeLibrary data directory loader and deduplication in {dex_path.name}")
 
-            # Patch l6/n4.smali: apply deduplicateEntries after getGameListEntries()
-            n4_file = smali_out / "l6" / "n4.smali"
-            if n4_file.exists():
-                n4_txt = n4_file.read_text(encoding="utf-8")
-                orig_get_entries = "invoke-static {}, Lxyz/aethersx2/android/NativeLibrary;->getGameListEntries()[Lxyz/aethersx2/android/GameListEntry;\n\n    move-result-object v1"
-                repl_get_entries = orig_get_entries + "\n\n    invoke-static {v1}, Lxyz/aethersx2/android/NativeLibrary;->deduplicateEntries([Lxyz/aethersx2/android/GameListEntry;)[Lxyz/aethersx2/android/GameListEntry;\n\n    move-result-object v1"
-                if orig_get_entries in n4_txt and "deduplicateEntries" not in n4_txt:
-                    n4_txt = n4_txt.replace(orig_get_entries, repl_get_entries, 1)
-                    n4_file.write_text(n4_txt, encoding="utf-8")
-                    print(f"  ✓ Patched l6/n4.smali: deduplicate game list entries")
+            # Patch GameListEntry.smali: clean %20 and extensions from titles, and infer regions from serial/name
+            gle_file = smali_out / "xyz" / "aethersx2" / "android" / "GameListEntry.smali"
+            if gle_file.exists():
+                gle_txt = gle_file.read_text(encoding="utf-8")
+                orig_get_title = ".method public getTitle()Ljava/lang/String;\\n    .registers 2\\n\\n    iget-object v0, p0, Lxyz/aethersx2/android/GameListEntry;->e:Ljava/lang/String;\\n\\n    return-object v0\\n.end method"
+                new_get_title = """.method public getTitle()Ljava/lang/String;
+    .registers 4
 
-            # Patch l6/p4.smali: resolve content:// URIs to canonical decoded POSIX paths
+    iget-object v0, p0, Lxyz/aethersx2/android/GameListEntry;->e:Ljava/lang/String;
+
+    if-nez v0, :cond_gle_t_not_null
+
+    const-string v0, ""
+
+    return-object v0
+
+    :cond_gle_t_not_null
+    const-string v1, "%20"
+
+    invoke-virtual {v0, v1}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v1
+
+    if-eqz v1, :cond_gle_t_url
+
+    const-string v1, "%20"
+
+    const-string v2, " "
+
+    invoke-virtual {v0, v1, v2}, Ljava/lang/String;->replace(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Ljava/lang/String;
+
+    move-result-object v0
+
+    :cond_gle_t_url
+    const-string v1, "%"
+
+    invoke-virtual {v0, v1}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v1
+
+    if-eqz v1, :cond_gle_t_ext
+
+    :try_start_gle_dec
+    const-string v1, "UTF-8"
+
+    invoke-static {v0, v1}, Ljava/net/URLDecoder;->decode(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+
+    move-result-object v0
+    :try_end_gle_dec
+    .catch Ljava/lang/Exception; {:try_start_gle_dec .. :try_end_gle_dec} :catch_gle_dec
+
+    goto :cond_gle_t_ext
+
+    :catch_gle_dec
+    nop
+
+    :cond_gle_t_ext
+    invoke-virtual {v0}, Ljava/lang/String;->toLowerCase()Ljava/lang/String;
+
+    move-result-object v1
+
+    const-string v2, ".iso"
+
+    invoke-virtual {v1, v2}, Ljava/lang/String;->endsWith(Ljava/lang/String;)Z
+
+    move-result v2
+
+    if-nez v2, :cond_strip_4
+
+    const-string v2, ".chd"
+
+    invoke-virtual {v1, v2}, Ljava/lang/String;->endsWith(Ljava/lang/String;)Z
+
+    move-result v2
+
+    if-nez v2, :cond_strip_4
+
+    const-string v2, ".cso"
+
+    invoke-virtual {v1, v2}, Ljava/lang/String;->endsWith(Ljava/lang/String;)Z
+
+    move-result v2
+
+    if-nez v2, :cond_strip_4
+
+    const-string v2, ".bin"
+
+    invoke-virtual {v1, v2}, Ljava/lang/String;->endsWith(Ljava/lang/String;)Z
+
+    move-result v2
+
+    if-nez v2, :cond_strip_4
+
+    const-string v2, ".gz"
+
+    invoke-virtual {v1, v2}, Ljava/lang/String;->endsWith(Ljava/lang/String;)Z
+
+    move-result v1
+
+    if-eqz v1, :cond_gle_t_done
+
+    const/4 v1, 0x0
+
+    invoke-virtual {v0}, Ljava/lang/String;->length()I
+
+    move-result v2
+
+    add-int/lit8 v2, v2, -0x3
+
+    invoke-virtual {v0, v1, v2}, Ljava/lang/String;->substring(II)Ljava/lang/String;
+
+    move-result-object v0
+
+    goto :cond_gle_t_done
+
+    :cond_strip_4
+    const/4 v1, 0x0
+
+    invoke-virtual {v0}, Ljava/lang/String;->length()I
+
+    move-result v2
+
+    add-int/lit8 v2, v2, -0x4
+
+    invoke-virtual {v0, v1, v2}, Ljava/lang/String;->substring(II)Ljava/lang/String;
+
+    move-result-object v0
+
+    :cond_gle_t_done
+    invoke-virtual {v0}, Ljava/lang/String;->trim()Ljava/lang/String;
+
+    move-result-object v0
+
+    iput-object v0, p0, Lxyz/aethersx2/android/GameListEntry;->e:Ljava/lang/String;
+
+    return-object v0
+.end method"""
+
+                orig_get_reg = ".method public getRegion()Lxyz/aethersx2/android/GameListEntry$b;\\n    .registers 2\\n\\n    iget-object v0, p0, Lxyz/aethersx2/android/GameListEntry;->a:Lxyz/aethersx2/android/GameListEntry$b;\\n\\n    return-object v0\\n.end method"
+                new_detect_and_get_reg = """.method public static detectRegion(Lxyz/aethersx2/android/GameListEntry;)Lxyz/aethersx2/android/GameListEntry$b;
+    .registers 6
+
+    if-nez p0, :cond_gle_reg_null
+
+    sget-object v0, Lxyz/aethersx2/android/GameListEntry$b;->d:[Lxyz/aethersx2/android/GameListEntry$b;
+
+    const/4 v1, 0x7
+
+    aget-object v0, v0, v1
+
+    return-object v0
+
+    :cond_gle_reg_null
+    iget-object v0, p0, Lxyz/aethersx2/android/GameListEntry;->a:Lxyz/aethersx2/android/GameListEntry$b;
+
+    sget-object v1, Lxyz/aethersx2/android/GameListEntry$b;->d:[Lxyz/aethersx2/android/GameListEntry$b;
+
+    if-eqz v0, :cond_gle_reg_check
+
+    invoke-virtual {v0}, Ljava/lang/Enum;->ordinal()I
+
+    move-result v2
+
+    const/4 v3, 0x7
+
+    if-eq v2, v3, :cond_gle_reg_check
+
+    return-object v0
+
+    :cond_gle_reg_check
+    iget-object v2, p0, Lxyz/aethersx2/android/GameListEntry;->d:Ljava/lang/String;
+
+    if-eqz v2, :cond_gle_chk_name
+
+    invoke-virtual {v2}, Ljava/lang/String;->toUpperCase()Ljava/lang/String;
+
+    move-result-object v2
+
+    const-string v3, "SLUS"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_ntsc_u
+
+    const-string v3, "SCUS"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-eqz v3, :cond_chk_ser_pal
+
+    :cond_ntsc_u
+    const/4 v2, 0x6
+
+    aget-object v1, v1, v2
+
+    iput-object v1, p0, Lxyz/aethersx2/android/GameListEntry;->a:Lxyz/aethersx2/android/GameListEntry$b;
+
+    return-object v1
+
+    :cond_chk_ser_pal
+    const-string v3, "SLES"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_pal_e
+
+    const-string v3, "SCES"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_pal_e
+
+    const-string v3, "SLED"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_pal_e
+
+    const-string v3, "SCED"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-eqz v3, :cond_chk_ser_jp
+
+    :cond_pal_e
+    const/16 v2, 0xc
+
+    aget-object v1, v1, v2
+
+    iput-object v1, p0, Lxyz/aethersx2/android/GameListEntry;->a:Lxyz/aethersx2/android/GameListEntry$b;
+
+    return-object v1
+
+    :cond_chk_ser_jp
+    const-string v3, "SLPS"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_ntsc_j
+
+    const-string v3, "SCPS"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_ntsc_j
+
+    const-string v3, "SLPM"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_ntsc_j
+
+    const-string v3, "SCPM"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-eqz v3, :cond_chk_ser_kr
+
+    :cond_ntsc_j
+    const/4 v2, 0x3
+
+    aget-object v1, v1, v2
+
+    iput-object v1, p0, Lxyz/aethersx2/android/GameListEntry;->a:Lxyz/aethersx2/android/GameListEntry$b;
+
+    return-object v1
+
+    :cond_chk_ser_kr
+    const-string v3, "SLKA"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_ntsc_k
+
+    const-string v3, "SCKA"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-eqz v3, :cond_chk_ser_cn
+
+    :cond_ntsc_k
+    const/4 v2, 0x4
+
+    aget-object v1, v1, v2
+
+    iput-object v1, p0, Lxyz/aethersx2/android/GameListEntry;->a:Lxyz/aethersx2/android/GameListEntry$b;
+
+    return-object v1
+
+    :cond_chk_ser_cn
+    const-string v3, "SLCN"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_ntsc_c
+
+    const-string v3, "SCCN"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v2
+
+    if-eqz v2, :cond_gle_chk_name
+
+    :cond_ntsc_c
+    const/4 v2, 0x1
+
+    aget-object v1, v1, v2
+
+    iput-object v1, p0, Lxyz/aethersx2/android/GameListEntry;->a:Lxyz/aethersx2/android/GameListEntry$b;
+
+    return-object v1
+
+    :cond_gle_chk_name
+    new-instance v2, Ljava/lang/StringBuilder;
+
+    invoke-direct {v2}, Ljava/lang/StringBuilder;-><init>()V
+
+    iget-object v3, p0, Lxyz/aethersx2/android/GameListEntry;->e:Ljava/lang/String;
+
+    if-eqz v3, :cond_chk_p
+
+    invoke-virtual {v2, v3}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+
+    const-string v3, " "
+
+    invoke-virtual {v2, v3}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+
+    :cond_chk_p
+    iget-object v3, p0, Lxyz/aethersx2/android/GameListEntry;->c:Ljava/lang/String;
+
+    if-eqz v3, :cond_chk_str
+
+    invoke-virtual {v2, v3}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+
+    :cond_chk_str
+    invoke-virtual {v2}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+
+    move-result-object v2
+
+    invoke-virtual {v2}, Ljava/lang/String;->toUpperCase()Ljava/lang/String;
+
+    move-result-object v2
+
+    const-string v3, "(USA)"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_match_u
+
+    const-string v3, "(US)"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_match_u
+
+    const-string v3, "[USA]"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_match_u
+
+    const-string v3, "SLUS"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_match_u
+
+    const-string v3, "SCUS"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_match_u
+
+    const-string v3, "NTSC-U"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-eqz v3, :cond_chk_name_pal
+
+    :cond_match_u
+    const/4 v2, 0x6
+
+    aget-object v1, v1, v2
+
+    iput-object v1, p0, Lxyz/aethersx2/android/GameListEntry;->a:Lxyz/aethersx2/android/GameListEntry$b;
+
+    return-object v1
+
+    :cond_chk_name_pal
+    const-string v3, "(EUROPE)"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_match_pal
+
+    const-string v3, "(EU)"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_match_pal
+
+    const-string v3, "[EUROPE]"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_match_pal
+
+    const-string v3, "(PAL)"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_match_pal
+
+    const-string v3, "[PAL]"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_match_pal
+
+    const-string v3, "(EN,"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_match_pal
+
+    const-string v3, "SLES"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_match_pal
+
+    const-string v3, "SCES"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_match_pal
+
+    const-string v3, "PAL-E"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-eqz v3, :cond_chk_name_jp
+
+    :cond_match_pal
+    const/16 v2, 0xc
+
+    aget-object v1, v1, v2
+
+    iput-object v1, p0, Lxyz/aethersx2/android/GameListEntry;->a:Lxyz/aethersx2/android/GameListEntry$b;
+
+    return-object v1
+
+    :cond_chk_name_jp
+    const-string v3, "(JAPAN)"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_match_jp
+
+    const-string v3, "(JP)"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_match_jp
+
+    const-string v3, "[JAPAN]"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_match_jp
+
+    const-string v3, "SLPS"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_match_jp
+
+    const-string v3, "SCPS"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_match_jp
+
+    const-string v3, "SLPM"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_match_jp
+
+    const-string v3, "NTSC-J"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-eqz v3, :cond_chk_name_kr
+
+    :cond_match_jp
+    const/4 v2, 0x3
+
+    aget-object v1, v1, v2
+
+    iput-object v1, p0, Lxyz/aethersx2/android/GameListEntry;->a:Lxyz/aethersx2/android/GameListEntry$b;
+
+    return-object v1
+
+    :cond_chk_name_kr
+    const-string v3, "(KOREA)"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_match_kr
+
+    const-string v3, "(KO)"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_match_kr
+
+    const-string v3, "SLKA"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_match_kr
+
+    const-string v3, "NTSC-K"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-eqz v3, :cond_chk_name_cn
+
+    :cond_match_kr
+    const/4 v2, 0x4
+
+    aget-object v1, v1, v2
+
+    iput-object v1, p0, Lxyz/aethersx2/android/GameListEntry;->a:Lxyz/aethersx2/android/GameListEntry$b;
+
+    return-object v1
+
+    :cond_chk_name_cn
+    const-string v3, "(CHINA)"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_match_cn
+
+    const-string v3, "(CN)"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_match_cn
+
+    const-string v3, "SLCN"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v3
+
+    if-nez v3, :cond_match_cn
+
+    const-string v3, "NTSC-C"
+
+    invoke-virtual {v2, v3}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v2
+
+    if-eqz v2, :cond_ret_orig
+
+    :cond_match_cn
+    const/4 v2, 0x1
+
+    aget-object v1, v1, v2
+
+    iput-object v1, p0, Lxyz/aethersx2/android/GameListEntry;->a:Lxyz/aethersx2/android/GameListEntry$b;
+
+    return-object v1
+
+    :cond_ret_orig
+    if-eqz v0, :cond_fallback_other
+
+    return-object v0
+
+    :cond_fallback_other
+    const/4 v0, 0x7
+
+    aget-object v0, v1, v0
+
+    iput-object v0, p0, Lxyz/aethersx2/android/GameListEntry;->a:Lxyz/aethersx2/android/GameListEntry$b;
+
+    return-object v0
+.end method
+
+.method public getRegion()Lxyz/aethersx2/android/GameListEntry$b;
+    .registers 2
+
+    invoke-static {p0}, Lxyz/aethersx2/android/GameListEntry;->detectRegion(Lxyz/aethersx2/android/GameListEntry;)Lxyz/aethersx2/android/GameListEntry$b;
+
+    move-result-object v0
+
+    return-object v0
+.end method"""
+
+                orig_get_title = """.method public getTitle()Ljava/lang/String;
+    .registers 2
+
+    iget-object v0, p0, Lxyz/aethersx2/android/GameListEntry;->e:Ljava/lang/String;
+
+    return-object v0
+.end method"""
+
+                orig_get_reg = """.method public getRegion()Lxyz/aethersx2/android/GameListEntry$b;
+    .registers 2
+
+    iget-object v0, p0, Lxyz/aethersx2/android/GameListEntry;->a:Lxyz/aethersx2/android/GameListEntry$b;
+
+    return-object v0
+.end method"""
+
+                if orig_get_title in gle_txt:
+                    gle_txt = gle_txt.replace(orig_get_title, new_get_title, 1)
+                if orig_get_reg in gle_txt:
+                    gle_txt = gle_txt.replace(orig_get_reg, new_detect_and_get_reg, 1)
+                gle_file.write_text(gle_txt, encoding="utf-8")
+                print(f"  ✓ Patched GameListEntry.smali: clean %20 titles and auto-detect region flags")
+
+            # Patch FileHelper.smali: sanitize getFileNameForPath (%20 -> space)
+            fh_file = smali_out / "xyz" / "aethersx2" / "android" / "FileHelper.smali"
+            if fh_file.exists():
+                fh_txt = fh_file.read_text(encoding="utf-8")
+                target_fh = """:cond_31
+    return-object p0"""
+                repl_fh = """:cond_31
+    if-eqz p0, :cond_fn_ret
+
+    const-string v0, "%20"
+
+    invoke-virtual {p0, v0}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+    move-result v0
+
+    if-eqz v0, :cond_fn_ret
+
+    const-string v0, "%20"
+
+    const-string v1, " "
+
+    invoke-virtual {p0, v0, v1}, Ljava/lang/String;->replace(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Ljava/lang/String;
+
+    move-result-object p0
+
+    :cond_fn_ret
+    return-object p0"""
+                if target_fh in fh_txt:
+                    fh_txt = fh_txt.replace(target_fh, repl_fh, 1)
+                    fh_file.write_text(fh_txt, encoding="utf-8")
+                    print(f"  ✓ Patched FileHelper.smali: decode %20 in filenames")
+
+            # Patch game list runners: l6/n4.smali (Adreno) and q3/u1.smali (Mali)
+            for runner_rel in [Path("l6") / "n4.smali", Path("q3") / "u1.smali"]:
+                runner_file = smali_out / runner_rel
+                if runner_file.exists():
+                    r_txt = runner_file.read_text(encoding="utf-8")
+                    orig_get_entries = """invoke-static {}, Lxyz/aethersx2/android/NativeLibrary;->getGameListEntries()[Lxyz/aethersx2/android/GameListEntry;
+
+    move-result-object v1"""
+                    repl_get_entries = orig_get_entries + """
+
+    invoke-static {v1}, Lxyz/aethersx2/android/NativeLibrary;->deduplicateEntries([Lxyz/aethersx2/android/GameListEntry;)[Lxyz/aethersx2/android/GameListEntry;
+
+    move-result-object v1"""
+                    if orig_get_entries in r_txt and "deduplicateEntries" not in r_txt:
+                        r_txt = r_txt.replace(orig_get_entries, repl_get_entries, 1)
+                        runner_file.write_text(r_txt, encoding="utf-8")
+                        print(f"  ✓ Patched {runner_rel}: deduplicate game list entries")
+
+            # Patch directory settings: l6/p4.smali (Adreno) and q3/v1.smali (Mali)
             p4_file = smali_out / "l6" / "p4.smali"
             if p4_file.exists():
                 p4_txt = p4_file.read_text(encoding="utf-8")
-                target_p4 = ".method public static z(Landroid/content/Context;Ljava/lang/String;Z)V\n    .registers 3\n\n    .line 1\n    invoke-static {p0}, Landroidx/preference/PreferenceManager;->getDefaultSharedPreferences(Landroid/content/Context;)Landroid/content/SharedPreferences;"
+                target_p4 = """.method public static z(Landroid/content/Context;Ljava/lang/String;Z)V
+    .registers 3
+
+    .line 1
+    invoke-static {p0}, Landroidx/preference/PreferenceManager;->getDefaultSharedPreferences(Landroid/content/Context;)Landroid/content/SharedPreferences;"""
                 repl_p4 = """.method public static z(Landroid/content/Context;Ljava/lang/String;Z)V
     .registers 6
 
@@ -1263,6 +2246,85 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
                     p4_txt = p4_txt.replace(target_p4, repl_p4, 1)
                     p4_file.write_text(p4_txt, encoding="utf-8")
                     print(f"  ✓ Patched l6/p4.smali: resolve content:// SAF tree URIs to POSIX paths")
+
+            v1_file = smali_out / "q3" / "v1.smali"
+            if v1_file.exists():
+                v1_txt = v1_file.read_text(encoding="utf-8")
+                target_v1 = """.method public static y(Landroid/content/Context;Ljava/lang/String;Z)V
+    .registers 3
+
+    .line 1
+    invoke-static {p0}, Landroidx/preference/PreferenceManager;->getDefaultSharedPreferences(Landroid/content/Context;)Landroid/content/SharedPreferences;"""
+                repl_v1 = """.method public static y(Landroid/content/Context;Ljava/lang/String;Z)V
+    .registers 6
+
+    if-eqz p1, :cond_resolve_done
+
+    const-string v0, "content://"
+
+    invoke-virtual {p1, v0}, Ljava/lang/String;->startsWith(Ljava/lang/String;)Z
+
+    move-result v0
+
+    if-eqz v0, :cond_resolve_done
+
+    :try_start_v1_res
+    invoke-static {p1}, Landroid/net/Uri;->parse(Ljava/lang/String;)Landroid/net/Uri;
+
+    move-result-object v0
+
+    invoke-static {v0, p0}, Lxyz/aethersx2/android/FileHelper;->getFullPathFromTreeUri(Landroid/net/Uri;Landroid/content/Context;)Ljava/lang/String;
+
+    move-result-object v0
+
+    if-eqz v0, :cond_resolve_done
+
+    invoke-virtual {v0}, Ljava/lang/String;->isEmpty()Z
+
+    move-result v1
+
+    if-nez v1, :cond_resolve_done
+
+    const-string v1, "/"
+
+    invoke-virtual {v1, v0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+
+    move-result v1
+
+    if-nez v1, :cond_resolve_done
+
+    const-string v1, "UTF-8"
+
+    invoke-static {v0, v1}, Ljava/net/URLDecoder;->decode(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+
+    move-result-object v0
+
+    new-instance v1, Ljava/io/File;
+
+    invoke-direct {v1, v0}, Ljava/io/File;-><init>(Ljava/lang/String;)V
+
+    invoke-virtual {v1}, Ljava/io/File;->exists()Z
+
+    move-result v1
+
+    if-eqz v1, :cond_resolve_done
+
+    move-object p1, v0
+    :try_end_v1_res
+    .catch Ljava/lang/Exception; {:try_start_v1_res .. :try_end_v1_res} :catch_v1_res
+
+    goto :cond_resolve_done
+
+    :catch_v1_res
+    nop
+
+    :cond_resolve_done
+    .line 1
+    invoke-static {p0}, Landroidx/preference/PreferenceManager;->getDefaultSharedPreferences(Landroid/content/Context;)Landroid/content/SharedPreferences;"""
+                if target_v1 in v1_txt:
+                    v1_txt = v1_txt.replace(target_v1, repl_v1, 1)
+                    v1_file.write_text(v1_txt, encoding="utf-8")
+                    print(f"  ✓ Patched q3/v1.smali: resolve content:// SAF tree URIs to POSIX paths")
 
             # 3. Patch MainActivity.smali: inject PCSX2 version, Check Update button handler, and Setup Wizard restart
             main_activity = smali_out / "xyz" / "aethersx2" / "android" / "MainActivity.smali"
