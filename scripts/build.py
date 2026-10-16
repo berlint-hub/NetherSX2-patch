@@ -470,7 +470,7 @@ def patch_preserve_user_data_on_reset(work_dir: Path) -> None:
     call1_3668_patch  = bytes.fromhex("e1031f2ae2031f2ae3031f2ae4031f2ae5031f2a1f2003d5")
 
     call2_3668_target = bytes.fromhex("e1031f2a22008052e3031f2ae4031f2ae5031f2a4aaffe97")
-    call2_3668_patch  = bytes.fromhex("e1031f2ae2031f2ae3031f2ae4031f2ae5031f2a1f2003d5")
+    call2_3668_patch  = bytes.fromhex("e1031f2ae2031f2ae3031f2ae4031f2ae5031f2a80018052")
 
     for so_path in work_dir.rglob("libemucore.so"):
         so_data = bytearray(so_path.read_bytes())
@@ -499,6 +499,66 @@ def patch_preserve_user_data_on_reset(work_dir: Path) -> None:
         if patches_applied > 0:
             so_path.write_bytes(so_data)
             print(f"  ✓ Patched {so_path.name} ({patches_applied} calls patched): Memory cards, achievements, and controls preserved on reset")
+
+
+def patch_libemucore_settings_defaults(work_dir: Path) -> None:
+    """Patch libemucore.so:
+    1. Full Texture Preloading (2) by default for both Optimal and Fast defaults in setDefaultSettings and GSSettings::Load.
+    2. GPU Renderer for Fast Mali uses Vulkan (14), while Optimal uses OpenGL (12).
+    """
+    mali_patches = {
+        0x833D04: (bytes.fromhex("80018052"), bytes.fromhex("0004140b")), # add w0, w0, w20, lsl #1 (Fast=14 Vulkan, Safe=12 OpenGL)
+        0x8344AC: (bytes.fromhex("00119f1a"), bytes.fromhex("40008052")), # mov w0, #2 (Full Texture Preload in setDefaultSettings)
+        0x4AB558: (bytes.fromhex("a3224039"), bytes.fromhex("43008052")), # mov w3, #2 (Full Texture Preload fallback in GSSettings::Load)
+    }
+    adreno_patches = {
+        0x84179C: (bytes.fromhex("00119f1a"), bytes.fromhex("40008052")), # mov w0, #2 (Full Texture Preload in setDefaultSettings)
+        0x4BAC34: (bytes.fromhex("a3224039"), bytes.fromhex("43008052")), # mov w3, #2 (Full Texture Preload fallback in GSSettings::Load)
+    }
+
+    for so_path in work_dir.rglob("libemucore.so"):
+        data = bytearray(so_path.read_bytes())
+        file_len = len(data)
+        patches = None
+        if file_len == 12162984:
+            patches = adreno_patches
+        elif file_len == 12094744:
+            patches = mali_patches
+        else:
+            if all(data[off:off+4] in (orig, repl) for off, (orig, repl) in adreno_patches.items()):
+                patches = adreno_patches
+            elif all(data[off:off+4] in (orig, repl) for off, (orig, repl) in mali_patches.items()):
+                patches = mali_patches
+
+        if patches:
+            applied = 0
+            for off, (orig, repl) in patches.items():
+                if data[off:off+4] == orig:
+                    data[off:off+4] = repl
+                    applied += 1
+                elif data[off:off+4] == repl:
+                    applied += 1
+            if applied == len(patches):
+                so_path.write_bytes(data)
+                print(f"  ✓ Patched {so_path.name}: Full Texture Preload as default and Fast Mali Vulkan")
+
+    # Also ensure all preference XMLs default texture_preloading to 2 (Full)
+    for p in work_dir.rglob("*preferences*.xml"):
+        txt = p.read_text(encoding="utf-8")
+        if "EmuCore/GS/texture_preloading" in txt:
+            pattern = re.compile(r'(<[^>]+app:key="EmuCore/GS/texture_preloading"[^>]*>)', re.DOTALL)
+            def repl_tag(m: re.Match) -> str:
+                tag = m.group(1)
+                if 'app:defaultValue=' in tag:
+                    return re.sub(r'app:defaultValue="[^"]*"', 'app:defaultValue="2"', tag)
+                elif tag.endswith("/>"):
+                    return tag[:-2].rstrip() + ' app:defaultValue="2" />'
+                elif tag.endswith(">"):
+                    return tag[:-1].rstrip() + ' app:defaultValue="2">'
+                return tag
+            new_txt = pattern.sub(repl_tag, txt)
+            if new_txt != txt:
+                p.write_text(new_txt, encoding="utf-8")
 
 
 def patch_gameindex(work_dir: Path) -> None:
@@ -856,7 +916,7 @@ _DEX_CACHE: dict[str, bytes] = {}
 
 
 def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
-    """Inject PCSX2 upstream version into the Show Version dialog and SQLite GameListDatabase into classes.dex using baksmali/smali."""
+    """Inject PCSX2 upstream version into the Show Version dialog and custom smali into classes.dex using baksmali/smali."""
     pcsx2_ver = get_pcsx2_version()
     target_needle = 'const-string v0, "\\nNative Version:\\n"'
     replacement = f'const-string v0, "\\nPCSX2 Version: {pcsx2_ver}\\nNative Version:\\n"'
@@ -871,7 +931,7 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
     for dex_path in dex_files:
         original_bytes = dex_path.read_bytes()
         dex_md5 = hashlib.md5(original_bytes).hexdigest()
-        cache_key = f"{dex_md5}_{pcsx2_ver}_data_dir_split_v5_{'mali' if is_mali else 'adreno'}"
+        cache_key = f"{dex_md5}_{pcsx2_ver}_data_dir_split_v7_{'mali' if is_mali else 'adreno'}"
 
         if cache_key in _DEX_CACHE:
             patched_bytes = _DEX_CACHE[cache_key]
@@ -986,51 +1046,13 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
                 nat_lib.write_text(nl_txt, encoding="utf-8")
                 print(f"  ✓ Patched NativeLibrary data directory loader in {dex_path.name}")
 
-            # 3. Patch runner to use GameListDatabase.getOrUpdateGameList (prevents rescanning on every open)
-            runner_patched = False
-            for p in smali_out.rglob("*.smali"):
-                if p.name in ["GameListDatabase.smali", "NativeLibrary.smali"]:
-                    continue
-                txt = p.read_text(encoding="utf-8")
-                if "refreshGameList" in txt and "getGameListEntries" in txt:
-                    pattern = re.compile(
-                        r'invoke-static\s*\{[^}]+\},\s*Lxyz/aethersx2/android/NativeLibrary;->refreshGameList\(ZZLxyz/aethersx2/android/AndroidProgressCallback;\)V\s*'
-                        r'(?:\.line\s*\d+\s*)?'
-                        r'invoke-static\s*\{\},\s*Lxyz/aethersx2/android/NativeLibrary;->getGameListEntries\(\)\[Lxyz/aethersx2/android/GameListEntry;\s*'
-                        r'move-result-object\s+(v\d+)',
-                        re.DOTALL
-                    )
-                    def repl_runner(m: re.Match) -> str:
-                        ret_reg = m.group(1)
-                        return (
-                            f"iget-object v3, v0, Lxyz/aethersx2/android/d;->a:Landroid/app/Activity;\n\n"
-                            f"    invoke-static {{v3, v1, v2}}, Lxyz/aethersx2/android/GameListDatabase;->getOrUpdateGameList(Landroid/content/Context;ZLxyz/aethersx2/android/AndroidProgressCallback;)[Lxyz/aethersx2/android/GameListEntry;\n\n"
-                            f"    move-result-object {ret_reg}"
-                        )
-                    new_txt, count = pattern.subn(repl_runner, txt)
-                    if count > 0:
-                        p.write_text(new_txt, encoding="utf-8")
-                        runner_patched = True
-                        print(f"  ✓ Patched game list loader in {p.relative_to(smali_out)} to use SQLite persistence (eliminates startup folder rescan)")
-                        break
-
-            # 4. Patch MainActivity.smali: inject PCSX2 version and cover path persistence
+            # 3. Patch MainActivity.smali: inject PCSX2 version
             main_activity = smali_out / "xyz" / "aethersx2" / "android" / "MainActivity.smali"
             if main_activity.exists():
                 content = main_activity.read_text(encoding="utf-8")
                 if target_needle in content:
                     content = content.replace(target_needle, replacement, 1)
                     print(f"  ✓ Injected PCSX2 version ({pcsx2_ver}) after Java Version into {dex_path.name}")
-                cover_target = 'invoke-virtual {v15, v3}, Lxyz/aethersx2/android/GameListEntry;->setCoverPath(Ljava/lang/String;)V'
-                cover_repl = (
-                    'invoke-virtual {v15, v3}, Lxyz/aethersx2/android/GameListEntry;->setCoverPath(Ljava/lang/String;)V\n\n'
-                    '    invoke-virtual {v15}, Lxyz/aethersx2/android/GameListEntry;->getPath()Ljava/lang/String;\n\n'
-                    '    move-result-object v4\n\n'
-                    '    invoke-static {v1, v4, v3}, Lxyz/aethersx2/android/GameListDatabase;->updateCoverPath(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;)V'
-                )
-                if cover_target in content:
-                    content = content.replace(cover_target, cover_repl, 1)
-                    print(f"  ✓ Injected SQLite cover path updater in {dex_path.name}")
                 main_activity.write_text(content, encoding="utf-8")
 
             print(f"  Reassembling {dex_path.name} with smali...")
@@ -1117,6 +1139,7 @@ def inject_scale_multiplier(input_apk: Path, output_apk: Path, work_name: str, i
         patch_emucore_scale_clamp(work_dir)
         patch_mali_vulkan_core(work_dir)
         patch_libemucore_custom_data_dir(work_dir)
+        patch_libemucore_settings_defaults(work_dir)
 
     # Rebuild with APKEditor (preserves original resource IDs)
     raw_rebuilt = REPO_ROOT / f"{work_name}_rebuilt.apk"
@@ -1242,6 +1265,14 @@ def verify_all(target_apks: list[Path] | None = None) -> None:
                 arm64_nop = bytes.fromhex("1f2003d5")
                 if arm64_nop not in (so_bytes[0x65afa0:0x65afa4], so_bytes[0x681e7c:0x681e80]):
                     raise SystemExit(f"ERROR: libemucore.so in {apk.name} missing Vulkan format check bypass!")
+                if apk.name == NETHERSX2_MALI_APK.name:
+                    if so_bytes[0x833D04:0x833D08] != bytes.fromhex("0004140b"):
+                        raise SystemExit(f"ERROR: libemucore.so in {apk.name} missing Fast Mali Vulkan patch!")
+                    if so_bytes[0x8344AC:0x8344B0] != bytes.fromhex("40008052"):
+                        raise SystemExit(f"ERROR: libemucore.so in {apk.name} missing Full Texture Preload patch!")
+                elif apk.name == NETHERSX2_ADRENO_APK.name:
+                    if so_bytes[0x84179C:0x8417A0] != bytes.fromhex("40008052"):
+                        raise SystemExit(f"ERROR: libemucore.so in {apk.name} missing Full Texture Preload patch!")
             custom_buttons = [n for n in z.namelist() if n.endswith(".png") and "ic_controller_" in n]
             if custom_buttons:
                 raise SystemExit(f"ERROR: Custom controller buttons still found in {apk.name}: {custom_buttons}")
@@ -1266,8 +1297,6 @@ def verify_all(target_apks: list[Path] | None = None) -> None:
                 dex_bytes = z.read("classes.dex")
                 if b"PCSX2 Version:" not in dex_bytes:
                     raise SystemExit(f"ERROR: classes.dex in {apk.name} missing PCSX2 version string!")
-                if b"GameListDatabase" not in dex_bytes or b"gamelist.db" not in dex_bytes:
-                    raise SystemExit(f"ERROR: classes.dex in {apk.name} missing SQLite GameListDatabase!")
                 if b"SetupWizardDataDirectoryFragment" not in dex_bytes:
                     raise SystemExit(f"ERROR: classes.dex in {apk.name} missing SetupWizardDataDirectoryFragment!")
                 verify_dex_integrity(dex_bytes)

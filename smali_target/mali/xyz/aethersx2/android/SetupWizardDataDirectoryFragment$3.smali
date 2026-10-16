@@ -20,22 +20,13 @@
 # instance fields
 .field final synthetic this$0:Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;
 
-.field final synthetic val$context:Landroid/content/Context;
-
 
 # direct methods
-.method constructor <init>(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;Landroid/content/Context;)V
-    .registers 3
-    .annotation system Ldalvik/annotation/Signature;
-        value = {
-            "()V"
-        }
-    .end annotation
+.method constructor <init>(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;)V
+    .registers 2
 
-    .line 247
+    .line 194
     iput-object p1, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$3;->this$0:Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;
-
-    iput-object p2, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$3;->val$context:Landroid/content/Context;
 
     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
 
@@ -47,25 +38,15 @@
 .method public onClick(Landroid/view/View;)V
     .registers 3
 
-    .line 250
+    .line 197
     iget-object p1, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$3;->this$0:Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;
 
-    const-string v0, ""
+    invoke-virtual {p1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getContext()Landroid/content/Context;
 
-    invoke-static {p1, v0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->-$$Nest$fputcustomSavedPath(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;Ljava/lang/String;)V
+    move-result-object v0
 
-    .line 251
-    iget-object p1, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$3;->this$0:Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;
+    invoke-static {p1, v0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->-$$Nest$mrequestAllFilesPermission(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;Landroid/content/Context;)V
 
-    iget-object v0, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$3;->val$context:Landroid/content/Context;
-
-    invoke-static {p1, v0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->-$$Nest$mselectDefault(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;Landroid/content/Context;)V
-
-    .line 252
-    iget-object p1, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$3;->this$0:Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;
-
-    invoke-static {p1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->-$$Nest$mupdateUiState(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;)V
-
-    .line 253
+    .line 198
     return-void
 .end method

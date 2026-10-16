@@ -4,12 +4,12 @@
 
 
 # static fields
+.field private static final REQ_CODE_ALL_FILES:I = 0x3ea
+
 .field private static final REQ_CODE_FOLDER_PICKER:I = 0x3e9
 
 
 # instance fields
-.field private btnClearCustom:Landroid/widget/ImageButton;
-
 .field private currentSelectedPath:Ljava/lang/String;
 
 .field private customSavedPath:Ljava/lang/String;
@@ -20,28 +20,14 @@
 
 .field private ivDefaultCheck:Landroid/widget/ImageView;
 
-.field private permissionBanner:Landroid/widget/LinearLayout;
-
 .field private tvCustomSubtitle:Landroid/widget/TextView;
+
+.field private tvGrantPermission:Landroid/widget/TextView;
+
+.field private tvPermissionStatus:Landroid/widget/TextView;
 
 
 # direct methods
-.method static bridge synthetic -$$Nest$fgetcustomSavedPath(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;)Ljava/lang/String;
-    .registers 1
-
-    iget-object p0, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->customSavedPath:Ljava/lang/String;
-
-    return-object p0
-.end method
-
-.method static bridge synthetic -$$Nest$fputcustomSavedPath(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;Ljava/lang/String;)V
-    .registers 2
-
-    iput-object p1, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->customSavedPath:Ljava/lang/String;
-
-    return-void
-.end method
-
 .method static bridge synthetic -$$Nest$mopenFolderPicker(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;)V
     .registers 1
 
@@ -58,14 +44,6 @@
     return-void
 .end method
 
-.method static bridge synthetic -$$Nest$mselectCustom(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;Landroid/content/Context;Ljava/lang/String;)V
-    .registers 3
-
-    invoke-direct {p0, p1, p2}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->selectCustom(Landroid/content/Context;Ljava/lang/String;)V
-
-    return-void
-.end method
-
 .method static bridge synthetic -$$Nest$mselectDefault(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;Landroid/content/Context;)V
     .registers 2
 
@@ -74,29 +52,21 @@
     return-void
 .end method
 
-.method static bridge synthetic -$$Nest$mupdateUiState(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;)V
-    .registers 1
-
-    invoke-direct {p0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->updateUiState()V
-
-    return-void
-.end method
-
 .method public constructor <init>()V
     .registers 2
 
-    .line 35
+    .line 26
     invoke-direct {p0}, Landroidx/fragment/app/n;-><init>()V
 
-    .line 39
+    .line 30
     const-string v0, ""
 
     iput-object v0, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->currentSelectedPath:Ljava/lang/String;
 
-    .line 40
+    .line 31
     iput-object v0, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->customSavedPath:Ljava/lang/String;
 
-    .line 41
+    .line 32
     iput-object v0, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->defaultInternalPath:Ljava/lang/String;
 
     return-void
@@ -105,16 +75,473 @@
 .method public static applyDataLocation(Landroid/content/Context;Ljava/lang/String;)V
     .registers 4
 
-    .line 533
-    if-eqz p0, :cond_b6
+    .line 359
+    if-eqz p0, :cond_9b
 
     if-nez p1, :cond_6
 
-    goto/16 :goto_b6
+    goto/16 :goto_9b
 
-    .line 535
+    .line 361
     :cond_6
     :try_start_6
+    invoke-static {p0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getPrefs(Landroid/content/Context;)Landroid/content/SharedPreferences;
+
+    move-result-object v0
+
+    .line 362
+    if-eqz v0, :cond_19
+
+    .line 363
+    invoke-interface {v0}, Landroid/content/SharedPreferences;->edit()Landroid/content/SharedPreferences$Editor;
+
+    move-result-object v0
+
+    const-string v1, "UI/DataDirectory"
+
+    invoke-interface {v0, v1, p1}, Landroid/content/SharedPreferences$Editor;->putString(Ljava/lang/String;Ljava/lang/String;)Landroid/content/SharedPreferences$Editor;
+
+    move-result-object v0
+
+    invoke-interface {v0}, Landroid/content/SharedPreferences$Editor;->commit()Z
+    :try_end_19
+    .catch Ljava/lang/Exception; {:try_start_6 .. :try_end_19} :catch_1a
+
+    .line 367
+    :cond_19
+    goto :goto_1e
+
+    .line 365
+    :catch_1a
+    move-exception v0
+
+    .line 366
+    invoke-virtual {v0}, Ljava/lang/Exception;->printStackTrace()V
+
+    .line 369
+    :goto_1e
+    nop
+
+    .line 370
+    const-string v0, "internal"
+
+    invoke-virtual {v0, p1}, Ljava/lang/String;->equalsIgnoreCase(Ljava/lang/String;)Z
+
+    move-result v0
+
+    if-nez v0, :cond_2d
+
+    invoke-virtual {p1}, Ljava/lang/String;->isEmpty()Z
+
+    move-result v0
+
+    if-eqz v0, :cond_42
+
+    .line 371
+    :cond_2d
+    const/4 p1, 0x0
+
+    invoke-virtual {p0, p1}, Landroid/content/Context;->getExternalFilesDir(Ljava/lang/String;)Ljava/io/File;
+
+    move-result-object p1
+
+    .line 372
+    if-nez p1, :cond_38
+
+    invoke-virtual {p0}, Landroid/content/Context;->getDataDir()Ljava/io/File;
+
+    move-result-object p1
+
+    .line 373
+    :cond_38
+    if-eqz p1, :cond_3f
+
+    invoke-virtual {p1}, Ljava/io/File;->getAbsolutePath()Ljava/lang/String;
+
+    move-result-object p0
+
+    goto :goto_41
+
+    :cond_3f
+    const-string p0, "/sdcard/Android/data/xyz.aethersx2.android/files"
+
+    :goto_41
+    move-object p1, p0
+
+    .line 377
+    :cond_42
+    :try_start_42
+    new-instance p0, Ljava/io/File;
+
+    invoke-direct {p0, p1}, Ljava/io/File;-><init>(Ljava/lang/String;)V
+
+    .line 378
+    invoke-virtual {p0}, Ljava/io/File;->mkdirs()Z
+
+    .line 379
+    new-instance v0, Ljava/io/File;
+
+    const-string v1, "memcards"
+
+    invoke-direct {v0, p0, v1}, Ljava/io/File;-><init>(Ljava/io/File;Ljava/lang/String;)V
+
+    invoke-virtual {v0}, Ljava/io/File;->mkdirs()Z
+
+    .line 380
+    new-instance v0, Ljava/io/File;
+
+    const-string v1, "bios"
+
+    invoke-direct {v0, p0, v1}, Ljava/io/File;-><init>(Ljava/io/File;Ljava/lang/String;)V
+
+    invoke-virtual {v0}, Ljava/io/File;->mkdirs()Z
+
+    .line 381
+    new-instance v0, Ljava/io/File;
+
+    const-string v1, "cheats"
+
+    invoke-direct {v0, p0, v1}, Ljava/io/File;-><init>(Ljava/io/File;Ljava/lang/String;)V
+
+    invoke-virtual {v0}, Ljava/io/File;->mkdirs()Z
+
+    .line 382
+    new-instance v0, Ljava/io/File;
+
+    const-string v1, "covers"
+
+    invoke-direct {v0, p0, v1}, Ljava/io/File;-><init>(Ljava/io/File;Ljava/lang/String;)V
+
+    invoke-virtual {v0}, Ljava/io/File;->mkdirs()Z
+
+    .line 383
+    new-instance v0, Ljava/io/File;
+
+    const-string v1, "sstates"
+
+    invoke-direct {v0, p0, v1}, Ljava/io/File;-><init>(Ljava/io/File;Ljava/lang/String;)V
+
+    invoke-virtual {v0}, Ljava/io/File;->mkdirs()Z
+
+    .line 384
+    new-instance v0, Ljava/io/File;
+
+    const-string v1, "gamesettings"
+
+    invoke-direct {v0, p0, v1}, Ljava/io/File;-><init>(Ljava/io/File;Ljava/lang/String;)V
+
+    invoke-virtual {v0}, Ljava/io/File;->mkdirs()Z
+
+    .line 385
+    new-instance v0, Ljava/io/File;
+
+    const-string v1, "inputprofiles"
+
+    invoke-direct {v0, p0, v1}, Ljava/io/File;-><init>(Ljava/io/File;Ljava/lang/String;)V
+
+    invoke-virtual {v0}, Ljava/io/File;->mkdirs()Z
+    :try_end_90
+    .catch Ljava/lang/Exception; {:try_start_42 .. :try_end_90} :catch_91
+
+    .line 388
+    goto :goto_95
+
+    .line 386
+    :catch_91
+    move-exception p0
+
+    .line 387
+    invoke-virtual {p0}, Ljava/lang/Exception;->printStackTrace()V
+
+    .line 391
+    :goto_95
+    :try_start_95
+    invoke-static {p1}, Lxyz/aethersx2/android/NativeLibrary;->setDataDirectory(Ljava/lang/String;)V
+    :try_end_98
+    .catchall {:try_start_95 .. :try_end_98} :catchall_99
+
+    .line 394
+    goto :goto_9a
+
+    .line 392
+    :catchall_99
+    move-exception p0
+
+    .line 395
+    :goto_9a
+    return-void
+
+    .line 359
+    :cond_9b
+    :goto_9b
+    return-void
+.end method
+
+.method private createOptionRow(Landroid/content/Context;)Landroid/widget/RelativeLayout;
+    .registers 6
+
+    .line 407
+    new-instance v0, Landroid/widget/RelativeLayout;
+
+    invoke-direct {v0, p1}, Landroid/widget/RelativeLayout;-><init>(Landroid/content/Context;)V
+
+    .line 408
+    new-instance v1, Landroid/widget/LinearLayout$LayoutParams;
+
+    const/4 v2, -0x1
+
+    const/4 v3, -0x2
+
+    invoke-direct {v1, v2, v3}, Landroid/widget/LinearLayout$LayoutParams;-><init>(II)V
+
+    .line 410
+    invoke-virtual {v0, v1}, Landroid/widget/RelativeLayout;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
+
+    .line 411
+    const/16 v1, 0x10
+
+    invoke-direct {p0, p1, v1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
+
+    move-result v1
+
+    .line 412
+    const/16 v2, 0xe
+
+    invoke-direct {p0, p1, v2}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
+
+    move-result v2
+
+    .line 413
+    invoke-virtual {v0, v1, v2, v1, v2}, Landroid/widget/RelativeLayout;->setPadding(IIII)V
+
+    .line 414
+    invoke-direct {p0, p1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getSelectableItemBackground(Landroid/content/Context;)I
+
+    move-result p1
+
+    invoke-virtual {v0, p1}, Landroid/widget/RelativeLayout;->setBackgroundResource(I)V
+
+    .line 415
+    const/4 p1, 0x1
+
+    invoke-virtual {v0, p1}, Landroid/widget/RelativeLayout;->setClickable(Z)V
+
+    .line 416
+    invoke-virtual {v0, p1}, Landroid/widget/RelativeLayout;->setFocusable(Z)V
+
+    .line 417
+    return-object v0
+.end method
+
+.method private createTextColumn(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;)Landroid/widget/LinearLayout;
+    .registers 7
+
+    .line 421
+    new-instance v0, Landroid/widget/LinearLayout;
+
+    invoke-direct {v0, p1}, Landroid/widget/LinearLayout;-><init>(Landroid/content/Context;)V
+
+    .line 422
+    const/4 v1, 0x1
+
+    invoke-virtual {v0, v1}, Landroid/widget/LinearLayout;->setOrientation(I)V
+
+    .line 424
+    new-instance v1, Landroid/widget/TextView;
+
+    invoke-direct {v1, p1}, Landroid/widget/TextView;-><init>(Landroid/content/Context;)V
+
+    .line 425
+    invoke-virtual {v1, p2}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+
+    .line 426
+    const/high16 p2, 0x41880000    # 17.0f
+
+    const/4 v2, 0x2
+
+    invoke-virtual {v1, v2, p2}, Landroid/widget/TextView;->setTextSize(IF)V
+
+    .line 427
+    sget-object p2, Landroid/graphics/Typeface;->DEFAULT_BOLD:Landroid/graphics/Typeface;
+
+    invoke-virtual {v1, p2}, Landroid/widget/TextView;->setTypeface(Landroid/graphics/Typeface;)V
+
+    .line 428
+    const/4 p2, -0x1
+
+    invoke-virtual {v1, p2}, Landroid/widget/TextView;->setTextColor(I)V
+
+    .line 429
+    invoke-virtual {v0, v1}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
+
+    .line 431
+    new-instance p2, Landroid/widget/TextView;
+
+    invoke-direct {p2, p1}, Landroid/widget/TextView;-><init>(Landroid/content/Context;)V
+
+    .line 432
+    invoke-virtual {p2, p3}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+
+    .line 433
+    const/high16 p3, 0x41500000    # 13.0f
+
+    invoke-virtual {p2, v2, p3}, Landroid/widget/TextView;->setTextSize(IF)V
+
+    .line 434
+    const-string p3, "#9E9E9E"
+
+    invoke-static {p3}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
+
+    move-result p3
+
+    invoke-virtual {p2, p3}, Landroid/widget/TextView;->setTextColor(I)V
+
+    .line 435
+    invoke-direct {p0, p1, v2}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
+
+    move-result p3
+
+    int-to-float p3, p3
+
+    const/high16 v1, 0x3f800000    # 1.0f
+
+    invoke-virtual {p2, p3, v1}, Landroid/widget/TextView;->setLineSpacing(FF)V
+
+    .line 436
+    new-instance p3, Landroid/widget/LinearLayout$LayoutParams;
+
+    const/4 v1, -0x2
+
+    invoke-direct {p3, v1, v1}, Landroid/widget/LinearLayout$LayoutParams;-><init>(II)V
+
+    .line 438
+    const/4 v1, 0x4
+
+    invoke-direct {p0, p1, v1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
+
+    move-result p1
+
+    iput p1, p3, Landroid/widget/LinearLayout$LayoutParams;->topMargin:I
+
+    .line 439
+    invoke-virtual {p2, p3}, Landroid/widget/TextView;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
+
+    .line 440
+    invoke-virtual {v0, p2}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
+
+    .line 442
+    return-object v0
+.end method
+
+.method private dp(Landroid/content/Context;I)I
+    .registers 4
+
+    .line 446
+    if-nez p1, :cond_5
+
+    mul-int/lit8 p2, p2, 0x2
+
+    return p2
+
+    .line 447
+    :cond_5
+    int-to-float p2, p2
+
+    .line 448
+    invoke-virtual {p1}, Landroid/content/Context;->getResources()Landroid/content/res/Resources;
+
+    move-result-object p1
+
+    invoke-virtual {p1}, Landroid/content/res/Resources;->getDisplayMetrics()Landroid/util/DisplayMetrics;
+
+    move-result-object p1
+
+    .line 447
+    const/4 v0, 0x1
+
+    invoke-static {v0, p2, p1}, Landroid/util/TypedValue;->applyDimension(IFLandroid/util/DisplayMetrics;)F
+
+    move-result p1
+
+    float-to-int p1, p1
+
+    return p1
+.end method
+
+.method private getAppDrawable(Landroid/content/Context;Ljava/lang/String;)Landroid/graphics/drawable/Drawable;
+    .registers 7
+
+    .line 461
+    const/4 v0, 0x0
+
+    if-nez p1, :cond_4
+
+    return-object v0
+
+    .line 462
+    :cond_4
+    invoke-virtual {p1}, Landroid/content/Context;->getResources()Landroid/content/res/Resources;
+
+    move-result-object v1
+
+    const-string v2, "drawable"
+
+    invoke-virtual {p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
+
+    move-result-object v3
+
+    invoke-virtual {v1, p2, v2, v3}, Landroid/content/res/Resources;->getIdentifier(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I
+
+    move-result p2
+
+    .line 463
+    if-eqz p2, :cond_1a
+
+    .line 465
+    :try_start_14
+    invoke-virtual {p1, p2}, Landroid/content/Context;->getDrawable(I)Landroid/graphics/drawable/Drawable;
+
+    move-result-object p1
+    :try_end_18
+    .catch Ljava/lang/Exception; {:try_start_14 .. :try_end_18} :catch_19
+
+    return-object p1
+
+    .line 466
+    :catch_19
+    move-exception p1
+
+    .line 468
+    :cond_1a
+    return-object v0
+.end method
+
+.method private static getPrefs(Landroid/content/Context;)Landroid/content/SharedPreferences;
+    .registers 3
+
+    .line 398
+    if-nez p0, :cond_4
+
+    const/4 p0, 0x0
+
+    return-object p0
+
+    .line 400
+    :cond_4
+    :try_start_4
+    invoke-static {p0}, Landroidx/preference/PreferenceManager;->getDefaultSharedPreferences(Landroid/content/Context;)Landroid/content/SharedPreferences;
+
+    move-result-object p0
+    :try_end_8
+    .catchall {:try_start_4 .. :try_end_8} :catchall_9
+
+    return-object p0
+
+    .line 401
+    :catchall_9
+    move-exception v0
+
+    .line 402
     invoke-virtual {p0}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
 
     move-result-object v0
@@ -141,664 +568,114 @@
 
     invoke-virtual {p0, v0, v1}, Landroid/content/Context;->getSharedPreferences(Ljava/lang/String;I)Landroid/content/SharedPreferences;
 
-    move-result-object v0
-
-    .line 536
-    invoke-interface {v0}, Landroid/content/SharedPreferences;->edit()Landroid/content/SharedPreferences$Editor;
-
-    move-result-object v0
-
-    const-string v1, "UI/DataDirectory"
-
-    invoke-interface {v0, v1, p1}, Landroid/content/SharedPreferences$Editor;->putString(Ljava/lang/String;Ljava/lang/String;)Landroid/content/SharedPreferences$Editor;
-
-    move-result-object v0
-
-    invoke-interface {v0}, Landroid/content/SharedPreferences$Editor;->apply()V
-    :try_end_2f
-    .catch Ljava/lang/Exception; {:try_start_6 .. :try_end_2f} :catch_30
-
-    .line 539
-    goto :goto_34
-
-    .line 537
-    :catch_30
-    move-exception v0
-
-    .line 538
-    invoke-virtual {v0}, Ljava/lang/Exception;->printStackTrace()V
-
-    .line 542
-    :goto_34
-    const-string v0, "internal"
-
-    invoke-virtual {v0, p1}, Ljava/lang/String;->equalsIgnoreCase(Ljava/lang/String;)Z
-
-    move-result v0
-
-    if-nez v0, :cond_44
-
-    invoke-virtual {p1}, Ljava/lang/String;->isEmpty()Z
-
-    move-result v0
-
-    if-eqz v0, :cond_43
-
-    goto :goto_44
-
-    .line 547
-    :cond_43
-    goto :goto_5a
-
-    .line 543
-    :cond_44
-    :goto_44
-    const/4 p1, 0x0
-
-    invoke-virtual {p0, p1}, Landroid/content/Context;->getExternalFilesDir(Ljava/lang/String;)Ljava/io/File;
-
-    move-result-object p1
-
-    .line 544
-    if-nez p1, :cond_4f
-
-    invoke-virtual {p0}, Landroid/content/Context;->getDataDir()Ljava/io/File;
-
-    move-result-object p1
-
-    .line 545
-    :cond_4f
-    if-eqz p1, :cond_56
-
-    invoke-virtual {p1}, Ljava/io/File;->getAbsolutePath()Ljava/lang/String;
-
     move-result-object p0
 
-    goto :goto_58
-
-    :cond_56
-    const-string p0, "/sdcard/Android/data/xyz.aethersx2.android/files"
-
-    :goto_58
-    move-object p1, p0
-
-    .line 546
-    nop
-
-    .line 551
-    :goto_5a
-    :try_start_5a
-    new-instance p0, Ljava/io/File;
-
-    invoke-direct {p0, p1}, Ljava/io/File;-><init>(Ljava/lang/String;)V
-
-    .line 552
-    invoke-virtual {p0}, Ljava/io/File;->mkdirs()Z
-
-    .line 553
-    new-instance v0, Ljava/io/File;
-
-    const-string v1, "memcards"
-
-    invoke-direct {v0, p0, v1}, Ljava/io/File;-><init>(Ljava/io/File;Ljava/lang/String;)V
-
-    invoke-virtual {v0}, Ljava/io/File;->mkdirs()Z
-
-    .line 554
-    new-instance v0, Ljava/io/File;
-
-    const-string v1, "bios"
-
-    invoke-direct {v0, p0, v1}, Ljava/io/File;-><init>(Ljava/io/File;Ljava/lang/String;)V
-
-    invoke-virtual {v0}, Ljava/io/File;->mkdirs()Z
-
-    .line 555
-    new-instance v0, Ljava/io/File;
-
-    const-string v1, "cheats"
-
-    invoke-direct {v0, p0, v1}, Ljava/io/File;-><init>(Ljava/io/File;Ljava/lang/String;)V
-
-    invoke-virtual {v0}, Ljava/io/File;->mkdirs()Z
-
-    .line 556
-    new-instance v0, Ljava/io/File;
-
-    const-string v1, "covers"
-
-    invoke-direct {v0, p0, v1}, Ljava/io/File;-><init>(Ljava/io/File;Ljava/lang/String;)V
-
-    invoke-virtual {v0}, Ljava/io/File;->mkdirs()Z
-
-    .line 557
-    new-instance v0, Ljava/io/File;
-
-    const-string v1, "sstates"
-
-    invoke-direct {v0, p0, v1}, Ljava/io/File;-><init>(Ljava/io/File;Ljava/lang/String;)V
-
-    invoke-virtual {v0}, Ljava/io/File;->mkdirs()Z
-
-    .line 558
-    new-instance v0, Ljava/io/File;
-
-    const-string v1, "gamesettings"
-
-    invoke-direct {v0, p0, v1}, Ljava/io/File;-><init>(Ljava/io/File;Ljava/lang/String;)V
-
-    invoke-virtual {v0}, Ljava/io/File;->mkdirs()Z
-
-    .line 559
-    new-instance v0, Ljava/io/File;
-
-    const-string v1, "inputprofiles"
-
-    invoke-direct {v0, p0, v1}, Ljava/io/File;-><init>(Ljava/io/File;Ljava/lang/String;)V
-
-    invoke-virtual {v0}, Ljava/io/File;->mkdirs()Z
-    :try_end_a8
-    .catch Ljava/lang/Exception; {:try_start_5a .. :try_end_a8} :catch_a9
-
-    .line 562
-    goto :goto_ad
-
-    .line 560
-    :catch_a9
-    move-exception p0
-
-    .line 561
-    invoke-virtual {p0}, Ljava/lang/Exception;->printStackTrace()V
-
-    .line 565
-    :goto_ad
-    :try_start_ad
-    invoke-static {p1}, Lxyz/aethersx2/android/NativeLibrary;->setDataDirectory(Ljava/lang/String;)V
-    :try_end_b0
-    .catchall {:try_start_ad .. :try_end_b0} :catchall_b1
-
-    .line 568
-    goto :goto_b5
-
-    .line 566
-    :catchall_b1
-    move-exception p0
-
-    .line 567
-    invoke-virtual {p0}, Ljava/lang/Throwable;->printStackTrace()V
-
-    .line 569
-    :goto_b5
-    return-void
-
-    .line 533
-    :cond_b6
-    :goto_b6
-    return-void
-.end method
-
-.method private createDivider(Landroid/content/Context;)Landroid/view/View;
-    .registers 7
-
-    .line 411
-    new-instance v0, Landroid/view/View;
-
-    invoke-direct {v0, p1}, Landroid/view/View;-><init>(Landroid/content/Context;)V
-
-    .line 412
-    new-instance v1, Landroid/widget/LinearLayout$LayoutParams;
-
-    .line 414
-    const/4 v2, 0x1
-
-    invoke-direct {p0, p1, v2}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v2
-
-    const/4 v3, -0x1
-
-    invoke-direct {v1, v3, v2}, Landroid/widget/LinearLayout$LayoutParams;-><init>(II)V
-
-    .line 416
-    const/16 v2, 0x14
-
-    invoke-direct {p0, p1, v2}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v3
-
-    const/4 v4, 0x0
-
-    invoke-direct {p0, p1, v2}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result p1
-
-    invoke-virtual {v1, v3, v4, p1, v4}, Landroid/widget/LinearLayout$LayoutParams;->setMargins(IIII)V
-
-    .line 417
-    invoke-virtual {v0, v1}, Landroid/view/View;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
-
-    .line 418
-    const-string p1, "#20FFFFFF"
-
-    invoke-static {p1}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
-
-    move-result p1
-
-    invoke-virtual {v0, p1}, Landroid/view/View;->setBackgroundColor(I)V
-
-    .line 419
-    return-object v0
-.end method
-
-.method private createOptionRow(Landroid/content/Context;)Landroid/widget/RelativeLayout;
-    .registers 7
-
-    .line 370
-    new-instance v0, Landroid/widget/RelativeLayout;
-
-    invoke-direct {v0, p1}, Landroid/widget/RelativeLayout;-><init>(Landroid/content/Context;)V
-
-    .line 371
-    new-instance v1, Landroid/widget/LinearLayout$LayoutParams;
-
-    const/4 v2, -0x1
-
-    const/4 v3, -0x2
-
-    invoke-direct {v1, v2, v3}, Landroid/widget/LinearLayout$LayoutParams;-><init>(II)V
-
-    .line 375
-    invoke-virtual {v0, v1}, Landroid/widget/RelativeLayout;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
-
-    .line 376
-    const/16 v1, 0x14
-
-    invoke-direct {p0, p1, v1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v2
-
-    const/16 v3, 0xe
-
-    invoke-direct {p0, p1, v3}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v4
-
-    invoke-direct {p0, p1, v1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v1
-
-    invoke-direct {p0, p1, v3}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v3
-
-    invoke-virtual {v0, v2, v4, v1, v3}, Landroid/widget/RelativeLayout;->setPadding(IIII)V
-
-    .line 377
-    invoke-direct {p0, p1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getSelectableItemBackground(Landroid/content/Context;)I
-
-    move-result p1
-
-    invoke-virtual {v0, p1}, Landroid/widget/RelativeLayout;->setBackgroundResource(I)V
-
-    .line 378
-    const/4 p1, 0x1
-
-    invoke-virtual {v0, p1}, Landroid/widget/RelativeLayout;->setClickable(Z)V
-
-    .line 379
-    invoke-virtual {v0, p1}, Landroid/widget/RelativeLayout;->setFocusable(Z)V
-
-    .line 380
-    return-object v0
-.end method
-
-.method private createTextColumn(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;)Landroid/widget/LinearLayout;
-    .registers 7
-
-    .line 384
-    new-instance v0, Landroid/widget/LinearLayout;
-
-    invoke-direct {v0, p1}, Landroid/widget/LinearLayout;-><init>(Landroid/content/Context;)V
-
-    .line 385
-    const/4 v1, 0x1
-
-    invoke-virtual {v0, v1}, Landroid/widget/LinearLayout;->setOrientation(I)V
-
-    .line 387
-    new-instance v1, Landroid/widget/TextView;
-
-    invoke-direct {v1, p1}, Landroid/widget/TextView;-><init>(Landroid/content/Context;)V
-
-    .line 388
-    invoke-virtual {v1, p2}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
-
-    .line 389
-    const/high16 p2, 0x41900000    # 18.0f
-
-    const/4 v2, 0x2
-
-    invoke-virtual {v1, v2, p2}, Landroid/widget/TextView;->setTextSize(IF)V
-
-    .line 390
-    sget-object p2, Landroid/graphics/Typeface;->DEFAULT_BOLD:Landroid/graphics/Typeface;
-
-    invoke-virtual {v1, p2}, Landroid/widget/TextView;->setTypeface(Landroid/graphics/Typeface;)V
-
-    .line 391
-    const/4 p2, -0x1
-
-    invoke-virtual {v1, p2}, Landroid/widget/TextView;->setTextColor(I)V
-
-    .line 392
-    invoke-virtual {v0, v1}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
-
-    .line 394
-    new-instance p2, Landroid/widget/TextView;
-
-    invoke-direct {p2, p1}, Landroid/widget/TextView;-><init>(Landroid/content/Context;)V
-
-    .line 395
-    invoke-virtual {p2, p3}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
-
-    .line 396
-    const/high16 p3, 0x41500000    # 13.0f
-
-    invoke-virtual {p2, v2, p3}, Landroid/widget/TextView;->setTextSize(IF)V
-
-    .line 397
-    const-string p3, "#9E9E9E"
-
-    invoke-static {p3}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
-
-    move-result p3
-
-    invoke-virtual {p2, p3}, Landroid/widget/TextView;->setTextColor(I)V
-
-    .line 398
-    invoke-direct {p0, p1, v2}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result p3
-
-    int-to-float p3, p3
-
-    const/high16 v1, 0x3f800000    # 1.0f
-
-    invoke-virtual {p2, p3, v1}, Landroid/widget/TextView;->setLineSpacing(FF)V
-
-    .line 399
-    new-instance p3, Landroid/widget/LinearLayout$LayoutParams;
-
-    const/4 v1, -0x2
-
-    invoke-direct {p3, v1, v1}, Landroid/widget/LinearLayout$LayoutParams;-><init>(II)V
-
-    .line 403
-    const/4 v1, 0x4
-
-    invoke-direct {p0, p1, v1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result p1
-
-    iput p1, p3, Landroid/widget/LinearLayout$LayoutParams;->topMargin:I
-
-    .line 404
-    invoke-virtual {p2, p3}, Landroid/widget/TextView;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
-
-    .line 405
-    invoke-virtual {v0, p2}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
-
-    .line 407
-    return-object v0
-.end method
-
-.method private dp(Landroid/content/Context;I)I
-    .registers 4
-
-    .line 600
-    if-nez p1, :cond_5
-
-    mul-int/lit8 p2, p2, 0x2
-
-    return p2
-
-    .line 601
-    :cond_5
-    int-to-float p2, p2
-
-    invoke-virtual {p1}, Landroid/content/Context;->getResources()Landroid/content/res/Resources;
-
-    move-result-object p1
-
-    invoke-virtual {p1}, Landroid/content/res/Resources;->getDisplayMetrics()Landroid/util/DisplayMetrics;
-
-    move-result-object p1
-
-    const/4 v0, 0x1
-
-    invoke-static {v0, p2, p1}, Landroid/util/TypedValue;->applyDimension(IFLandroid/util/DisplayMetrics;)F
-
-    move-result p1
-
-    float-to-int p1, p1
-
-    return p1
-.end method
-
-.method private getAppDrawable(Landroid/content/Context;Ljava/lang/String;)Landroid/graphics/drawable/Drawable;
-    .registers 7
-
-    .line 572
-    const/4 v0, 0x0
-
-    if-nez p1, :cond_4
-
-    return-object v0
-
-    .line 573
-    :cond_4
-    invoke-virtual {p1}, Landroid/content/Context;->getResources()Landroid/content/res/Resources;
-
-    move-result-object v1
-
-    const-string v2, "drawable"
-
-    invoke-virtual {p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
-
-    move-result-object v3
-
-    invoke-virtual {v1, p2, v2, v3}, Landroid/content/res/Resources;->getIdentifier(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I
-
-    move-result p2
-
-    .line 574
-    if-eqz p2, :cond_1a
-
-    .line 576
-    :try_start_14
-    invoke-virtual {p1, p2}, Landroid/content/Context;->getDrawable(I)Landroid/graphics/drawable/Drawable;
-
-    move-result-object p1
-    :try_end_18
-    .catch Ljava/lang/Exception; {:try_start_14 .. :try_end_18} :catch_19
-
-    return-object p1
-
-    .line 577
-    :catch_19
-    move-exception p1
-
-    .line 579
-    :cond_1a
-    return-object v0
-.end method
-
-.method private getAppMipmap(Landroid/content/Context;Ljava/lang/String;)Landroid/graphics/drawable/Drawable;
-    .registers 7
-
-    .line 583
-    const/4 v0, 0x0
-
-    if-nez p1, :cond_4
-
-    return-object v0
-
-    .line 584
-    :cond_4
-    invoke-virtual {p1}, Landroid/content/Context;->getResources()Landroid/content/res/Resources;
-
-    move-result-object v1
-
-    const-string v2, "mipmap"
-
-    invoke-virtual {p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
-
-    move-result-object v3
-
-    invoke-virtual {v1, p2, v2, v3}, Landroid/content/res/Resources;->getIdentifier(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I
-
-    move-result p2
-
-    .line 585
-    if-eqz p2, :cond_1a
-
-    .line 587
-    :try_start_14
-    invoke-virtual {p1, p2}, Landroid/content/Context;->getDrawable(I)Landroid/graphics/drawable/Drawable;
-
-    move-result-object p1
-    :try_end_18
-    .catch Ljava/lang/Exception; {:try_start_14 .. :try_end_18} :catch_19
-
-    return-object p1
-
-    .line 588
-    :catch_19
-    move-exception p1
-
-    .line 590
-    :cond_1a
-    return-object v0
+    return-object p0
 .end method
 
 .method private getSelectableItemBackground(Landroid/content/Context;)I
-    .registers 5
+    .registers 6
 
-    .line 594
-    new-instance v0, Landroid/util/TypedValue;
+    .line 452
+    const/4 v0, 0x0
 
-    invoke-direct {v0}, Landroid/util/TypedValue;-><init>()V
+    if-nez p1, :cond_4
 
-    .line 595
+    return v0
+
+    .line 453
+    :cond_4
+    new-instance v1, Landroid/util/TypedValue;
+
+    invoke-direct {v1}, Landroid/util/TypedValue;-><init>()V
+
+    .line 454
     invoke-virtual {p1}, Landroid/content/Context;->getTheme()Landroid/content/res/Resources$Theme;
 
     move-result-object p1
 
-    const v1, 0x101030e
+    const v2, 0x101030e
 
-    const/4 v2, 0x1
+    const/4 v3, 0x1
 
-    invoke-virtual {p1, v1, v0, v2}, Landroid/content/res/Resources$Theme;->resolveAttribute(ILandroid/util/TypedValue;Z)Z
+    invoke-virtual {p1, v2, v1, v3}, Landroid/content/res/Resources$Theme;->resolveAttribute(ILandroid/util/TypedValue;Z)Z
 
-    .line 596
-    iget p1, v0, Landroid/util/TypedValue;->resourceId:I
+    move-result p1
+
+    if-eqz p1, :cond_1a
+
+    .line 455
+    iget p1, v1, Landroid/util/TypedValue;->resourceId:I
 
     return p1
+
+    .line 457
+    :cond_1a
+    return v0
 .end method
 
 .method private openFolderPicker()V
-    .registers 4
+    .registers 3
 
-    .line 466
+    .line 289
+    :try_start_0
     new-instance v0, Landroid/content/Intent;
 
     const-string v1, "android.intent.action.OPEN_DOCUMENT_TREE"
 
     invoke-direct {v0, v1}, Landroid/content/Intent;-><init>(Ljava/lang/String;)V
 
-    .line 467
-    const-string v1, "android.intent.extra.LOCAL_ONLY"
-
-    const/4 v2, 0x1
-
-    invoke-virtual {v0, v1, v2}, Landroid/content/Intent;->putExtra(Ljava/lang/String;Z)Landroid/content/Intent;
-
-    .line 468
-    const/16 v1, 0x43
+    .line 290
+    const/16 v1, 0xc3
 
     invoke-virtual {v0, v1}, Landroid/content/Intent;->addFlags(I)Landroid/content/Intent;
 
-    .line 470
+    .line 294
     const/16 v1, 0x3e9
 
-    :try_start_14
     invoke-virtual {p0, v0, v1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->startActivityForResult(Landroid/content/Intent;I)V
-    :try_end_17
-    .catch Ljava/lang/Exception; {:try_start_14 .. :try_end_17} :catch_18
+    :try_end_11
+    .catch Ljava/lang/Exception; {:try_start_0 .. :try_end_11} :catch_12
 
-    .line 476
-    goto :goto_29
+    .line 297
+    goto :goto_16
 
-    .line 471
-    :catch_18
+    .line 295
+    :catch_12
     move-exception v0
 
-    .line 472
-    invoke-virtual {p0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getContext()Landroid/content/Context;
+    .line 296
+    invoke-virtual {v0}, Ljava/lang/Exception;->printStackTrace()V
 
-    move-result-object v0
-
-    .line 473
-    if-eqz v0, :cond_29
-
-    .line 474
-    const-string v1, "Failed to launch folder picker"
-
-    const/4 v2, 0x0
-
-    invoke-static {v0, v1, v2}, Landroid/widget/Toast;->makeText(Landroid/content/Context;Ljava/lang/CharSequence;I)Landroid/widget/Toast;
-
-    move-result-object v0
-
-    invoke-virtual {v0}, Landroid/widget/Toast;->show()V
-
-    .line 477
-    :cond_29
-    :goto_29
+    .line 298
+    :goto_16
     return-void
 .end method
 
 .method private requestAllFilesPermission(Landroid/content/Context;)V
     .registers 5
 
-    .line 480
+    .line 270
+    if-nez p1, :cond_3
+
+    return-void
+
+    .line 271
+    :cond_3
     sget v0, Landroid/os/Build$VERSION;->SDK_INT:I
 
     const/16 v1, 0x1e
 
-    if-lt v0, v1, :cond_42
+    if-lt v0, v1, :cond_3e
 
-    .line 482
-    :try_start_6
-    new-instance v0, Landroid/content/Intent;
+    .line 273
+    const/16 v0, 0x3ea
 
-    const-string v1, "android.settings.MANAGE_APP_ALL_FILES_ACCESS_PERMISSION"
-
-    invoke-direct {v0, v1}, Landroid/content/Intent;-><init>(Ljava/lang/String;)V
-
-    .line 483
-    if-eqz p1, :cond_14
-
+    :try_start_b
     invoke-virtual {p1}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
 
     move-result-object p1
 
-    goto :goto_16
-
-    :cond_14
-    const-string p1, "xyz.aethersx2.android"
-
-    :goto_16
     new-instance v1, Ljava/lang/StringBuilder;
 
     invoke-direct {v1}, Ljava/lang/StringBuilder;-><init>()V
@@ -821,89 +698,92 @@
 
     move-result-object p1
 
-    invoke-virtual {v0, p1}, Landroid/content/Intent;->setData(Landroid/net/Uri;)Landroid/content/Intent;
+    .line 274
+    new-instance v1, Landroid/content/Intent;
 
-    .line 484
-    invoke-virtual {p0, v0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->startActivity(Landroid/content/Intent;)V
-    :try_end_33
-    .catch Ljava/lang/Exception; {:try_start_6 .. :try_end_33} :catch_34
+    const-string v2, "android.settings.MANAGE_APP_ALL_FILES_ACCESS_PERMISSION"
 
-    .line 490
-    goto :goto_42
+    invoke-direct {v1, v2, p1}, Landroid/content/Intent;-><init>(Ljava/lang/String;Landroid/net/Uri;)V
 
-    .line 485
-    :catch_34
+    .line 275
+    invoke-virtual {p0, v1, v0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->startActivityForResult(Landroid/content/Intent;I)V
+    :try_end_30
+    .catch Ljava/lang/Exception; {:try_start_b .. :try_end_30} :catch_31
+
+    .line 283
+    goto :goto_3e
+
+    .line 276
+    :catch_31
     move-exception p1
 
-    .line 487
-    :try_start_35
+    .line 278
+    :try_start_32
     new-instance p1, Landroid/content/Intent;
 
-    const-string v0, "android.settings.MANAGE_ALL_FILES_ACCESS_PERMISSION"
+    const-string v1, "android.settings.MANAGE_ALL_FILES_ACCESS_PERMISSION"
 
-    invoke-direct {p1, v0}, Landroid/content/Intent;-><init>(Ljava/lang/String;)V
+    invoke-direct {p1, v1}, Landroid/content/Intent;-><init>(Ljava/lang/String;)V
 
-    .line 488
-    invoke-virtual {p0, p1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->startActivity(Landroid/content/Intent;)V
-    :try_end_3f
-    .catch Ljava/lang/Exception; {:try_start_35 .. :try_end_3f} :catch_40
+    .line 279
+    invoke-virtual {p0, p1, v0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->startActivityForResult(Landroid/content/Intent;I)V
+    :try_end_3c
+    .catch Ljava/lang/Exception; {:try_start_32 .. :try_end_3c} :catch_3d
 
-    goto :goto_41
+    .line 282
+    goto :goto_3e
 
-    .line 489
-    :catch_40
+    .line 280
+    :catch_3d
     move-exception p1
 
-    :goto_41
-    nop
-
-    .line 492
-    :cond_42
-    :goto_42
+    .line 285
+    :cond_3e
+    :goto_3e
     return-void
 .end method
 
 .method private selectCustom(Landroid/content/Context;Ljava/lang/String;)V
     .registers 3
 
-    .line 429
-    iput-object p2, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->currentSelectedPath:Ljava/lang/String;
-
-    .line 430
+    .line 346
     iput-object p2, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->customSavedPath:Ljava/lang/String;
 
-    .line 431
+    .line 347
+    iput-object p2, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->currentSelectedPath:Ljava/lang/String;
+
+    .line 348
     invoke-static {p1, p2}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->applyDataLocation(Landroid/content/Context;Ljava/lang/String;)V
 
-    .line 432
+    .line 349
     invoke-direct {p0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->updateUiState()V
 
-    .line 433
+    .line 350
     return-void
 .end method
 
 .method private selectDefault(Landroid/content/Context;)V
     .registers 3
 
-    .line 423
+    .line 353
     const-string v0, "internal"
 
     iput-object v0, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->currentSelectedPath:Ljava/lang/String;
 
-    .line 424
+    .line 354
     invoke-static {p1, v0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->applyDataLocation(Landroid/content/Context;Ljava/lang/String;)V
 
-    .line 425
+    .line 355
     invoke-direct {p0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->updateUiState()V
 
-    .line 426
+    .line 356
     return-void
 .end method
 
 .method private updateUiState()V
-    .registers 7
+    .registers 9
 
-    .line 436
+    .line 222
     const-string v0, "internal"
 
     iget-object v1, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->currentSelectedPath:Ljava/lang/String;
@@ -912,9 +792,11 @@
 
     move-result v0
 
-    const/4 v1, 0x0
+    const/4 v1, 0x1
 
-    if-nez v0, :cond_16
+    const/4 v2, 0x0
+
+    if-nez v0, :cond_17
 
     iget-object v0, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->currentSelectedPath:Ljava/lang/String;
 
@@ -922,187 +804,235 @@
 
     move-result v0
 
-    if-eqz v0, :cond_14
-
-    goto :goto_16
-
-    :cond_14
-    move v0, v1
+    if-eqz v0, :cond_15
 
     goto :goto_17
 
-    :cond_16
-    :goto_16
+    :cond_15
+    const/4 v0, 0x0
+
+    goto :goto_18
+
+    :cond_17
+    :goto_17
     const/4 v0, 0x1
 
-    .line 437
-    :goto_17
-    iget-object v2, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->ivDefaultCheck:Landroid/widget/ImageView;
+    .line 223
+    :goto_18
+    iget-object v3, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->ivDefaultCheck:Landroid/widget/ImageView;
 
-    const/16 v3, 0x8
+    const/16 v4, 0x8
 
-    if-eqz v2, :cond_25
+    if-eqz v3, :cond_27
 
-    .line 438
-    if-eqz v0, :cond_21
+    .line 224
+    if-eqz v0, :cond_22
 
-    move v4, v1
+    const/4 v5, 0x0
 
-    goto :goto_22
+    goto :goto_24
 
-    :cond_21
-    move v4, v3
+    :cond_22
+    const/16 v5, 0x8
 
-    :goto_22
-    invoke-virtual {v2, v4}, Landroid/widget/ImageView;->setVisibility(I)V
+    :goto_24
+    invoke-virtual {v3, v5}, Landroid/widget/ImageView;->setVisibility(I)V
 
-    .line 440
-    :cond_25
-    iget-object v2, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->ivCustomCheck:Landroid/widget/ImageView;
+    .line 226
+    :cond_27
+    iget-object v3, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->ivCustomCheck:Landroid/widget/ImageView;
 
-    if-eqz v2, :cond_31
+    if-eqz v3, :cond_34
 
-    .line 441
-    if-nez v0, :cond_2d
+    .line 227
+    if-nez v0, :cond_2f
 
-    move v4, v1
+    const/4 v5, 0x0
 
-    goto :goto_2e
+    goto :goto_31
 
-    :cond_2d
-    move v4, v3
+    :cond_2f
+    const/16 v5, 0x8
 
-    :goto_2e
-    invoke-virtual {v2, v4}, Landroid/widget/ImageView;->setVisibility(I)V
+    :goto_31
+    invoke-virtual {v3, v5}, Landroid/widget/ImageView;->setVisibility(I)V
 
-    .line 443
-    :cond_31
-    iget-object v2, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->btnClearCustom:Landroid/widget/ImageButton;
+    .line 229
+    :cond_34
+    iget-object v3, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvCustomSubtitle:Landroid/widget/TextView;
 
-    if-eqz v2, :cond_43
+    const/4 v5, -0x1
 
-    .line 444
-    iget-object v4, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->customSavedPath:Ljava/lang/String;
+    if-eqz v3, :cond_68
 
-    invoke-virtual {v4}, Ljava/lang/String;->isEmpty()Z
+    .line 230
+    iget-object v3, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->customSavedPath:Ljava/lang/String;
 
-    move-result v4
+    invoke-virtual {v3}, Ljava/lang/String;->isEmpty()Z
 
-    if-nez v4, :cond_3f
+    move-result v3
 
-    move v4, v1
+    const-string v6, "#9E9E9E"
 
-    goto :goto_40
+    if-eqz v3, :cond_54
 
-    :cond_3f
-    move v4, v3
+    .line 231
+    iget-object v0, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvCustomSubtitle:Landroid/widget/TextView;
 
-    :goto_40
-    invoke-virtual {v2, v4}, Landroid/widget/ImageButton;->setVisibility(I)V
+    const-string v3, "Tap to select custom data directory"
 
-    .line 446
-    :cond_43
-    iget-object v2, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvCustomSubtitle:Landroid/widget/TextView;
+    invoke-virtual {v0, v3}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
 
-    if-eqz v2, :cond_77
+    .line 232
+    iget-object v0, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvCustomSubtitle:Landroid/widget/TextView;
 
-    .line 447
-    iget-object v2, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->customSavedPath:Ljava/lang/String;
+    invoke-static {v6}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
 
-    invoke-virtual {v2}, Ljava/lang/String;->isEmpty()Z
+    move-result v3
 
-    move-result v2
+    invoke-virtual {v0, v3}, Landroid/widget/TextView;->setTextColor(I)V
 
-    const-string v4, "#9E9E9E"
+    goto :goto_68
 
-    if-eqz v2, :cond_62
+    .line 234
+    :cond_54
+    iget-object v3, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvCustomSubtitle:Landroid/widget/TextView;
 
-    .line 448
-    iget-object v2, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvCustomSubtitle:Landroid/widget/TextView;
+    iget-object v7, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->customSavedPath:Ljava/lang/String;
 
-    const-string v5, "Tap to choose a custom data directory..."
+    invoke-virtual {v3, v7}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
 
-    invoke-virtual {v2, v5}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+    .line 235
+    iget-object v3, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvCustomSubtitle:Landroid/widget/TextView;
 
-    .line 449
-    iget-object v2, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvCustomSubtitle:Landroid/widget/TextView;
+    if-eqz v0, :cond_64
 
-    invoke-static {v4}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
+    invoke-static {v6}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
 
-    move-result v4
+    move-result v0
 
-    invoke-virtual {v2, v4}, Landroid/widget/TextView;->setTextColor(I)V
+    goto :goto_65
 
-    goto :goto_77
+    :cond_64
+    const/4 v0, -0x1
 
-    .line 451
-    :cond_62
-    iget-object v2, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvCustomSubtitle:Landroid/widget/TextView;
+    :goto_65
+    invoke-virtual {v3, v0}, Landroid/widget/TextView;->setTextColor(I)V
 
-    iget-object v5, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->customSavedPath:Ljava/lang/String;
+    .line 238
+    :cond_68
+    :goto_68
+    sget v0, Landroid/os/Build$VERSION;->SDK_INT:I
 
-    invoke-virtual {v2, v5}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+    const/16 v3, 0x1e
 
-    .line 452
-    iget-object v2, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvCustomSubtitle:Landroid/widget/TextView;
+    if-lt v0, v3, :cond_b4
 
-    if-eqz v0, :cond_6e
-
-    goto :goto_70
-
-    :cond_6e
-    const-string v4, "#64B5F6"
-
-    :goto_70
-    invoke-static {v4}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
-
-    move-result v4
-
-    invoke-virtual {v2, v4}, Landroid/widget/TextView;->setTextColor(I)V
-
-    .line 455
-    :cond_77
-    :goto_77
-    iget-object v2, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->permissionBanner:Landroid/widget/LinearLayout;
-
-    if-eqz v2, :cond_95
-
-    .line 456
-    sget v2, Landroid/os/Build$VERSION;->SDK_INT:I
-
-    const/16 v4, 0x1e
-
-    if-lt v2, v4, :cond_90
-
-    if-nez v0, :cond_90
-
-    .line 457
+    .line 239
     invoke-static {}, Landroid/os/Environment;->isExternalStorageManager()Z
 
     move-result v0
 
-    .line 458
-    iget-object v2, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->permissionBanner:Landroid/widget/LinearLayout;
+    .line 240
+    if-eqz v0, :cond_97
 
-    if-eqz v0, :cond_8c
+    .line 241
+    iget-object v0, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvGrantPermission:Landroid/widget/TextView;
 
-    move v1, v3
+    if-eqz v0, :cond_8d
 
-    :cond_8c
-    invoke-virtual {v2, v1}, Landroid/widget/LinearLayout;->setVisibility(I)V
+    .line 242
+    const-string v1, "All Files Access Granted"
 
-    .line 459
-    goto :goto_95
+    invoke-virtual {v0, v1}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
 
-    .line 460
-    :cond_90
-    iget-object v0, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->permissionBanner:Landroid/widget/LinearLayout;
+    .line 243
+    iget-object v0, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvGrantPermission:Landroid/widget/TextView;
 
-    invoke-virtual {v0, v3}, Landroid/widget/LinearLayout;->setVisibility(I)V
+    const-string v1, "#81C784"
 
-    .line 463
-    :cond_95
-    :goto_95
+    invoke-static {v1}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
+
+    move-result v1
+
+    invoke-virtual {v0, v1}, Landroid/widget/TextView;->setTextColor(I)V
+
+    .line 244
+    iget-object v0, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvGrantPermission:Landroid/widget/TextView;
+
+    invoke-virtual {v0, v2}, Landroid/widget/TextView;->setClickable(Z)V
+
+    .line 246
+    :cond_8d
+    iget-object v0, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvPermissionStatus:Landroid/widget/TextView;
+
+    if-eqz v0, :cond_b3
+
+    .line 247
+    const-string v1, "Permission active for custom storage"
+
+    invoke-virtual {v0, v1}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+
+    goto :goto_b3
+
+    .line 250
+    :cond_97
+    iget-object v0, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvGrantPermission:Landroid/widget/TextView;
+
+    if-eqz v0, :cond_aa
+
+    .line 251
+    const-string v2, "Grant All Files Permission"
+
+    invoke-virtual {v0, v2}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+
+    .line 252
+    iget-object v0, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvGrantPermission:Landroid/widget/TextView;
+
+    invoke-virtual {v0, v5}, Landroid/widget/TextView;->setTextColor(I)V
+
+    .line 253
+    iget-object v0, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvGrantPermission:Landroid/widget/TextView;
+
+    invoke-virtual {v0, v1}, Landroid/widget/TextView;->setClickable(Z)V
+
+    .line 255
+    :cond_aa
+    iget-object v0, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvPermissionStatus:Landroid/widget/TextView;
+
+    if-eqz v0, :cond_b3
+
+    .line 256
+    const-string v1, "Required on Android 11+ for custom folder access"
+
+    invoke-virtual {v0, v1}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+
+    .line 259
+    :cond_b3
+    :goto_b3
+    goto :goto_c2
+
+    .line 260
+    :cond_b4
+    iget-object v0, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvGrantPermission:Landroid/widget/TextView;
+
+    if-eqz v0, :cond_bb
+
+    .line 261
+    invoke-virtual {v0, v4}, Landroid/widget/TextView;->setVisibility(I)V
+
+    .line 263
+    :cond_bb
+    iget-object v0, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvPermissionStatus:Landroid/widget/TextView;
+
+    if-eqz v0, :cond_c2
+
+    .line 264
+    invoke-virtual {v0, v4}, Landroid/widget/TextView;->setVisibility(I)V
+
+    .line 267
+    :cond_c2
+    :goto_c2
     return-void
 .end method
 
@@ -1111,38 +1041,67 @@
 .method public onActivityResult(IILandroid/content/Intent;)V
     .registers 6
 
-    .line 496
+    .line 302
     invoke-super {p0, p1, p2, p3}, Landroidx/fragment/app/n;->onActivityResult(IILandroid/content/Intent;)V
 
-    .line 497
+    .line 303
+    const/16 v0, 0x3ea
+
+    if-ne p1, v0, :cond_1a
+
+    .line 304
+    invoke-direct {p0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->updateUiState()V
+
+    .line 305
+    sget p1, Landroid/os/Build$VERSION;->SDK_INT:I
+
+    const/16 p2, 0x1e
+
+    if-lt p1, p2, :cond_19
+
+    invoke-static {}, Landroid/os/Environment;->isExternalStorageManager()Z
+
+    move-result p1
+
+    if-eqz p1, :cond_19
+
+    .line 306
+    invoke-direct {p0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->openFolderPicker()V
+
+    .line 308
+    :cond_19
+    return-void
+
+    .line 310
+    :cond_1a
     const/16 v0, 0x3e9
 
-    if-ne p1, v0, :cond_a1
+    if-ne p1, v0, :cond_b0
 
     const/4 p1, -0x1
 
-    if-ne p2, p1, :cond_a1
+    if-ne p2, p1, :cond_b0
 
-    if-eqz p3, :cond_a1
+    if-eqz p3, :cond_b0
 
-    .line 498
+    .line 311
     invoke-virtual {p3}, Landroid/content/Intent;->getData()Landroid/net/Uri;
 
     move-result-object p1
 
-    .line 499
-    if-eqz p1, :cond_a1
+    .line 312
+    if-eqz p1, :cond_b0
 
-    .line 500
+    .line 313
     invoke-virtual {p0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getContext()Landroid/content/Context;
 
     move-result-object p2
 
-    .line 501
-    if-eqz p2, :cond_23
+    .line 314
+    if-eqz p2, :cond_39
 
-    .line 503
-    :try_start_18
+    .line 316
+    :try_start_2f
     invoke-virtual {p2}, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
 
     move-result-object p3
@@ -1150,64 +1109,69 @@
     const/4 v0, 0x3
 
     invoke-virtual {p3, p1, v0}, Landroid/content/ContentResolver;->takePersistableUriPermission(Landroid/net/Uri;I)V
-    :try_end_20
-    .catch Ljava/lang/Exception; {:try_start_18 .. :try_end_20} :catch_21
+    :try_end_37
+    .catch Ljava/lang/Exception; {:try_start_2f .. :try_end_37} :catch_38
 
-    goto :goto_22
+    .line 320
+    goto :goto_39
 
-    .line 507
-    :catch_21
+    .line 318
+    :catch_38
     move-exception p3
 
-    :goto_22
+    .line 322
+    :cond_39
+    :goto_39
     nop
 
-    .line 510
-    :cond_23
-    nop
-
-    .line 512
-    :try_start_24
+    .line 324
+    :try_start_3a
     invoke-static {p1}, Landroid/provider/DocumentsContract;->getTreeDocumentId(Landroid/net/Uri;)Ljava/lang/String;
 
-    move-result-object p1
-    :try_end_28
-    .catch Ljava/lang/Exception; {:try_start_24 .. :try_end_28} :catch_29
+    move-result-object p3
+    :try_end_3e
+    .catch Ljava/lang/Exception; {:try_start_3a .. :try_end_3e} :catch_3f
 
-    .line 513
-    goto :goto_2b
+    .line 327
+    goto :goto_41
 
-    :catch_29
-    move-exception p1
+    .line 325
+    :catch_3f
+    move-exception p3
 
-    const/4 p1, 0x0
+    const/4 p3, 0x0
 
-    .line 516
-    :goto_2b
-    const-string p3, "/storage/emulated/0/"
+    .line 328
+    :goto_41
+    nop
 
-    if-eqz p1, :cond_4f
+    .line 329
+    if-eqz p3, :cond_68
 
     const-string v0, "primary:"
 
-    invoke-virtual {p1, v0}, Ljava/lang/String;->startsWith(Ljava/lang/String;)Z
+    invoke-virtual {p3, v0}, Ljava/lang/String;->startsWith(Ljava/lang/String;)Z
 
-    move-result v0
+    move-result v1
 
-    if-eqz v0, :cond_4f
+    if-eqz v1, :cond_68
 
-    .line 517
-    const/16 v0, 0x8
+    .line 330
+    invoke-virtual {v0}, Ljava/lang/String;->length()I
 
-    invoke-virtual {p1, v0}, Ljava/lang/String;->substring(I)Ljava/lang/String;
+    move-result p1
+
+    invoke-virtual {p3, p1}, Ljava/lang/String;->substring(I)Ljava/lang/String;
 
     move-result-object p1
 
-    new-instance v0, Ljava/lang/StringBuilder;
+    new-instance p3, Ljava/lang/StringBuilder;
 
-    invoke-direct {v0}, Ljava/lang/StringBuilder;-><init>()V
+    invoke-direct {p3}, Ljava/lang/StringBuilder;-><init>()V
 
-    invoke-virtual {v0, p3}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    const-string v0, "/storage/emulated/0/"
+
+    invoke-virtual {p3, v0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
 
     move-result-object p3
 
@@ -1219,51 +1183,57 @@
 
     move-result-object p1
 
-    goto :goto_9e
+    goto :goto_a5
 
-    .line 518
-    :cond_4f
-    if-eqz p1, :cond_88
+    .line 331
+    :cond_68
+    if-eqz p3, :cond_a1
 
     const-string v0, ":"
 
-    invoke-virtual {p1, v0}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+    invoke-virtual {p3, v0}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
 
-    move-result v0
+    move-result v1
 
-    if-eqz v0, :cond_88
+    if-eqz v1, :cond_a1
 
-    .line 519
-    const/16 p3, 0x3a
+    .line 332
+    const/4 p1, 0x2
 
-    invoke-virtual {p1, p3}, Ljava/lang/String;->indexOf(I)I
-
-    move-result p3
-
-    .line 520
-    const/4 v0, 0x0
-
-    invoke-virtual {p1, v0, p3}, Ljava/lang/String;->substring(II)Ljava/lang/String;
-
-    move-result-object v0
-
-    add-int/lit8 p3, p3, 0x1
-
-    invoke-virtual {p1, p3}, Ljava/lang/String;->substring(I)Ljava/lang/String;
+    invoke-virtual {p3, v0, p1}, Ljava/lang/String;->split(Ljava/lang/String;I)[Ljava/lang/String;
 
     move-result-object p1
 
-    new-instance p3, Ljava/lang/StringBuilder;
+    .line 333
+    const/4 p3, 0x0
 
-    invoke-direct {p3}, Ljava/lang/StringBuilder;-><init>()V
+    aget-object p3, p1, p3
+
+    array-length v0, p1
+
+    const/4 v1, 0x1
+
+    if-le v0, v1, :cond_81
+
+    aget-object p1, p1, v1
+
+    goto :goto_83
+
+    :cond_81
+    const-string p1, ""
+
+    :goto_83
+    new-instance v0, Ljava/lang/StringBuilder;
+
+    invoke-direct {v0}, Ljava/lang/StringBuilder;-><init>()V
 
     const-string v1, "/storage/"
 
-    invoke-virtual {p3, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
 
-    move-result-object p3
+    move-result-object v0
 
-    invoke-virtual {p3, v0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    invoke-virtual {v0, p3}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
 
     move-result-object p3
 
@@ -1281,1346 +1251,753 @@
 
     move-result-object p1
 
-    .line 521
-    goto :goto_9e
+    .line 334
+    goto :goto_a5
 
-    :cond_88
-    if-eqz p1, :cond_9c
-
-    .line 522
-    new-instance v0, Ljava/lang/StringBuilder;
-
-    invoke-direct {v0}, Ljava/lang/StringBuilder;-><init>()V
-
-    invoke-virtual {v0, p3}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    move-result-object p3
-
-    invoke-virtual {p3, p1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    .line 335
+    :cond_a1
+    invoke-virtual {p1}, Landroid/net/Uri;->getPath()Ljava/lang/String;
 
     move-result-object p1
 
-    invoke-virtual {p1}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    .line 338
+    :goto_a5
+    if-eqz p1, :cond_b0
 
-    move-result-object p1
+    invoke-virtual {p1}, Ljava/lang/String;->isEmpty()Z
 
-    goto :goto_9e
+    move-result p3
 
-    .line 524
-    :cond_9c
-    const-string p1, "/storage/emulated/0/Download/ps2"
+    if-nez p3, :cond_b0
 
-    .line 527
-    :goto_9e
+    .line 339
     invoke-direct {p0, p2, p1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->selectCustom(Landroid/content/Context;Ljava/lang/String;)V
 
-    .line 530
-    :cond_a1
+    .line 343
+    :cond_b0
     return-void
 .end method
 
 .method public onCreateView(Landroid/view/LayoutInflater;Landroid/view/ViewGroup;Landroid/os/Bundle;)Landroid/view/View;
-    .registers 21
+    .registers 20
 
-    .line 51
-    move-object/from16 v1, p0
+    .line 42
+    move-object/from16 v0, p0
 
     invoke-virtual/range {p0 .. p0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getContext()Landroid/content/Context;
 
-    move-result-object v0
+    move-result-object v1
 
-    .line 52
+    .line 45
     const/4 v2, 0x0
 
-    if-nez v0, :cond_15
+    if-eqz v1, :cond_d
 
-    new-instance v0, Landroid/view/View;
-
-    if-eqz p2, :cond_11
-
-    invoke-virtual/range {p2 .. p2}, Landroid/view/ViewGroup;->getContext()Landroid/content/Context;
+    invoke-virtual {v1, v2}, Landroid/content/Context;->getExternalFilesDir(Ljava/lang/String;)Ljava/io/File;
 
     move-result-object v2
 
-    :cond_11
-    invoke-direct {v0, v2}, Landroid/view/View;-><init>(Landroid/content/Context;)V
+    .line 46
+    :cond_d
+    if-nez v2, :cond_15
 
-    return-object v0
+    if-eqz v1, :cond_15
 
-    .line 55
+    .line 47
+    invoke-virtual {v1}, Landroid/content/Context;->getDataDir()Ljava/io/File;
+
+    move-result-object v2
+
+    .line 49
     :cond_15
-    invoke-virtual {v0, v2}, Landroid/content/Context;->getExternalFilesDir(Ljava/lang/String;)Ljava/io/File;
-
-    move-result-object v2
-
-    .line 56
-    if-nez v2, :cond_1f
-
-    invoke-virtual {v0}, Landroid/content/Context;->getDataDir()Ljava/io/File;
-
-    move-result-object v2
-
-    .line 57
-    :cond_1f
-    if-eqz v2, :cond_26
+    if-eqz v2, :cond_1c
 
     invoke-virtual {v2}, Ljava/io/File;->getAbsolutePath()Ljava/lang/String;
 
     move-result-object v2
 
-    goto :goto_28
+    goto :goto_1e
 
-    :cond_26
+    :cond_1c
     const-string v2, "/sdcard/Android/data/xyz.aethersx2.android/files"
 
-    :goto_28
-    iput-object v2, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->defaultInternalPath:Ljava/lang/String;
+    :goto_1e
+    iput-object v2, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->defaultInternalPath:Ljava/lang/String;
 
-    .line 60
-    invoke-virtual {v0}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
-
-    move-result-object v2
-
-    new-instance v3, Ljava/lang/StringBuilder;
-
-    invoke-direct {v3}, Ljava/lang/StringBuilder;-><init>()V
-
-    invoke-virtual {v3, v2}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    .line 51
+    invoke-static {v1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getPrefs(Landroid/content/Context;)Landroid/content/SharedPreferences;
 
     move-result-object v2
 
-    const-string v3, "_preferences"
+    .line 52
+    const-string v3, "internal"
 
-    invoke-virtual {v2, v3}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    if-eqz v2, :cond_2f
 
-    move-result-object v2
-
-    invoke-virtual {v2}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
-
-    move-result-object v2
-
-    const/4 v3, 0x0
-
-    invoke-virtual {v0, v2, v3}, Landroid/content/Context;->getSharedPreferences(Ljava/lang/String;I)Landroid/content/SharedPreferences;
-
-    move-result-object v2
-
-    .line 61
     const-string v4, "UI/DataDirectory"
 
-    const-string v5, "internal"
-
-    invoke-interface {v2, v4, v5}, Landroid/content/SharedPreferences;->getString(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+    invoke-interface {v2, v4, v3}, Landroid/content/SharedPreferences;->getString(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 
     move-result-object v2
 
-    .line 62
-    if-eqz v2, :cond_6a
+    goto :goto_30
+
+    :cond_2f
+    move-object v2, v3
+
+    .line 53
+    :goto_30
+    if-eqz v2, :cond_44
 
     invoke-virtual {v2}, Ljava/lang/String;->isEmpty()Z
 
     move-result v4
 
-    if-nez v4, :cond_6a
+    if-nez v4, :cond_44
 
-    invoke-virtual {v5, v2}, Ljava/lang/String;->equalsIgnoreCase(Ljava/lang/String;)Z
-
-    move-result v4
-
-    if-nez v4, :cond_6a
-
-    iget-object v4, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->defaultInternalPath:Ljava/lang/String;
-
-    invoke-virtual {v2, v4}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+    invoke-virtual {v3, v2}, Ljava/lang/String;->equalsIgnoreCase(Ljava/lang/String;)Z
 
     move-result v4
 
-    if-eqz v4, :cond_65
+    if-eqz v4, :cond_3f
 
-    goto :goto_6a
+    goto :goto_44
 
-    .line 66
-    :cond_65
-    iput-object v2, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->currentSelectedPath:Ljava/lang/String;
+    .line 57
+    :cond_3f
+    iput-object v2, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->currentSelectedPath:Ljava/lang/String;
 
-    .line 67
-    iput-object v2, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->customSavedPath:Ljava/lang/String;
+    .line 58
+    iput-object v2, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->customSavedPath:Ljava/lang/String;
 
-    goto :goto_70
+    goto :goto_4a
 
-    .line 63
-    :cond_6a
-    :goto_6a
-    iput-object v5, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->currentSelectedPath:Ljava/lang/String;
+    .line 54
+    :cond_44
+    :goto_44
+    iput-object v3, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->currentSelectedPath:Ljava/lang/String;
 
-    .line 64
+    .line 55
     const-string v2, ""
 
-    iput-object v2, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->customSavedPath:Ljava/lang/String;
+    iput-object v2, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->customSavedPath:Ljava/lang/String;
 
-    .line 71
-    :goto_70
-    new-instance v2, Landroid/widget/FrameLayout;
+    .line 62
+    :goto_4a
+    iget-object v2, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->currentSelectedPath:Ljava/lang/String;
 
-    invoke-direct {v2, v0}, Landroid/widget/FrameLayout;-><init>(Landroid/content/Context;)V
+    invoke-static {v1, v2}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->applyDataLocation(Landroid/content/Context;Ljava/lang/String;)V
 
-    .line 72
-    new-instance v4, Landroid/view/ViewGroup$LayoutParams;
+    .line 65
+    new-instance v2, Landroid/widget/ScrollView;
 
-    const/4 v5, -0x1
+    invoke-direct {v2, v1}, Landroid/widget/ScrollView;-><init>(Landroid/content/Context;)V
 
-    invoke-direct {v4, v5, v5}, Landroid/view/ViewGroup$LayoutParams;-><init>(II)V
+    .line 66
+    new-instance v3, Landroid/view/ViewGroup$LayoutParams;
 
-    invoke-virtual {v2, v4}, Landroid/widget/FrameLayout;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
+    const/4 v4, -0x1
 
-    .line 78
-    new-instance v4, Landroid/widget/ScrollView;
+    invoke-direct {v3, v4, v4}, Landroid/view/ViewGroup$LayoutParams;-><init>(II)V
 
-    invoke-direct {v4, v0}, Landroid/widget/ScrollView;-><init>(Landroid/content/Context;)V
+    invoke-virtual {v2, v3}, Landroid/widget/ScrollView;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
 
-    .line 79
-    new-instance v6, Landroid/widget/FrameLayout$LayoutParams;
+    .line 68
+    const/4 v3, 0x1
 
-    invoke-direct {v6, v5, v5}, Landroid/widget/FrameLayout$LayoutParams;-><init>(II)V
+    invoke-virtual {v2, v3}, Landroid/widget/ScrollView;->setFillViewport(Z)V
 
-    .line 83
-    invoke-virtual {v4, v6}, Landroid/widget/ScrollView;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
-
-    .line 84
-    const/4 v6, 0x1
-
-    invoke-virtual {v4, v6}, Landroid/widget/ScrollView;->setFillViewport(Z)V
-
-    .line 86
-    new-instance v7, Landroid/widget/LinearLayout;
-
-    invoke-direct {v7, v0}, Landroid/widget/LinearLayout;-><init>(Landroid/content/Context;)V
-
-    .line 87
-    invoke-virtual {v7, v6}, Landroid/widget/LinearLayout;->setOrientation(I)V
-
-    .line 88
-    new-instance v8, Landroid/view/ViewGroup$LayoutParams;
-
-    const/4 v9, -0x2
-
-    invoke-direct {v8, v5, v9}, Landroid/view/ViewGroup$LayoutParams;-><init>(II)V
-
-    invoke-virtual {v7, v8}, Landroid/widget/LinearLayout;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
-
-    .line 94
-    new-instance v8, Landroid/widget/RelativeLayout;
-
-    invoke-direct {v8, v0}, Landroid/widget/RelativeLayout;-><init>(Landroid/content/Context;)V
-
-    .line 95
-    new-instance v10, Landroid/widget/LinearLayout$LayoutParams;
-
-    invoke-direct {v10, v5, v9}, Landroid/widget/LinearLayout$LayoutParams;-><init>(II)V
-
-    .line 99
-    const/16 v11, 0x14
-
-    invoke-direct {v1, v0, v11}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v12
-
-    const/16 v13, 0xa
-
-    invoke-direct {v1, v0, v13}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v14
-
-    invoke-direct {v1, v0, v11}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v15
-
-    invoke-direct {v1, v0, v13}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v6
-
-    invoke-virtual {v10, v12, v14, v15, v6}, Landroid/widget/LinearLayout$LayoutParams;->setMargins(IIII)V
-
-    .line 100
-    invoke-virtual {v8, v10}, Landroid/widget/RelativeLayout;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
-
-    .line 103
-    new-instance v6, Landroid/widget/ImageView;
-
-    invoke-direct {v6, v0}, Landroid/widget/ImageView;-><init>(Landroid/content/Context;)V
-
-    .line 104
-    invoke-static {}, Landroid/view/View;->generateViewId()I
-
-    move-result v10
-
-    invoke-virtual {v6, v10}, Landroid/widget/ImageView;->setId(I)V
-
-    .line 105
-    new-instance v10, Landroid/widget/RelativeLayout$LayoutParams;
-
-    const/16 v12, 0x2d
-
-    invoke-direct {v1, v0, v12}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v14
-
-    invoke-direct {v1, v0, v12}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v12
-
-    invoke-direct {v10, v14, v12}, Landroid/widget/RelativeLayout$LayoutParams;-><init>(II)V
-
-    .line 106
-    const/16 v12, 0x15
-
-    invoke-virtual {v10, v12}, Landroid/widget/RelativeLayout$LayoutParams;->addRule(I)V
-
-    .line 107
-    invoke-virtual {v10, v13}, Landroid/widget/RelativeLayout$LayoutParams;->addRule(I)V
-
-    .line 108
-    invoke-virtual {v6, v10}, Landroid/widget/ImageView;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
-
-    .line 109
-    const-string v10, "logo"
-
-    invoke-direct {v1, v0, v10}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getAppMipmap(Landroid/content/Context;Ljava/lang/String;)Landroid/graphics/drawable/Drawable;
-
-    move-result-object v10
-
-    .line 110
-    if-eqz v10, :cond_f5
-
-    .line 111
-    invoke-virtual {v6, v10}, Landroid/widget/ImageView;->setImageDrawable(Landroid/graphics/drawable/Drawable;)V
-
-    .line 113
-    :cond_f5
-    invoke-virtual {v8, v6}, Landroid/widget/RelativeLayout;->addView(Landroid/view/View;)V
-
-    .line 116
-    new-instance v10, Landroid/widget/TextView;
-
-    invoke-direct {v10, v0}, Landroid/widget/TextView;-><init>(Landroid/content/Context;)V
-
-    .line 117
-    new-instance v14, Landroid/widget/RelativeLayout$LayoutParams;
-
-    invoke-direct {v14, v5, v9}, Landroid/widget/RelativeLayout$LayoutParams;-><init>(II)V
-
-    .line 121
-    invoke-virtual {v14, v11}, Landroid/widget/RelativeLayout$LayoutParams;->addRule(I)V
-
-    .line 122
-    invoke-virtual {v14, v13}, Landroid/widget/RelativeLayout$LayoutParams;->addRule(I)V
-
-    .line 123
-    invoke-virtual {v6}, Landroid/widget/ImageView;->getId()I
-
-    move-result v6
-
-    const/16 v15, 0x10
-
-    invoke-virtual {v14, v15, v6}, Landroid/widget/RelativeLayout$LayoutParams;->addRule(II)V
-
-    .line 124
-    invoke-direct {v1, v0, v15}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v6
-
-    invoke-virtual {v14, v6}, Landroid/widget/RelativeLayout$LayoutParams;->setMarginEnd(I)V
-
-    .line 125
-    invoke-virtual {v10, v14}, Landroid/widget/TextView;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
-
-    .line 126
-    const-string v6, "Data\nDirectory"
-
-    invoke-virtual {v10, v6}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
-
-    .line 127
-    const/high16 v6, 0x41f00000    # 30.0f
-
-    const/4 v14, 0x2
-
-    invoke-virtual {v10, v14, v6}, Landroid/widget/TextView;->setTextSize(IF)V
-
-    .line 128
-    sget-object v6, Landroid/graphics/Typeface;->DEFAULT_BOLD:Landroid/graphics/Typeface;
-
-    invoke-virtual {v10, v6}, Landroid/widget/TextView;->setTypeface(Landroid/graphics/Typeface;)V
-
-    .line 129
-    invoke-virtual {v10, v5}, Landroid/widget/TextView;->setTextColor(I)V
-
-    .line 130
-    invoke-direct {v1, v0, v14}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v6
-
-    int-to-float v6, v6
-
-    const/high16 v13, 0x3f800000    # 1.0f
-
-    invoke-virtual {v10, v6, v13}, Landroid/widget/TextView;->setLineSpacing(FF)V
-
-    .line 131
-    invoke-virtual {v8, v10}, Landroid/widget/RelativeLayout;->addView(Landroid/view/View;)V
-
-    .line 133
-    invoke-virtual {v7, v8}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
-
-    .line 136
-    new-instance v6, Landroid/widget/TextView;
-
-    invoke-direct {v6, v0}, Landroid/widget/TextView;-><init>(Landroid/content/Context;)V
-
-    .line 137
-    new-instance v8, Landroid/widget/LinearLayout$LayoutParams;
-
-    invoke-direct {v8, v5, v9}, Landroid/widget/LinearLayout$LayoutParams;-><init>(II)V
-
-    .line 141
-    invoke-direct {v1, v0, v11}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v10
-
-    invoke-direct {v1, v0, v11}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v15
-
-    const/16 v12, 0xe
-
-    invoke-direct {v1, v0, v12}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v11
-
-    invoke-virtual {v8, v10, v3, v15, v11}, Landroid/widget/LinearLayout$LayoutParams;->setMargins(IIII)V
-
-    .line 142
-    invoke-virtual {v6, v8}, Landroid/widget/TextView;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
-
-    .line 143
-    const-string v8, "NetherSX2 stores core data (BIOS, memory cards, savestates, cheats, covers, game settings) in this directory. Choose Default for internal storage or Custom to use your own folder."
-
-    invoke-virtual {v6, v8}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
-
-    .line 144
-    const/high16 v8, 0x41600000    # 14.0f
-
-    invoke-virtual {v6, v14, v8}, Landroid/widget/TextView;->setTextSize(IF)V
-
-    .line 145
-    const-string v10, "#CCCCCC"
-
-    invoke-static {v10}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
-
-    move-result v10
-
-    invoke-virtual {v6, v10}, Landroid/widget/TextView;->setTextColor(I)V
-
-    .line 146
-    const/4 v10, 0x3
-
-    invoke-direct {v1, v0, v10}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v10
-
-    int-to-float v10, v10
-
-    invoke-virtual {v6, v10, v13}, Landroid/widget/TextView;->setLineSpacing(FF)V
-
-    .line 147
-    invoke-virtual {v7, v6}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
-
-    .line 150
-    invoke-direct {v1, v0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->createOptionRow(Landroid/content/Context;)Landroid/widget/RelativeLayout;
-
-    move-result-object v6
-
-    .line 151
-    iget-object v10, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->defaultInternalPath:Ljava/lang/String;
-
-    new-instance v11, Ljava/lang/StringBuilder;
-
-    invoke-direct {v11}, Ljava/lang/StringBuilder;-><init>()V
-
-    const-string v13, "Internal app storage ("
-
-    invoke-virtual {v11, v13}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    move-result-object v11
-
-    invoke-virtual {v11, v10}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    move-result-object v10
-
-    const-string v11, ")"
-
-    invoke-virtual {v10, v11}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    move-result-object v10
-
-    invoke-virtual {v10}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
-
-    move-result-object v10
-
-    const-string v11, "Default"
-
-    invoke-direct {v1, v0, v11, v10}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->createTextColumn(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;)Landroid/widget/LinearLayout;
-
-    move-result-object v10
-
-    .line 152
-    new-instance v11, Landroid/widget/RelativeLayout$LayoutParams;
-
-    invoke-direct {v11, v5, v9}, Landroid/widget/RelativeLayout$LayoutParams;-><init>(II)V
-
-    .line 156
-    const/16 v13, 0x14
-
-    invoke-virtual {v11, v13}, Landroid/widget/RelativeLayout$LayoutParams;->addRule(I)V
-
-    .line 157
-    const/16 v13, 0xf
-
-    invoke-virtual {v11, v13}, Landroid/widget/RelativeLayout$LayoutParams;->addRule(I)V
-
-    .line 158
-    const/16 v15, 0x32
-
-    invoke-direct {v1, v0, v15}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v15
-
-    invoke-virtual {v11, v15}, Landroid/widget/RelativeLayout$LayoutParams;->setMarginEnd(I)V
-
-    .line 159
-    invoke-virtual {v10, v11}, Landroid/widget/LinearLayout;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
-
-    .line 160
-    invoke-virtual {v6, v10}, Landroid/widget/RelativeLayout;->addView(Landroid/view/View;)V
-
-    .line 162
-    new-instance v10, Landroid/widget/ImageView;
-
-    invoke-direct {v10, v0}, Landroid/widget/ImageView;-><init>(Landroid/content/Context;)V
-
-    iput-object v10, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->ivDefaultCheck:Landroid/widget/ImageView;
-
-    .line 163
-    new-instance v10, Landroid/widget/RelativeLayout$LayoutParams;
-
-    const/16 v11, 0x1c
-
-    invoke-direct {v1, v0, v11}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v15
-
-    invoke-direct {v1, v0, v11}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v8
-
-    invoke-direct {v10, v15, v8}, Landroid/widget/RelativeLayout$LayoutParams;-><init>(II)V
-
-    .line 164
-    const/16 v8, 0x15
-
-    invoke-virtual {v10, v8}, Landroid/widget/RelativeLayout$LayoutParams;->addRule(I)V
-
-    .line 165
-    invoke-virtual {v10, v13}, Landroid/widget/RelativeLayout$LayoutParams;->addRule(I)V
-
-    .line 166
-    invoke-direct {v1, v0, v13}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v8
-
-    invoke-virtual {v10, v8}, Landroid/widget/RelativeLayout$LayoutParams;->setMarginEnd(I)V
-
-    .line 167
-    iget-object v8, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->ivDefaultCheck:Landroid/widget/ImageView;
-
-    invoke-virtual {v8, v10}, Landroid/widget/ImageView;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
-
-    .line 168
-    const-string v8, "ic_baseline_check_green_24"
-
-    invoke-direct {v1, v0, v8}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getAppDrawable(Landroid/content/Context;Ljava/lang/String;)Landroid/graphics/drawable/Drawable;
-
-    move-result-object v8
-
-    .line 169
-    const-string v10, "#4CAF50"
-
-    if-eqz v8, :cond_1f8
-
-    .line 170
-    iget-object v15, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->ivDefaultCheck:Landroid/widget/ImageView;
-
-    invoke-virtual {v15, v8}, Landroid/widget/ImageView;->setImageDrawable(Landroid/graphics/drawable/Drawable;)V
-
-    goto :goto_201
-
-    .line 172
-    :cond_1f8
-    iget-object v15, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->ivDefaultCheck:Landroid/widget/ImageView;
-
-    invoke-static {v10}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
-
-    move-result v14
-
-    invoke-virtual {v15, v14}, Landroid/widget/ImageView;->setColorFilter(I)V
-
-    .line 174
-    :goto_201
-    iget-object v14, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->ivDefaultCheck:Landroid/widget/ImageView;
-
-    invoke-virtual {v6, v14}, Landroid/widget/RelativeLayout;->addView(Landroid/view/View;)V
-
-    .line 176
-    new-instance v14, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$1;
-
-    invoke-direct {v14, v1, v0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$1;-><init>(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;Landroid/content/Context;)V
-
-    invoke-virtual {v6, v14}, Landroid/widget/RelativeLayout;->setOnClickListener(Landroid/view/View$OnClickListener;)V
-
-    .line 182
-    invoke-virtual {v7, v6}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
-
-    .line 185
-    invoke-direct {v1, v0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->createDivider(Landroid/content/Context;)Landroid/view/View;
-
-    move-result-object v6
-
-    invoke-virtual {v7, v6}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
-
-    .line 188
-    invoke-direct {v1, v0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->createOptionRow(Landroid/content/Context;)Landroid/widget/RelativeLayout;
-
-    move-result-object v6
-
-    .line 189
-    iget-object v14, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->customSavedPath:Ljava/lang/String;
-
-    invoke-virtual {v14}, Ljava/lang/String;->isEmpty()Z
-
-    move-result v14
-
-    if-eqz v14, :cond_227
-
-    const-string v14, "Tap to choose a custom data directory..."
-
-    goto :goto_229
-
-    :cond_227
-    iget-object v14, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->customSavedPath:Ljava/lang/String;
-
-    .line 190
-    :goto_229
-    const-string v15, "Custom Folder"
-
-    invoke-direct {v1, v0, v15, v14}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->createTextColumn(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;)Landroid/widget/LinearLayout;
-
-    move-result-object v14
-
-    .line 191
-    const/4 v15, 0x1
-
-    invoke-virtual {v14, v15}, Landroid/widget/LinearLayout;->getChildAt(I)Landroid/view/View;
-
-    move-result-object v16
-
-    move-object/from16 v15, v16
-
-    check-cast v15, Landroid/widget/TextView;
-
-    iput-object v15, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvCustomSubtitle:Landroid/widget/TextView;
-
-    .line 192
-    iget-object v15, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->customSavedPath:Ljava/lang/String;
-
-    invoke-virtual {v15}, Ljava/lang/String;->isEmpty()Z
-
-    move-result v15
-
-    if-nez v15, :cond_24d
-
-    .line 193
-    iget-object v15, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvCustomSubtitle:Landroid/widget/TextView;
-
-    const-string v16, "#64B5F6"
-
-    invoke-static/range {v16 .. v16}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
-
-    move-result v12
-
-    invoke-virtual {v15, v12}, Landroid/widget/TextView;->setTextColor(I)V
-
-    .line 196
-    :cond_24d
-    new-instance v12, Landroid/widget/RelativeLayout$LayoutParams;
-
-    invoke-direct {v12, v5, v9}, Landroid/widget/RelativeLayout$LayoutParams;-><init>(II)V
-
-    .line 200
-    const/16 v15, 0x14
-
-    invoke-virtual {v12, v15}, Landroid/widget/RelativeLayout$LayoutParams;->addRule(I)V
-
-    .line 201
-    invoke-virtual {v12, v13}, Landroid/widget/RelativeLayout$LayoutParams;->addRule(I)V
-
-    .line 202
-    const/16 v15, 0x6e
-
-    invoke-direct {v1, v0, v15}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v15
-
-    invoke-virtual {v12, v15}, Landroid/widget/RelativeLayout$LayoutParams;->setMarginEnd(I)V
-
-    .line 203
-    invoke-virtual {v14, v12}, Landroid/widget/LinearLayout;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
-
-    .line 204
-    invoke-virtual {v6, v14}, Landroid/widget/RelativeLayout;->addView(Landroid/view/View;)V
-
-    .line 207
-    new-instance v12, Landroid/widget/LinearLayout;
-
-    invoke-direct {v12, v0}, Landroid/widget/LinearLayout;-><init>(Landroid/content/Context;)V
-
-    .line 208
-    invoke-virtual {v12, v3}, Landroid/widget/LinearLayout;->setOrientation(I)V
-
-    .line 209
-    const/16 v14, 0x10
-
-    invoke-virtual {v12, v14}, Landroid/widget/LinearLayout;->setGravity(I)V
-
-    .line 210
-    new-instance v14, Landroid/widget/RelativeLayout$LayoutParams;
-
-    invoke-direct {v14, v9, v9}, Landroid/widget/RelativeLayout$LayoutParams;-><init>(II)V
-
-    .line 214
-    const/16 v15, 0x15
-
-    invoke-virtual {v14, v15}, Landroid/widget/RelativeLayout$LayoutParams;->addRule(I)V
-
-    .line 215
-    invoke-virtual {v14, v13}, Landroid/widget/RelativeLayout$LayoutParams;->addRule(I)V
-
-    .line 216
-    const/16 v13, 0xa
-
-    invoke-direct {v1, v0, v13}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v15
-
-    invoke-virtual {v14, v15}, Landroid/widget/RelativeLayout$LayoutParams;->setMarginEnd(I)V
-
-    .line 217
-    invoke-virtual {v12, v14}, Landroid/widget/LinearLayout;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
-
-    .line 220
-    new-instance v13, Landroid/widget/ImageButton;
-
-    invoke-direct {v13, v0}, Landroid/widget/ImageButton;-><init>(Landroid/content/Context;)V
-
-    .line 221
-    new-instance v14, Landroid/widget/LinearLayout$LayoutParams;
-
-    const/16 v15, 0x22
-
-    invoke-direct {v1, v0, v15}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v3
-
-    invoke-direct {v1, v0, v15}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v5
-
-    invoke-direct {v14, v3, v5}, Landroid/widget/LinearLayout$LayoutParams;-><init>(II)V
-
-    .line 222
-    const/4 v3, 0x6
-
-    invoke-direct {v1, v0, v3}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v5
-
-    invoke-virtual {v14, v5}, Landroid/widget/LinearLayout$LayoutParams;->setMarginEnd(I)V
-
-    .line 223
-    invoke-virtual {v13, v14}, Landroid/widget/ImageButton;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
-
-    .line 224
-    invoke-direct {v1, v0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getSelectableItemBackground(Landroid/content/Context;)I
-
-    move-result v5
-
-    invoke-virtual {v13, v5}, Landroid/widget/ImageButton;->setBackgroundResource(I)V
-
-    .line 225
-    const-string v5, "ic_baseline_folder_24"
-
-    invoke-direct {v1, v0, v5}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getAppDrawable(Landroid/content/Context;Ljava/lang/String;)Landroid/graphics/drawable/Drawable;
-
-    move-result-object v5
-
-    .line 226
-    if-eqz v5, :cond_2c0
-
-    .line 227
-    invoke-virtual {v13, v5}, Landroid/widget/ImageButton;->setImageDrawable(Landroid/graphics/drawable/Drawable;)V
-
-    .line 229
-    :cond_2c0
-    new-instance v5, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$2;
-
-    invoke-direct {v5, v1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$2;-><init>(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;)V
-
-    invoke-virtual {v13, v5}, Landroid/widget/ImageButton;->setOnClickListener(Landroid/view/View$OnClickListener;)V
-
-    .line 235
-    invoke-virtual {v12, v13}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
-
-    .line 238
-    new-instance v5, Landroid/widget/ImageButton;
-
-    invoke-direct {v5, v0}, Landroid/widget/ImageButton;-><init>(Landroid/content/Context;)V
-
-    iput-object v5, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->btnClearCustom:Landroid/widget/ImageButton;
-
-    .line 239
-    new-instance v5, Landroid/widget/LinearLayout$LayoutParams;
-
-    invoke-direct {v1, v0, v15}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v13
-
-    invoke-direct {v1, v0, v15}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v14
-
-    invoke-direct {v5, v13, v14}, Landroid/widget/LinearLayout$LayoutParams;-><init>(II)V
-
-    .line 240
-    invoke-direct {v1, v0, v3}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v13
-
-    invoke-virtual {v5, v13}, Landroid/widget/LinearLayout$LayoutParams;->setMarginEnd(I)V
-
-    .line 241
-    iget-object v13, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->btnClearCustom:Landroid/widget/ImageButton;
-
-    invoke-virtual {v13, v5}, Landroid/widget/ImageButton;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
-
-    .line 242
-    iget-object v5, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->btnClearCustom:Landroid/widget/ImageButton;
-
-    invoke-direct {v1, v0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getSelectableItemBackground(Landroid/content/Context;)I
-
-    move-result v13
-
-    invoke-virtual {v5, v13}, Landroid/widget/ImageButton;->setBackgroundResource(I)V
-
-    .line 243
-    const-string v5, "ic_baseline_delete_24"
-
-    invoke-direct {v1, v0, v5}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getAppDrawable(Landroid/content/Context;Ljava/lang/String;)Landroid/graphics/drawable/Drawable;
-
-    move-result-object v5
-
-    .line 244
-    if-eqz v5, :cond_301
-
-    .line 245
-    iget-object v13, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->btnClearCustom:Landroid/widget/ImageButton;
-
-    invoke-virtual {v13, v5}, Landroid/widget/ImageButton;->setImageDrawable(Landroid/graphics/drawable/Drawable;)V
-
-    .line 247
-    :cond_301
-    iget-object v5, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->btnClearCustom:Landroid/widget/ImageButton;
-
-    new-instance v13, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$3;
-
-    invoke-direct {v13, v1, v0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$3;-><init>(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;Landroid/content/Context;)V
-
-    invoke-virtual {v5, v13}, Landroid/widget/ImageButton;->setOnClickListener(Landroid/view/View$OnClickListener;)V
-
-    .line 255
-    iget-object v5, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->btnClearCustom:Landroid/widget/ImageButton;
-
-    invoke-virtual {v12, v5}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
-
-    .line 258
-    new-instance v5, Landroid/widget/ImageView;
-
-    invoke-direct {v5, v0}, Landroid/widget/ImageView;-><init>(Landroid/content/Context;)V
-
-    iput-object v5, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->ivCustomCheck:Landroid/widget/ImageView;
-
-    .line 259
-    new-instance v5, Landroid/widget/LinearLayout$LayoutParams;
-
-    invoke-direct {v1, v0, v11}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v13
-
-    invoke-direct {v1, v0, v11}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v14
-
-    invoke-direct {v5, v13, v14}, Landroid/widget/LinearLayout$LayoutParams;-><init>(II)V
-
-    .line 260
-    iget-object v13, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->ivCustomCheck:Landroid/widget/ImageView;
-
-    invoke-virtual {v13, v5}, Landroid/widget/ImageView;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
-
-    .line 261
-    if-eqz v8, :cond_331
-
-    .line 262
-    iget-object v5, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->ivCustomCheck:Landroid/widget/ImageView;
-
-    invoke-virtual {v5, v8}, Landroid/widget/ImageView;->setImageDrawable(Landroid/graphics/drawable/Drawable;)V
-
-    goto :goto_33a
-
-    .line 264
-    :cond_331
-    iget-object v5, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->ivCustomCheck:Landroid/widget/ImageView;
-
-    invoke-static {v10}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
-
-    move-result v8
-
-    invoke-virtual {v5, v8}, Landroid/widget/ImageView;->setColorFilter(I)V
-
-    .line 266
-    :goto_33a
-    iget-object v5, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->ivCustomCheck:Landroid/widget/ImageView;
-
-    invoke-virtual {v12, v5}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
-
-    .line 268
-    invoke-virtual {v6, v12}, Landroid/widget/RelativeLayout;->addView(Landroid/view/View;)V
-
-    .line 270
-    new-instance v5, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$4;
-
-    invoke-direct {v5, v1, v0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$4;-><init>(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;Landroid/content/Context;)V
-
-    invoke-virtual {v6, v5}, Landroid/widget/RelativeLayout;->setOnClickListener(Landroid/view/View$OnClickListener;)V
-
-    .line 280
-    invoke-virtual {v7, v6}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
-
-    .line 283
-    invoke-direct {v1, v0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->createDivider(Landroid/content/Context;)Landroid/view/View;
-
-    move-result-object v5
-
-    invoke-virtual {v7, v5}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
-
-    .line 286
+    .line 70
     new-instance v5, Landroid/widget/LinearLayout;
 
-    invoke-direct {v5, v0}, Landroid/widget/LinearLayout;-><init>(Landroid/content/Context;)V
+    invoke-direct {v5, v1}, Landroid/widget/LinearLayout;-><init>(Landroid/content/Context;)V
 
-    iput-object v5, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->permissionBanner:Landroid/widget/LinearLayout;
+    .line 71
+    invoke-virtual {v5, v3}, Landroid/widget/LinearLayout;->setOrientation(I)V
 
-    .line 287
-    const/4 v6, 0x1
+    .line 72
+    new-instance v6, Landroid/view/ViewGroup$LayoutParams;
 
-    invoke-virtual {v5, v6}, Landroid/widget/LinearLayout;->setOrientation(I)V
+    const/4 v7, -0x2
 
-    .line 288
-    new-instance v5, Landroid/widget/LinearLayout$LayoutParams;
+    invoke-direct {v6, v4, v7}, Landroid/view/ViewGroup$LayoutParams;-><init>(II)V
 
-    const/4 v6, -0x1
+    invoke-virtual {v5, v6}, Landroid/widget/LinearLayout;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
 
-    invoke-direct {v5, v6, v9}, Landroid/widget/LinearLayout$LayoutParams;-><init>(II)V
-
-    .line 292
+    .line 74
     const/16 v6, 0x14
 
-    invoke-direct {v1, v0, v6}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
+    invoke-direct {v0, v1, v6}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
 
     move-result v8
 
-    const/16 v10, 0x10
+    const/16 v9, 0xa
 
-    invoke-direct {v1, v0, v10}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v12
-
-    invoke-direct {v1, v0, v6}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v10
-
-    const/16 v6, 0xa
-
-    invoke-direct {v1, v0, v6}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v6
-
-    invoke-virtual {v5, v8, v12, v10, v6}, Landroid/widget/LinearLayout$LayoutParams;->setMargins(IIII)V
-
-    .line 293
-    iget-object v6, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->permissionBanner:Landroid/widget/LinearLayout;
-
-    invoke-virtual {v6, v5}, Landroid/widget/LinearLayout;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
-
-    .line 294
-    iget-object v5, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->permissionBanner:Landroid/widget/LinearLayout;
-
-    const/16 v6, 0xe
-
-    invoke-direct {v1, v0, v6}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v8
-
-    const/16 v10, 0xc
-
-    invoke-direct {v1, v0, v10}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v12
-
-    invoke-direct {v1, v0, v6}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v6
-
-    invoke-direct {v1, v0, v10}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v13
-
-    invoke-virtual {v5, v8, v12, v6, v13}, Landroid/widget/LinearLayout;->setPadding(IIII)V
-
-    .line 296
-    new-instance v5, Landroid/graphics/drawable/GradientDrawable;
-
-    invoke-direct {v5}, Landroid/graphics/drawable/GradientDrawable;-><init>()V
-
-    .line 297
-    const-string v6, "#1E2A38"
-
-    invoke-static {v6}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
-
-    move-result v6
-
-    invoke-virtual {v5, v6}, Landroid/graphics/drawable/GradientDrawable;->setColor(I)V
-
-    .line 298
-    const/16 v6, 0x8
-
-    invoke-direct {v1, v0, v6}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v8
-
-    int-to-float v8, v8
-
-    invoke-virtual {v5, v8}, Landroid/graphics/drawable/GradientDrawable;->setCornerRadius(F)V
-
-    .line 299
-    const/4 v8, 0x1
-
-    invoke-direct {v1, v0, v8}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v12
-
-    const-string v8, "#375A7F"
-
-    invoke-static {v8}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
-
-    move-result v8
-
-    invoke-virtual {v5, v12, v8}, Landroid/graphics/drawable/GradientDrawable;->setStroke(II)V
-
-    .line 300
-    iget-object v8, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->permissionBanner:Landroid/widget/LinearLayout;
-
-    invoke-virtual {v8, v5}, Landroid/widget/LinearLayout;->setBackground(Landroid/graphics/drawable/Drawable;)V
-
-    .line 302
-    new-instance v5, Landroid/widget/TextView;
-
-    invoke-direct {v5, v0}, Landroid/widget/TextView;-><init>(Landroid/content/Context;)V
-
-    .line 303
-    const-string v8, "Notice: Custom directories outside app storage require All Files Access on Android 11+."
-
-    invoke-virtual {v5, v8}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
-
-    .line 304
-    const/high16 v8, 0x41500000    # 13.0f
-
-    const/4 v12, 0x2
-
-    invoke-virtual {v5, v12, v8}, Landroid/widget/TextView;->setTextSize(IF)V
-
-    .line 305
-    const-string v8, "#90CAF9"
-
-    invoke-static {v8}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
-
-    move-result v8
-
-    invoke-virtual {v5, v8}, Landroid/widget/TextView;->setTextColor(I)V
-
-    .line 306
-    iget-object v8, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->permissionBanner:Landroid/widget/LinearLayout;
-
-    invoke-virtual {v8, v5}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
-
-    .line 308
-    new-instance v5, Landroid/widget/TextView;
-
-    invoke-direct {v5, v0}, Landroid/widget/TextView;-><init>(Landroid/content/Context;)V
-
-    .line 309
-    new-instance v8, Landroid/widget/LinearLayout$LayoutParams;
-
-    invoke-direct {v8, v9, v9}, Landroid/widget/LinearLayout$LayoutParams;-><init>(II)V
-
-    .line 313
-    invoke-direct {v1, v0, v6}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v6
-
-    iput v6, v8, Landroid/widget/LinearLayout$LayoutParams;->topMargin:I
-
-    .line 314
-    invoke-virtual {v5, v8}, Landroid/widget/TextView;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
-
-    .line 315
-    const-string v6, "Grant Permission"
-
-    invoke-virtual {v5, v6}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
-
-    .line 316
-    const/high16 v6, 0x41600000    # 14.0f
-
-    const/4 v8, 0x2
-
-    invoke-virtual {v5, v8, v6}, Landroid/widget/TextView;->setTextSize(IF)V
-
-    .line 317
-    sget-object v6, Landroid/graphics/Typeface;->DEFAULT_BOLD:Landroid/graphics/Typeface;
-
-    invoke-virtual {v5, v6}, Landroid/widget/TextView;->setTypeface(Landroid/graphics/Typeface;)V
-
-    .line 318
-    const-string v6, "#448AFF"
-
-    invoke-static {v6}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
-
-    move-result v6
-
-    invoke-virtual {v5, v6}, Landroid/widget/TextView;->setTextColor(I)V
-
-    .line 319
-    invoke-direct {v1, v0, v10}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v6
-
-    invoke-direct {v1, v0, v3}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v8
-
-    invoke-direct {v1, v0, v10}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
+    invoke-direct {v0, v1, v9}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
 
     move-result v9
 
-    invoke-direct {v1, v0, v3}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
+    invoke-direct {v0, v1, v6}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
 
     move-result v10
 
-    invoke-virtual {v5, v6, v8, v9, v10}, Landroid/widget/TextView;->setPadding(IIII)V
+    invoke-direct {v0, v1, v6}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
 
-    .line 320
-    invoke-direct {v1, v0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getSelectableItemBackground(Landroid/content/Context;)I
+    move-result v11
 
-    move-result v6
+    invoke-virtual {v5, v8, v9, v10, v11}, Landroid/widget/LinearLayout;->setPadding(IIII)V
 
-    invoke-virtual {v5, v6}, Landroid/widget/TextView;->setBackgroundResource(I)V
+    .line 77
+    new-instance v8, Landroid/widget/TextView;
 
-    .line 321
-    new-instance v6, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$5;
+    invoke-direct {v8, v1}, Landroid/widget/TextView;-><init>(Landroid/content/Context;)V
 
-    invoke-direct {v6, v1, v0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$5;-><init>(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;Landroid/content/Context;)V
+    .line 78
+    const-string v9, "Data Directory"
 
-    invoke-virtual {v5, v6}, Landroid/widget/TextView;->setOnClickListener(Landroid/view/View$OnClickListener;)V
+    invoke-virtual {v8, v9}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
 
-    .line 327
-    iget-object v6, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->permissionBanner:Landroid/widget/LinearLayout;
+    .line 79
+    const/high16 v9, 0x41c00000    # 24.0f
 
-    invoke-virtual {v6, v5}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
+    const/4 v10, 0x2
 
-    .line 328
-    iget-object v5, v1, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->permissionBanner:Landroid/widget/LinearLayout;
+    invoke-virtual {v8, v10, v9}, Landroid/widget/TextView;->setTextSize(IF)V
 
-    invoke-virtual {v7, v5}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
+    .line 80
+    sget-object v9, Landroid/graphics/Typeface;->DEFAULT_BOLD:Landroid/graphics/Typeface;
 
-    .line 330
-    invoke-virtual {v4, v7}, Landroid/widget/ScrollView;->addView(Landroid/view/View;)V
+    invoke-virtual {v8, v9}, Landroid/widget/TextView;->setTypeface(Landroid/graphics/Typeface;)V
 
-    .line 331
-    invoke-virtual {v2, v4}, Landroid/widget/FrameLayout;->addView(Landroid/view/View;)V
+    .line 81
+    invoke-virtual {v8, v4}, Landroid/widget/TextView;->setTextColor(I)V
 
-    .line 334
-    new-instance v4, Landroid/widget/FrameLayout;
+    .line 82
+    invoke-virtual {v5, v8}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
 
-    invoke-direct {v4, v0}, Landroid/widget/FrameLayout;-><init>(Landroid/content/Context;)V
+    .line 85
+    new-instance v8, Landroid/widget/TextView;
 
-    .line 335
-    new-instance v5, Landroid/widget/FrameLayout$LayoutParams;
+    invoke-direct {v8, v1}, Landroid/widget/TextView;-><init>(Landroid/content/Context;)V
 
-    const/16 v6, 0x38
+    .line 86
+    const-string v9, "NetherSX2 needs a directory to store its data files, including memory cards, save states, BIOS, and covers. You can use the default app-internal storage or select a custom folder."
 
-    invoke-direct {v1, v0, v6}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
+    invoke-virtual {v8, v9}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
 
-    move-result v6
+    .line 87
+    const/high16 v9, 0x41600000    # 14.0f
 
-    const/16 v7, 0x38
+    invoke-virtual {v8, v10, v9}, Landroid/widget/TextView;->setTextSize(IF)V
 
-    invoke-direct {v1, v0, v7}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
+    .line 88
+    const-string v9, "#B0BEC5"
+
+    invoke-static {v9}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
+
+    move-result v9
+
+    invoke-virtual {v8, v9}, Landroid/widget/TextView;->setTextColor(I)V
+
+    .line 89
+    invoke-direct {v0, v1, v10}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
+
+    move-result v9
+
+    int-to-float v9, v9
+
+    const/high16 v11, 0x3f800000    # 1.0f
+
+    invoke-virtual {v8, v9, v11}, Landroid/widget/TextView;->setLineSpacing(FF)V
+
+    .line 90
+    new-instance v9, Landroid/widget/LinearLayout$LayoutParams;
+
+    invoke-direct {v9, v4, v7}, Landroid/widget/LinearLayout$LayoutParams;-><init>(II)V
+
+    .line 92
+    const/16 v11, 0x8
+
+    invoke-direct {v0, v1, v11}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
+
+    move-result v12
+
+    iput v12, v9, Landroid/widget/LinearLayout$LayoutParams;->topMargin:I
+
+    .line 93
+    const/16 v12, 0x10
+
+    invoke-direct {v0, v1, v12}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
+
+    move-result v13
+
+    iput v13, v9, Landroid/widget/LinearLayout$LayoutParams;->bottomMargin:I
+
+    .line 94
+    invoke-virtual {v8, v9}, Landroid/widget/TextView;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
+
+    .line 95
+    invoke-virtual {v5, v8}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
+
+    .line 98
+    invoke-direct {v0, v1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->createOptionRow(Landroid/content/Context;)Landroid/widget/RelativeLayout;
+
+    move-result-object v8
+
+    .line 99
+    const-string v9, "Default Storage"
+
+    iget-object v13, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->defaultInternalPath:Ljava/lang/String;
+
+    invoke-direct {v0, v1, v9, v13}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->createTextColumn(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;)Landroid/widget/LinearLayout;
+
+    move-result-object v9
+
+    .line 100
+    new-instance v13, Landroid/widget/RelativeLayout$LayoutParams;
+
+    invoke-direct {v13, v4, v7}, Landroid/widget/RelativeLayout$LayoutParams;-><init>(II)V
+
+    .line 102
+    invoke-virtual {v13, v6}, Landroid/widget/RelativeLayout$LayoutParams;->addRule(I)V
+
+    .line 103
+    const/16 v14, 0x65
+
+    invoke-virtual {v13, v12, v14}, Landroid/widget/RelativeLayout$LayoutParams;->addRule(II)V
+
+    .line 104
+    const/16 v15, 0xc
+
+    invoke-direct {v0, v1, v15}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
+
+    move-result v11
+
+    invoke-virtual {v13, v11}, Landroid/widget/RelativeLayout$LayoutParams;->setMarginEnd(I)V
+
+    .line 105
+    invoke-virtual {v9, v13}, Landroid/widget/LinearLayout;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
+
+    .line 106
+    invoke-virtual {v8, v9}, Landroid/widget/RelativeLayout;->addView(Landroid/view/View;)V
+
+    .line 108
+    new-instance v9, Landroid/widget/ImageView;
+
+    invoke-direct {v9, v1}, Landroid/widget/ImageView;-><init>(Landroid/content/Context;)V
+
+    iput-object v9, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->ivDefaultCheck:Landroid/widget/ImageView;
+
+    .line 109
+    invoke-virtual {v9, v14}, Landroid/widget/ImageView;->setId(I)V
+
+    .line 110
+    iget-object v9, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->ivDefaultCheck:Landroid/widget/ImageView;
+
+    const-string v11, "ic_baseline_check_24"
+
+    invoke-direct {v0, v1, v11}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getAppDrawable(Landroid/content/Context;Ljava/lang/String;)Landroid/graphics/drawable/Drawable;
+
+    move-result-object v13
+
+    invoke-virtual {v9, v13}, Landroid/widget/ImageView;->setImageDrawable(Landroid/graphics/drawable/Drawable;)V
+
+    .line 111
+    iget-object v9, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->ivDefaultCheck:Landroid/widget/ImageView;
+
+    invoke-virtual {v9, v4}, Landroid/widget/ImageView;->setColorFilter(I)V
+
+    .line 112
+    new-instance v9, Landroid/widget/RelativeLayout$LayoutParams;
+
+    .line 113
+    const/16 v13, 0x18
+
+    invoke-direct {v0, v1, v13}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
+
+    move-result v14
+
+    invoke-direct {v0, v1, v13}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
+
+    move-result v10
+
+    invoke-direct {v9, v14, v10}, Landroid/widget/RelativeLayout$LayoutParams;-><init>(II)V
+
+    .line 114
+    const/16 v10, 0x15
+
+    invoke-virtual {v9, v10}, Landroid/widget/RelativeLayout$LayoutParams;->addRule(I)V
+
+    .line 115
+    const/16 v14, 0xf
+
+    invoke-virtual {v9, v14}, Landroid/widget/RelativeLayout$LayoutParams;->addRule(I)V
+
+    .line 116
+    iget-object v14, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->ivDefaultCheck:Landroid/widget/ImageView;
+
+    invoke-virtual {v14, v9}, Landroid/widget/ImageView;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
+
+    .line 117
+    iget-object v9, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->ivDefaultCheck:Landroid/widget/ImageView;
+
+    invoke-virtual {v8, v9}, Landroid/widget/RelativeLayout;->addView(Landroid/view/View;)V
+
+    .line 119
+    new-instance v9, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$1;
+
+    invoke-direct {v9, v0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$1;-><init>(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;)V
+
+    invoke-virtual {v8, v9}, Landroid/widget/RelativeLayout;->setOnClickListener(Landroid/view/View$OnClickListener;)V
+
+    .line 125
+    invoke-virtual {v5, v8}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
+
+    .line 128
+    new-instance v8, Landroid/view/View;
+
+    invoke-direct {v8, v1}, Landroid/view/View;-><init>(Landroid/content/Context;)V
+
+    .line 129
+    new-instance v9, Landroid/widget/LinearLayout$LayoutParams;
+
+    .line 130
+    invoke-direct {v0, v1, v3}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
+
+    move-result v14
+
+    invoke-direct {v9, v4, v14}, Landroid/widget/LinearLayout$LayoutParams;-><init>(II)V
+
+    .line 131
+    const/4 v14, 0x4
+
+    invoke-direct {v0, v1, v14}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
+
+    move-result v10
+
+    invoke-direct {v0, v1, v14}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
+
+    move-result v13
+
+    const/4 v14, 0x0
+
+    invoke-virtual {v9, v14, v10, v14, v13}, Landroid/widget/LinearLayout$LayoutParams;->setMargins(IIII)V
+
+    .line 132
+    invoke-virtual {v8, v9}, Landroid/view/View;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
+
+    .line 133
+    const-string v9, "#1FFFFFFF"
+
+    invoke-static {v9}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
+
+    move-result v9
+
+    invoke-virtual {v8, v9}, Landroid/view/View;->setBackgroundColor(I)V
+
+    .line 134
+    invoke-virtual {v5, v8}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
+
+    .line 137
+    invoke-direct {v0, v1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->createOptionRow(Landroid/content/Context;)Landroid/widget/RelativeLayout;
+
+    move-result-object v8
+
+    .line 138
+    iget-object v9, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->customSavedPath:Ljava/lang/String;
+
+    invoke-virtual {v9}, Ljava/lang/String;->isEmpty()Z
+
+    move-result v9
+
+    if-eqz v9, :cond_18a
+
+    const-string v9, "Tap to select custom data directory"
+
+    goto :goto_18c
+
+    :cond_18a
+    iget-object v9, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->customSavedPath:Ljava/lang/String;
+
+    .line 139
+    :goto_18c
+    const-string v10, "Custom Folder"
+
+    invoke-direct {v0, v1, v10, v9}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->createTextColumn(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;)Landroid/widget/LinearLayout;
+
+    move-result-object v9
+
+    .line 140
+    invoke-virtual {v9, v3}, Landroid/widget/LinearLayout;->getChildAt(I)Landroid/view/View;
+
+    move-result-object v10
+
+    check-cast v10, Landroid/widget/TextView;
+
+    iput-object v10, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvCustomSubtitle:Landroid/widget/TextView;
+
+    .line 141
+    new-instance v10, Landroid/widget/RelativeLayout$LayoutParams;
+
+    invoke-direct {v10, v4, v7}, Landroid/widget/RelativeLayout$LayoutParams;-><init>(II)V
+
+    .line 143
+    invoke-virtual {v10, v6}, Landroid/widget/RelativeLayout$LayoutParams;->addRule(I)V
+
+    .line 144
+    const/16 v6, 0x66
+
+    invoke-virtual {v10, v12, v6}, Landroid/widget/RelativeLayout$LayoutParams;->addRule(II)V
+
+    .line 145
+    invoke-direct {v0, v1, v15}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
+
+    move-result v12
+
+    invoke-virtual {v10, v12}, Landroid/widget/RelativeLayout$LayoutParams;->setMarginEnd(I)V
+
+    .line 146
+    invoke-virtual {v9, v10}, Landroid/widget/LinearLayout;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
+
+    .line 147
+    invoke-virtual {v8, v9}, Landroid/widget/RelativeLayout;->addView(Landroid/view/View;)V
+
+    .line 149
+    new-instance v9, Landroid/widget/ImageView;
+
+    invoke-direct {v9, v1}, Landroid/widget/ImageView;-><init>(Landroid/content/Context;)V
+
+    iput-object v9, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->ivCustomCheck:Landroid/widget/ImageView;
+
+    .line 150
+    invoke-virtual {v9, v6}, Landroid/widget/ImageView;->setId(I)V
+
+    .line 151
+    iget-object v6, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->ivCustomCheck:Landroid/widget/ImageView;
+
+    invoke-direct {v0, v1, v11}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getAppDrawable(Landroid/content/Context;Ljava/lang/String;)Landroid/graphics/drawable/Drawable;
+
+    move-result-object v9
+
+    invoke-virtual {v6, v9}, Landroid/widget/ImageView;->setImageDrawable(Landroid/graphics/drawable/Drawable;)V
+
+    .line 152
+    iget-object v6, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->ivCustomCheck:Landroid/widget/ImageView;
+
+    invoke-virtual {v6, v4}, Landroid/widget/ImageView;->setColorFilter(I)V
+
+    .line 153
+    new-instance v6, Landroid/widget/RelativeLayout$LayoutParams;
+
+    .line 154
+    const/16 v9, 0x18
+
+    invoke-direct {v0, v1, v9}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
+
+    move-result v10
+
+    invoke-direct {v0, v1, v9}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
+
+    move-result v11
+
+    invoke-direct {v6, v10, v11}, Landroid/widget/RelativeLayout$LayoutParams;-><init>(II)V
+
+    .line 155
+    const/16 v9, 0x15
+
+    invoke-virtual {v6, v9}, Landroid/widget/RelativeLayout$LayoutParams;->addRule(I)V
+
+    .line 156
+    const/16 v9, 0xf
+
+    invoke-virtual {v6, v9}, Landroid/widget/RelativeLayout$LayoutParams;->addRule(I)V
+
+    .line 157
+    iget-object v9, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->ivCustomCheck:Landroid/widget/ImageView;
+
+    invoke-virtual {v9, v6}, Landroid/widget/ImageView;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
+
+    .line 158
+    iget-object v6, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->ivCustomCheck:Landroid/widget/ImageView;
+
+    invoke-virtual {v8, v6}, Landroid/widget/RelativeLayout;->addView(Landroid/view/View;)V
+
+    .line 162
+    new-instance v6, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$2;
+
+    invoke-direct {v6, v0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$2;-><init>(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;)V
+
+    invoke-virtual {v8, v6}, Landroid/widget/RelativeLayout;->setOnClickListener(Landroid/view/View$OnClickListener;)V
+
+    .line 174
+    invoke-virtual {v5, v8}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
+
+    .line 179
+    new-instance v6, Landroid/widget/LinearLayout;
+
+    invoke-direct {v6, v1}, Landroid/widget/LinearLayout;-><init>(Landroid/content/Context;)V
+
+    .line 180
+    invoke-virtual {v6, v3}, Landroid/widget/LinearLayout;->setOrientation(I)V
+
+    .line 181
+    new-instance v8, Landroid/widget/LinearLayout$LayoutParams;
+
+    invoke-direct {v8, v4, v7}, Landroid/widget/LinearLayout$LayoutParams;-><init>(II)V
+
+    .line 183
+    const/16 v7, 0x18
+
+    invoke-direct {v0, v1, v7}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
 
     move-result v7
 
-    invoke-direct {v5, v6, v7}, Landroid/widget/FrameLayout$LayoutParams;-><init>(II)V
+    iput v7, v8, Landroid/widget/LinearLayout$LayoutParams;->topMargin:I
 
-    .line 336
-    const v6, 0x800055
+    .line 184
+    invoke-virtual {v6, v8}, Landroid/widget/LinearLayout;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
 
-    iput v6, v5, Landroid/widget/FrameLayout$LayoutParams;->gravity:I
+    .line 186
+    new-instance v7, Landroid/widget/TextView;
 
-    .line 337
-    const/16 v6, 0x14
+    invoke-direct {v7, v1}, Landroid/widget/TextView;-><init>(Landroid/content/Context;)V
 
-    invoke-direct {v1, v0, v6}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
+    iput-object v7, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvGrantPermission:Landroid/widget/TextView;
 
-    move-result v6
+    .line 187
+    const-string v8, "Grant All Files Permission"
 
-    const/16 v7, 0x10
+    invoke-virtual {v7, v8}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
 
-    invoke-direct {v1, v0, v7}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
+    .line 188
+    iget-object v7, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvGrantPermission:Landroid/widget/TextView;
+
+    const/high16 v8, 0x41700000    # 15.0f
+
+    const/4 v9, 0x2
+
+    invoke-virtual {v7, v9, v8}, Landroid/widget/TextView;->setTextSize(IF)V
+
+    .line 189
+    iget-object v7, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvGrantPermission:Landroid/widget/TextView;
+
+    sget-object v8, Landroid/graphics/Typeface;->DEFAULT_BOLD:Landroid/graphics/Typeface;
+
+    invoke-virtual {v7, v8}, Landroid/widget/TextView;->setTypeface(Landroid/graphics/Typeface;)V
+
+    .line 190
+    iget-object v7, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvGrantPermission:Landroid/widget/TextView;
+
+    invoke-virtual {v7, v4}, Landroid/widget/TextView;->setTextColor(I)V
+
+    .line 191
+    iget-object v4, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvGrantPermission:Landroid/widget/TextView;
+
+    invoke-direct {v0, v1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getSelectableItemBackground(Landroid/content/Context;)I
 
     move-result v7
 
-    const/4 v8, 0x0
+    invoke-virtual {v4, v7}, Landroid/widget/TextView;->setBackgroundResource(I)V
 
-    invoke-virtual {v5, v8, v8, v6, v7}, Landroid/widget/FrameLayout$LayoutParams;->setMargins(IIII)V
+    .line 192
+    iget-object v4, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvGrantPermission:Landroid/widget/TextView;
 
-    .line 338
-    invoke-virtual {v4, v5}, Landroid/widget/FrameLayout;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
+    invoke-virtual {v4, v3}, Landroid/widget/TextView;->setClickable(Z)V
 
-    .line 340
-    new-instance v5, Landroid/graphics/drawable/GradientDrawable;
+    .line 193
+    iget-object v3, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvGrantPermission:Landroid/widget/TextView;
 
-    invoke-direct {v5}, Landroid/graphics/drawable/GradientDrawable;-><init>()V
+    const/16 v4, 0x8
 
-    .line 341
-    const/4 v6, 0x1
+    invoke-direct {v0, v1, v4}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
 
-    invoke-virtual {v5, v6}, Landroid/graphics/drawable/GradientDrawable;->setShape(I)V
+    move-result v4
 
-    .line 342
-    const-string v6, "#303030"
+    invoke-direct {v0, v1, v15}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
 
-    invoke-static {v6}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
+    move-result v7
 
-    move-result v6
+    const/4 v8, 0x4
 
-    invoke-virtual {v5, v6}, Landroid/graphics/drawable/GradientDrawable;->setColor(I)V
+    invoke-direct {v0, v1, v8}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
 
-    .line 343
-    invoke-virtual {v4, v5}, Landroid/widget/FrameLayout;->setBackground(Landroid/graphics/drawable/Drawable;)V
+    move-result v8
 
-    .line 344
-    invoke-direct {v1, v0, v3}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
+    invoke-virtual {v3, v14, v4, v7, v8}, Landroid/widget/TextView;->setPadding(IIII)V
+
+    .line 194
+    iget-object v3, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvGrantPermission:Landroid/widget/TextView;
+
+    new-instance v4, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$3;
+
+    invoke-direct {v4, v0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$3;-><init>(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;)V
+
+    invoke-virtual {v3, v4}, Landroid/widget/TextView;->setOnClickListener(Landroid/view/View$OnClickListener;)V
+
+    .line 200
+    iget-object v3, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvGrantPermission:Landroid/widget/TextView;
+
+    invoke-virtual {v6, v3}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
+
+    .line 202
+    new-instance v3, Landroid/widget/TextView;
+
+    invoke-direct {v3, v1}, Landroid/widget/TextView;-><init>(Landroid/content/Context;)V
+
+    iput-object v3, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvPermissionStatus:Landroid/widget/TextView;
+
+    .line 203
+    const-string v1, "Required on Android 11+ for custom folder access"
+
+    invoke-virtual {v3, v1}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+
+    .line 204
+    iget-object v1, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvPermissionStatus:Landroid/widget/TextView;
+
+    const/high16 v3, 0x41500000    # 13.0f
+
+    const/4 v4, 0x2
+
+    invoke-virtual {v1, v4, v3}, Landroid/widget/TextView;->setTextSize(IF)V
+
+    .line 205
+    iget-object v1, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvPermissionStatus:Landroid/widget/TextView;
+
+    const-string v3, "#9E9E9E"
+
+    invoke-static {v3}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
 
     move-result v3
 
-    int-to-float v3, v3
+    invoke-virtual {v1, v3}, Landroid/widget/TextView;->setTextColor(I)V
 
-    invoke-virtual {v4, v3}, Landroid/widget/FrameLayout;->setElevation(F)V
+    .line 206
+    iget-object v1, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvPermissionStatus:Landroid/widget/TextView;
 
-    .line 346
-    new-instance v3, Landroid/widget/ImageView;
+    invoke-virtual {v6, v1}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
 
-    invoke-direct {v3, v0}, Landroid/widget/ImageView;-><init>(Landroid/content/Context;)V
+    .line 208
+    invoke-virtual {v5, v6}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
 
-    .line 347
-    new-instance v5, Landroid/widget/FrameLayout$LayoutParams;
+    .line 209
+    invoke-virtual {v2, v5}, Landroid/widget/ScrollView;->addView(Landroid/view/View;)V
 
-    invoke-direct {v1, v0, v11}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v6
-
-    invoke-direct {v1, v0, v11}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
-
-    move-result v7
-
-    invoke-direct {v5, v6, v7}, Landroid/widget/FrameLayout$LayoutParams;-><init>(II)V
-
-    .line 348
-    const/16 v6, 0x11
-
-    iput v6, v5, Landroid/widget/FrameLayout$LayoutParams;->gravity:I
-
-    .line 349
-    invoke-virtual {v3, v5}, Landroid/widget/ImageView;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
-
-    .line 351
-    const v5, 0x108002b
-
-    :try_start_4aa
-    invoke-virtual {v0, v5}, Landroid/content/Context;->getDrawable(I)Landroid/graphics/drawable/Drawable;
-
-    move-result-object v0
-
-    invoke-virtual {v3, v0}, Landroid/widget/ImageView;->setImageDrawable(Landroid/graphics/drawable/Drawable;)V
-    :try_end_4b1
-    .catch Ljava/lang/Exception; {:try_start_4aa .. :try_end_4b1} :catch_4b2
-
-    goto :goto_4b3
-
-    .line 352
-    :catch_4b2
-    move-exception v0
-
-    :goto_4b3
-    nop
-
-    .line 353
-    const/4 v5, -0x1
-
-    invoke-virtual {v3, v5}, Landroid/widget/ImageView;->setColorFilter(I)V
-
-    .line 354
-    invoke-virtual {v4, v3}, Landroid/widget/FrameLayout;->addView(Landroid/view/View;)V
-
-    .line 356
-    new-instance v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$6;
-
-    invoke-direct {v0, v1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment$6;-><init>(Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;)V
-
-    invoke-virtual {v4, v0}, Landroid/widget/FrameLayout;->setOnClickListener(Landroid/view/View$OnClickListener;)V
-
-    .line 362
-    invoke-virtual {v2, v4}, Landroid/widget/FrameLayout;->addView(Landroid/view/View;)V
-
-    .line 365
+    .line 211
     invoke-direct/range {p0 .. p0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->updateUiState()V
 
-    .line 366
+    .line 212
     return-object v2
+.end method
+
+.method public onResume()V
+    .registers 1
+
+    .line 217
+    invoke-super {p0}, Landroidx/fragment/app/n;->onResume()V
+
+    .line 218
+    invoke-direct {p0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->updateUiState()V
+
+    .line 219
+    return-void
 .end method
