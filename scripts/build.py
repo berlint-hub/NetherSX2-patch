@@ -905,19 +905,28 @@ def get_pcsx2_version() -> str:
     pcsx2_dir = REPO_ROOT / "pcsx2"
     if (pcsx2_dir / ".git").exists() or pcsx2_dir.is_dir():
         try:
-            desc = subprocess.check_output(
-                ["git", "-C", str(pcsx2_dir), "describe", "--tags", "--always"],
-                text=True, stderr=subprocess.DEVNULL
-            ).strip()
             rev = subprocess.check_output(
                 ["git", "-C", str(pcsx2_dir), "rev-parse", "--short", "HEAD"],
                 text=True, stderr=subprocess.DEVNULL
             ).strip()
+            desc = subprocess.check_output(
+                ["git", "-C", str(pcsx2_dir), "describe", "--tags", "--always"],
+                text=True, stderr=subprocess.DEVNULL
+            ).strip()
+            if not desc or desc == rev or re.match(r"^[0-9a-fA-F]{7,40}$", desc):
+                tags = subprocess.check_output(
+                    ["git", "-C", str(pcsx2_dir), "tag", "-l", "v*", "--sort=-v:refname"],
+                    text=True, stderr=subprocess.DEVNULL
+                ).strip().splitlines()
+                if tags:
+                    desc = tags[0]
+                else:
+                    desc = "v2.9.129"
             if desc and rev:
                 return f"{desc} ({rev})"
         except Exception:
             pass
-    return "v2.9.122 (0f71e66)"
+    return "v2.9.129 (091ab68)"
 
 
 def verify_dex_integrity(dex_bytes: bytes) -> None:
@@ -967,7 +976,7 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
     for dex_path in dex_files:
         original_bytes = dex_path.read_bytes()
         dex_md5 = hashlib.md5(original_bytes).hexdigest()
-        cache_key = f"{dex_md5}_{pcsx2_ver}_qol_features_v13_{'mali' if is_mali else 'adreno'}"
+        cache_key = f"{dex_md5}_{pcsx2_ver}_qol_features_v14_{'mali' if is_mali else 'adreno'}"
 
         if cache_key in _DEX_CACHE:
             patched_bytes = _DEX_CACHE[cache_key]
@@ -2461,10 +2470,23 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
             if esv_file.exists():
                 esv_content = esv_file.read_text(encoding="utf-8")
                 if "ExternalControllerHelper" not in esv_content:
-                    pattern_esv = r'(iput-boolean\s+[a-z0-9]+,\s+[a-z0-9]+,\s+Lxyz/aethersx2/android/EmulationSurfaceView;->(?:d|j):Z)'
+                    pattern_esv = (
+                        r'(invoke-static \{([a-z0-9]+)\}, Lxyz/aethersx2/android/EmulationSurfaceView;->e\(Landroid/view/InputDevice;\)Z\s+'
+                        r'move-result ([a-z0-9]+)'
+                        r'[\s\S]*?'
+                        r'iput-boolean [a-z0-9]+,\s*([a-z0-9]+),\s*Lxyz/aethersx2/android/EmulationSurfaceView;->(?:d|j):Z)'
+                    )
                     m_esv = re.search(pattern_esv, esv_content)
                     if m_esv:
-                        repl_esv = m_esv.group(1) + '\n\n    invoke-virtual {v1}, Landroid/view/View;->getContext()Landroid/content/Context;\n\n    move-result-object v11\n\n    invoke-static {v11, v9}, Lxyz/aethersx2/android/ExternalControllerHelper;->checkAndAutoMapPlayer1(Landroid/content/Context;Landroid/view/InputDevice;)V'
+                        dev_reg = m_esv.group(2)
+                        scratch_reg = m_esv.group(3)
+                        this_reg = m_esv.group(4)
+                        repl_esv = (
+                            m_esv.group(1) +
+                            f'\n\n    invoke-virtual {{{this_reg}}}, Landroid/view/View;->getContext()Landroid/content/Context;\n\n'
+                            f'    move-result-object {scratch_reg}\n\n'
+                            f'    invoke-static {{{scratch_reg}, {dev_reg}}}, Lxyz/aethersx2/android/ExternalControllerHelper;->checkAndAutoMapPlayer1(Landroid/content/Context;Landroid/view/InputDevice;)V'
+                        )
                         esv_content = esv_content[:m_esv.start()] + repl_esv + esv_content[m_esv.end():]
                         esv_file.write_text(esv_content, encoding="utf-8")
                         print(f"  ✓ Injected ExternalControllerHelper auto-map into EmulationSurfaceView.smali")

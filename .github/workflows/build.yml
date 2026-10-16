@@ -62,13 +62,33 @@ jobs:
           git -C pcsx2 fetch --depth=100 origin master
           git -C pcsx2 checkout FETCH_HEAD
 
+          # Resolve and assign upstream release tag so git describe and cmake identify the correct version
+          PCSX2_HEAD=$(git -C pcsx2 rev-parse HEAD)
+          MATCHING_TAG=$(git -C pcsx2 ls-remote --tags origin | grep "$PCSX2_HEAD" | awk -F'refs/tags/' '{print $2}' | grep -v '\^{}' | head -n 1)
+          if [ -z "$MATCHING_TAG" ]; then
+            MATCHING_TAG=$(git -C pcsx2 ls-remote --tags origin 'refs/tags/v*' | grep -v '\^{}' | sort -V -k2 | tail -n 1 | awk -F'refs/tags/' '{print $2}')
+          fi
+          if [ -n "$MATCHING_TAG" ]; then
+            echo "Applying upstream tag ${MATCHING_TAG} to commit ${PCSX2_HEAD}..."
+            git -C pcsx2 tag -f "$MATCHING_TAG" "$PCSX2_HEAD"
+          fi
+
       - name: Check PCSX2 Upstream Commit Status
         id: check_release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           RECENT_COMMIT=$(git -C pcsx2 rev-parse --short HEAD)
-          RAW_VER=$(git -C pcsx2 describe --tags --always 2>/dev/null || echo "2.9.122")
+          RAW_VER=$(git -C pcsx2 describe --tags --abbrev=0 2>/dev/null || git -C pcsx2 describe --tags 2>/dev/null || echo "")
+          if [ -z "$RAW_VER" ] || [ "$RAW_VER" = "$RECENT_COMMIT" ] || [[ "$RAW_VER" =~ ^[0-9a-fA-F]{7,40}$ ]]; then
+            RAW_VER=$(git -C pcsx2 tag -l 'v*' --sort=-v:refname 2>/dev/null | head -n 1 || echo "")
+          fi
+          if [ -z "$RAW_VER" ] || [[ "$RAW_VER" =~ ^[0-9a-fA-F]{7,40}$ ]]; then
+            RAW_VER=$(git -C pcsx2 ls-remote --tags origin 'refs/tags/v*' | grep -v '\^{}' | sort -V -k2 | tail -n 1 | awk -F'refs/tags/' '{print $2}')
+          fi
+          if [ -z "$RAW_VER" ]; then
+            RAW_VER="v2.9.129"
+          fi
           PCSX2_VERSION="${RAW_VER#v}"
           BUILD_DATE=$(date +'%d%m%Y')
           TAG_NAME="${RECENT_COMMIT}-${PCSX2_VERSION}-${BUILD_DATE}"
