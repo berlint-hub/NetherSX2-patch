@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<androidx.drawerlayout.widget.DrawerLayout android:id="@id/drawer_layout"
+                      android:fitsSystemWindows="false"
+                      android:layout_width="fill_parent"
+                      android:layout_height="fill_parent" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+  <androidx.coordinatorlayout.widget.CoordinatorLayout android:layout_width="fill_parent"
+                        android:layout_height="fill_parent">
+    <com.google.android.material.appbar.AppBarLayout android:id="@id/appbar_layout"
+                          android:background="@null"
+                          android:layout_width="fill_parent"
+                          android:layout_height="wrap_content">
+      <com.google.android.material.appbar.MaterialToolbar android:id="@id/toolbar"
+                            android:background="@null"
+                            android:layout_width="fill_parent"
+                            android:layout_height="?attr/actionBarSize"
+                            app:contentInsetStartWithNavigation="0.0dp"
+                            app:layout_scrollFlags="scroll|enterAlways|snap"
+                            app:navigationIcon="@drawable/ic_baseline_menu_24">
+        <TextView android:id="@id/toolbar_title"
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:text="Title"
+                  style="?attr/textAppearanceHeadline5" />
+      </com.google.android.material.appbar.MaterialToolbar>
+    </com.google.android.material.appbar.AppBarLayout>
+    <FrameLayout android:id="@id/content_fragment"
+                 android:layout_width="fill_parent"
+                 android:layout_height="fill_parent"
+                 android:layout_weight="1.0"
+                 app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+    <com.google.android.material.floatingactionbutton.FloatingActionButton android:layout_gravity="bottom|center|end"
+                          android:id="@id/fab_start"
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:layout_margin="16.0dp"
+                          app:backgroundTint="@color/fab_background"
+                          app:srcCompat="@drawable/ic_baseline_folder_open_24"
+                          app:tint="@color/fab_color" />
+  </androidx.coordinatorlayout.widget.CoordinatorLayout>
+  <com.google.android.material.navigation.NavigationView android:layout_gravity="start"
+                        android:id="@id/nav_view"
+                        android:fitsSystemWindows="false"
+                        android:layout_width="wrap_content"
+                        android:layout_height="fill_parent"
+                        app:menu="@menu/menu_main_navigation" />
+</androidx.drawerlayout.widget.DrawerLayout>

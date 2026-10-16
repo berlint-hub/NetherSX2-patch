@@ -13,6 +13,14 @@ on:
         description: 'Force creating a GitHub Release regardless of PCSX2 commit status'
         type: boolean
         default: false
+      build_target:
+        description: 'Target APK variants to build (all, nethersx2, vanilla)'
+        type: choice
+        options:
+          - all
+          - nethersx2
+          - vanilla
+        default: 'all'
 
 permissions:
   contents: write
@@ -42,7 +50,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y xdelta3 zipalign
+          sudo apt-get install -y xdelta3 zipalign aapt
           pip install ruamel.yaml
           mkdir -p decomp/lib
           if [ ! -f decomp/lib/baksmali.jar ]; then
@@ -154,6 +162,8 @@ jobs:
           fi
 
       - name: Build NetherSX2 and Patch APKs
+        env:
+          BUILD_TARGET: ${{ github.event.inputs.build_target || 'all' }}
         run: python3 scripts/build.py
 
       - name: Upload NetherSX2 Adreno APK
@@ -161,28 +171,42 @@ jobs:
         with:
           name: xyz.nethersx2.android_adreno.apk
           path: xyz.nethersx2.android_adreno.apk
-          if-no-files-found: error
+          if-no-files-found: ignore
 
       - name: Upload NetherSX2 Mali APK
         uses: actions/upload-artifact@v4
         with:
           name: xyz.nethersx2.android_mali.apk
           path: xyz.nethersx2.android_mali.apk
-          if-no-files-found: error
+          if-no-files-found: ignore
+
+      - name: Upload Vanilla Adreno APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: xyz.aethersx2.android_adreno.apk
+          path: xyz.aethersx2.android_adreno.apk
+          if-no-files-found: ignore
+
+      - name: Upload Vanilla Mali APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: xyz.aethersx2.android_mali.apk
+          path: xyz.aethersx2.android_mali.apk
+          if-no-files-found: ignore
 
       - name: Upload Switch APK
         uses: actions/upload-artifact@v4
         with:
           name: xyz.aethersx2.android_switch.apk
           path: xyz.aethersx2.android_switch.apk
-          if-no-files-found: error
+          if-no-files-found: ignore
 
       - name: Upload xdelta
         uses: actions/upload-artifact@v4
         with:
           name: xyz.aethersx2.android_.xdelta
           path: xyz.aethersx2.android_.xdelta
-          if-no-files-found: error
+          if-no-files-found: ignore
 
       - name: Upload libemucore.so
         uses: actions/upload-artifact@v4
@@ -232,10 +256,12 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Publishing GitHub Release ${TAG_NAME}..."
-          FILES_TO_RELEASE="xyz.nethersx2.android_adreno.apk xyz.nethersx2.android_mali.apk xyz.aethersx2.android_switch.apk xyz.aethersx2.android_.xdelta"
-          if [ -f "native/build/libemucore.so" ]; then
-            FILES_TO_RELEASE="$FILES_TO_RELEASE native/build/libemucore.so"
-          fi
+          FILES_TO_RELEASE=""
+          for f in xyz.nethersx2.android_adreno.apk xyz.nethersx2.android_mali.apk xyz.aethersx2.android_adreno.apk xyz.aethersx2.android_mali.apk xyz.aethersx2.android_switch.apk xyz.aethersx2.android_.xdelta native/build/libemucore.so; do
+            if [ -f "$f" ]; then
+              FILES_TO_RELEASE="$FILES_TO_RELEASE $f"
+            fi
+          done
           gh release create "${TAG_NAME}" $FILES_TO_RELEASE \
             --title "${TAG_NAME}" \
             --notes-file release_notes.md

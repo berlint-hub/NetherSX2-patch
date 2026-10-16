@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<RelativeLayout android:orientation="vertical"
+                android:id="@id/linearLayout"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content" xmlns:android="http://schemas.android.com/apk/res/android">
+  <ImageView android:id="@id/controller_binding_icon"
+             android:layout_width="40.0dp"
+             android:layout_height="40.0dp"
+             android:layout_marginTop="0.0dp"
+             android:layout_alignParentTop="true" />
+  <TextView android:textAppearance="?attr/textAppearanceSubtitle1"
+            android:id="@id/controller_binding_name"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="0.0dp"
+            android:text="Up"
+            android:layout_alignParentTop="true"
+            android:textAlignment="viewStart"
+            android:layout_marginStart="16.0dp"
+            android:layout_toEndOf="@id/controller_binding_icon" />
+  <TextView android:textAppearance="?attr/textAppearanceCaption"
+            android:id="@id/controller_binding_value"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="Controller0/Button0"
+            android:layout_below="@id/controller_binding_name"
+            android:textAlignment="viewStart"
+            android:layout_marginStart="16.0dp"
+            android:layout_toEndOf="@id/controller_binding_icon" />
+</RelativeLayout>

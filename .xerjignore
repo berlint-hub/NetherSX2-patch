@@ -1,0 +1,10 @@
+*.apk
+*.xdelta
+*.idsig
+*.jks
+*.jar
+*.so
+pcsx2/
+GameIndex[converted].yaml
+GameIndex[merged].yaml
+old/

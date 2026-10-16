@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<LinearLayout android:gravity="center_vertical"
+              android:layout_width="fill_parent"
+              android:layout_height="wrap_content" xmlns:android="http://schemas.android.com/apk/res/android">
+  <TextView android:textAppearance="?attr/textAppearanceBody2"
+            android:id="@id/value"
+            android:layout_width="0.0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="100.0"
+            android:layout_marginStart="10.0dp"
+            android:layout_marginEnd="10.0dp" />
+  <CheckBox android:id="@id/checkbox"
+            android:layout_width="40.0dp"
+            android:layout_height="40.0dp" />
+  <ImageButton android:id="@id/increase"
+               android:background="?attr/selectableItemBackground"
+               android:layout_width="40.0dp"
+               android:layout_height="40.0dp"
+               android:src="@drawable/ic_baseline_arrow_drop_up_24" />
+  <ImageButton android:id="@id/decrease"
+               android:background="?attr/selectableItemBackground"
+               android:layout_width="40.0dp"
+               android:layout_height="40.0dp"
+               android:src="@drawable/ic_baseline_arrow_drop_down_24" />
+</LinearLayout>
