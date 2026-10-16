@@ -756,7 +756,7 @@ _DEX_CACHE: dict[str, bytes] = {}
 
 
 def patch_dex_pcsx2_version(work_dir: Path) -> None:
-    """Inject PCSX2 upstream version into the Show Version dialog in classes.dex using baksmali/smali."""
+    """Inject PCSX2 upstream version into the Show Version dialog and SQLite GameListDatabase into classes.dex using baksmali/smali."""
     pcsx2_ver = get_pcsx2_version()
     target_needle = 'const-string v0, "\\nNative Version:\\n"'
     replacement = f'const-string v0, "\\nPCSX2 Version: {pcsx2_ver}\\nNative Version:\\n"'
@@ -767,17 +767,18 @@ def patch_dex_pcsx2_version(work_dir: Path) -> None:
 
     baksmali_cmd = ensure_baksmali()
     smali_cmd = ensure_smali()
+    db_smali_src = REPO_ROOT / "smali_target" / "xyz" / "aethersx2" / "android" / "GameListDatabase.smali"
 
     for dex_path in dex_files:
         original_bytes = dex_path.read_bytes()
         dex_md5 = hashlib.md5(original_bytes).hexdigest()
-        cache_key = f"{dex_md5}_{pcsx2_ver}"
+        cache_key = f"{dex_md5}_{pcsx2_ver}_sqlite_v2"
 
         if cache_key in _DEX_CACHE:
             patched_bytes = _DEX_CACHE[cache_key]
             dex_path.write_bytes(patched_bytes)
             verify_dex_integrity(patched_bytes)
-            print(f"  ✓ Applied cached PCSX2 version ({pcsx2_ver}) DEX to {dex_path.name}")
+            print(f"  ✓ Applied cached PCSX2 version ({pcsx2_ver}) + SQLite GameList DEX to {dex_path.name}")
             continue
 
         temp_dir = Path(tempfile.mkdtemp(prefix="dex_patch_"))
@@ -786,20 +787,68 @@ def patch_dex_pcsx2_version(work_dir: Path) -> None:
             print(f"  Disassembling {dex_path.name} with baksmali...")
             run_cmd(baksmali_cmd + ["disassemble", str(dex_path), "-o", str(smali_out)])
 
+            # 1. Inject SQLite GameListDatabase.smali
+            if db_smali_src.exists():
+                db_dest = smali_out / "xyz" / "aethersx2" / "android" / "GameListDatabase.smali"
+                db_dest.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(db_smali_src, db_dest)
+                print(f"  ✓ Injected SQLite GameListDatabase into {dex_path.name}")
+
+            # 2. Patch runner to use GameListDatabase.getOrUpdateGameList (prevents rescanning on every open)
+            runner_patched = False
+            for p in smali_out.rglob("*.smali"):
+                if p.name in ["GameListDatabase.smali", "NativeLibrary.smali"]:
+                    continue
+                txt = p.read_text(encoding="utf-8")
+                if "refreshGameList" in txt and "getGameListEntries" in txt:
+                    pattern = re.compile(
+                        r'invoke-static\s*\{[^}]+\},\s*Lxyz/aethersx2/android/NativeLibrary;->refreshGameList\(ZZLxyz/aethersx2/android/AndroidProgressCallback;\)V\s*'
+                        r'(?:\.line\s*\d+\s*)?'
+                        r'invoke-static\s*\{\},\s*Lxyz/aethersx2/android/NativeLibrary;->getGameListEntries\(\)\[Lxyz/aethersx2/android/GameListEntry;\s*'
+                        r'move-result-object\s+(v\d+)',
+                        re.DOTALL
+                    )
+                    def repl_runner(m: re.Match) -> str:
+                        ret_reg = m.group(1)
+                        return (
+                            f"iget-object v3, v0, Lxyz/aethersx2/android/d;->a:Landroid/app/Activity;\n\n"
+                            f"    invoke-static {{v3, v1, v2}}, Lxyz/aethersx2/android/GameListDatabase;->getOrUpdateGameList(Landroid/content/Context;ZLxyz/aethersx2/android/AndroidProgressCallback;)[Lxyz/aethersx2/android/GameListEntry;\n\n"
+                            f"    move-result-object {ret_reg}"
+                        )
+                    new_txt, count = pattern.subn(repl_runner, txt)
+                    if count > 0:
+                        p.write_text(new_txt, encoding="utf-8")
+                        runner_patched = True
+                        print(f"  ✓ Patched game list loader in {p.relative_to(smali_out)} to use SQLite persistence (eliminates startup folder rescan)")
+                        break
+
+            # 3. Patch MainActivity.smali: inject PCSX2 version and cover path persistence
             main_activity = smali_out / "xyz" / "aethersx2" / "android" / "MainActivity.smali"
             if main_activity.exists():
                 content = main_activity.read_text(encoding="utf-8")
                 if target_needle in content:
                     content = content.replace(target_needle, replacement, 1)
-                    main_activity.write_text(content, encoding="utf-8")
-                    print(f"  Reassembling {dex_path.name} with smali...")
-                    patched_dex = temp_dir / "classes.dex"
-                    run_cmd(smali_cmd + ["assemble", str(smali_out), "-o", str(patched_dex)])
-                    patched_bytes = patched_dex.read_bytes()
-                    verify_dex_integrity(patched_bytes)
-                    _DEX_CACHE[cache_key] = patched_bytes
-                    dex_path.write_bytes(patched_bytes)
                     print(f"  ✓ Injected PCSX2 version ({pcsx2_ver}) after Java Version into {dex_path.name}")
+                cover_target = 'invoke-virtual {v15, v3}, Lxyz/aethersx2/android/GameListEntry;->setCoverPath(Ljava/lang/String;)V'
+                cover_repl = (
+                    'invoke-virtual {v15, v3}, Lxyz/aethersx2/android/GameListEntry;->setCoverPath(Ljava/lang/String;)V\n\n'
+                    '    invoke-virtual {v15}, Lxyz/aethersx2/android/GameListEntry;->getPath()Ljava/lang/String;\n\n'
+                    '    move-result-object v4\n\n'
+                    '    invoke-static {v1, v4, v3}, Lxyz/aethersx2/android/GameListDatabase;->updateCoverPath(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;)V'
+                )
+                if cover_target in content:
+                    content = content.replace(cover_target, cover_repl, 1)
+                    print(f"  ✓ Injected SQLite cover path updater in {dex_path.name}")
+                main_activity.write_text(content, encoding="utf-8")
+
+            print(f"  Reassembling {dex_path.name} with smali...")
+            patched_dex = temp_dir / "classes.dex"
+            run_cmd(smali_cmd + ["assemble", str(smali_out), "-o", str(patched_dex)])
+            patched_bytes = patched_dex.read_bytes()
+            verify_dex_integrity(patched_bytes)
+            _DEX_CACHE[cache_key] = patched_bytes
+            dex_path.write_bytes(patched_bytes)
+            print(f"  ✓ Injected PCSX2 version ({pcsx2_ver}) and SQLite GameListDatabase into {dex_path.name}")
         finally:
             shutil.rmtree(temp_dir, ignore_errors=True)
 
@@ -1018,6 +1067,8 @@ def verify_all(target_apks: list[Path] | None = None) -> None:
                 dex_bytes = z.read("classes.dex")
                 if b"PCSX2 Version:" not in dex_bytes:
                     raise SystemExit(f"ERROR: classes.dex in {apk.name} missing PCSX2 version string!")
+                if b"GameListDatabase" not in dex_bytes or b"gamelist.db" not in dex_bytes:
+                    raise SystemExit(f"ERROR: classes.dex in {apk.name} missing SQLite GameListDatabase!")
                 verify_dex_integrity(dex_bytes)
             for item in z.namelist():
                 if "menu_main_navigation" in item:

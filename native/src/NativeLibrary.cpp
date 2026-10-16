@@ -61,13 +61,25 @@ JNIEXPORT void JNICALL JNI_OnUnload(JavaVM* vm, void* reserved) {
 // Lifecycle & VM Thread Management
 // ============================================================================
 
+namespace {
+jobject s_app_context = nullptr;
+}
+
 JNIEXPORT jboolean JNICALL Java_xyz_aethersx2_android_NativeLibrary_initialize(
     JNIEnv* env, jclass, jobject context, jstring data_dir, jstring cache_dir, jstring external_dir) {
+    if (s_app_context) {
+        env->DeleteGlobalRef(s_app_context);
+        s_app_context = nullptr;
+    }
+    if (context) {
+        s_app_context = env->NewGlobalRef(context);
+    }
+
     std::string ddir = JStringToStdString(env, data_dir);
     std::string cdir = JStringToStdString(env, cache_dir);
 
     AndroidHost::GetInstance().Initialize(env, context, ddir, cdir);
-    LOGI("NativeLibrary::initialize: initialized core environment");
+    LOGI("NativeLibrary::initialize: initialized core environment with SQLite persistent game list support");
     return JNI_TRUE;
 }
 
@@ -179,6 +191,23 @@ JNIEXPORT jstring JNICALL Java_xyz_aethersx2_android_NativeLibrary_getBIOSDescri
 
 JNIEXPORT jobjectArray JNICALL Java_xyz_aethersx2_android_NativeLibrary_getGameListEntries(
     JNIEnv* env, jclass) {
+    if (s_app_context) {
+        jclass db_class = env->FindClass("xyz/aethersx2/android/GameListDatabase");
+        if (db_class) {
+            jmethodID mid = env->GetStaticMethodID(
+                db_class, "loadEntries", "(Landroid/content/Context;)[Lxyz/aethersx2/android/GameListEntry;");
+            if (mid) {
+                jobjectArray entries = (jobjectArray)env->CallStaticObjectMethod(db_class, mid, s_app_context);
+                if (entries) {
+                    LOGI("NativeLibrary::getGameListEntries: returned entries from SQLite GameListDatabase");
+                    return entries;
+                }
+            }
+        }
+        if (env->ExceptionCheck()) {
+            env->ExceptionClear();
+        }
+    }
     return CreateEmptyObjectArray(env, "xyz/aethersx2/android/GameListEntry");
 }
 
@@ -198,8 +227,21 @@ JNIEXPORT jstring JNICALL Java_xyz_aethersx2_android_NativeLibrary_getPathForSer
 }
 
 JNIEXPORT void JNICALL Java_xyz_aethersx2_android_NativeLibrary_refreshGameList(
-    JNIEnv*, jclass, jboolean, jboolean, jobject) {
-    LOGI("NativeLibrary::refreshGameList");
+    JNIEnv* env, jclass, jboolean invalidate_cache, jboolean only_cache, jobject progress) {
+    LOGI("NativeLibrary::refreshGameList (invalidate=%d, only_cache=%d)", invalidate_cache, only_cache);
+    if (invalidate_cache && s_app_context) {
+        jclass db_class = env->FindClass("xyz/aethersx2/android/GameListDatabase");
+        if (db_class) {
+            jmethodID mid = env->GetStaticMethodID(db_class, "clear", "(Landroid/content/Context;)V");
+            if (mid) {
+                env->CallStaticVoidMethod(db_class, mid, s_app_context);
+                LOGI("NativeLibrary::refreshGameList: cleared SQLite GameListDatabase cache on rescan");
+            }
+        }
+        if (env->ExceptionCheck()) {
+            env->ExceptionClear();
+        }
+    }
 }
 
 JNIEXPORT void JNICALL Java_xyz_aethersx2_android_NativeLibrary_downloadCovers(
