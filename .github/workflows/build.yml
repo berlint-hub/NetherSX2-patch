@@ -13,14 +13,6 @@ on:
         description: 'Force creating a GitHub Release regardless of PCSX2 commit status'
         type: boolean
         default: false
-      build_target:
-        description: 'Target APK variants to build (nethersx2, all, vanilla)'
-        type: choice
-        options:
-          - nethersx2
-          - all
-          - vanilla
-        default: 'nethersx2'
 
 permissions:
   contents: write
@@ -162,8 +154,6 @@ jobs:
           fi
 
       - name: Build NetherSX2 and Patch APKs
-        env:
-          BUILD_TARGET: ${{ github.event.inputs.build_target || 'nethersx2' }}
         run: python3 scripts/build.py
 
       - name: Upload NetherSX2 Adreno APK

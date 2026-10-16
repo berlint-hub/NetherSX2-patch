@@ -34,19 +34,13 @@ MALI_MD5 = "4a1751fa99bc4dcd647114c4d64e7985"
 MALI_CLASSIC_XDELTA_URL = "https://github.com/Trixarian/NetherSX2-classic/releases/download/1.0/nethersx2-classic.xdelta"
 MALI_CLASSIC_XDELTA = REPO_ROOT / "nethersx2-classic.xdelta"
 
-# Variant 1: Original + PCSX2 (Clean Vanilla AetherSX2 with updated PCSX2 assets and fixes)
-AETHERSX2_ADRENO_APK = REPO_ROOT / "xyz.aethersx2.android_adreno.apk"
-AETHERSX2_MALI_APK = REPO_ROOT / "xyz.aethersx2.android_mali.apk"
-
-# Variant 2: Original + PCSX2 + NetherSX2Patch (NetherSX2-branded with updated PCSX2 assets and fixes)
+# Output NetherSX2 APKs
 NETHERSX2_ADRENO_APK = REPO_ROOT / "xyz.nethersx2.android_adreno.apk"
 NETHERSX2_MALI_APK = REPO_ROOT / "xyz.nethersx2.android_mali.apk"
-NETHERSX2_SWITCH_APK = REPO_ROOT / "xyz.aethersx2.android_switch.apk"
 
 # Aliases
-ADRENO_FINAL_APK = AETHERSX2_ADRENO_APK
-MALI_FINAL_APK = AETHERSX2_MALI_APK
-SWITCH_FINAL_APK = NETHERSX2_SWITCH_APK
+ADRENO_FINAL_APK = NETHERSX2_ADRENO_APK
+MALI_FINAL_APK = NETHERSX2_MALI_APK
 ADRENO_FINAL_XDELTA = REPO_ROOT / "xyz.aethersx2.android_.xdelta"
 
 # Tools
@@ -895,22 +889,7 @@ def inject_scale_multiplier(input_apk: Path, output_apk: Path, work_name: str, i
         aligned.unlink()
 
 
-def build_aethersx2_adreno() -> None:
-    print("\n==========================================")
-    print("Building Vanilla AetherSX2 Adreno (v1.5-4248) APK")
-    print("==========================================")
-    base_apk = get_adreno_base_apk()
-    inject_scale_multiplier(base_apk, AETHERSX2_ADRENO_APK, "work_aethersx2_adreno")
-    print(f"Successfully built {AETHERSX2_ADRENO_APK}")
 
-
-def build_aethersx2_mali() -> None:
-    print("\n==========================================")
-    print("Building Vanilla AetherSX2 Mali (v1.5-3668) APK")
-    print("==========================================")
-    base_apk = get_mali_base_apk()
-    inject_scale_multiplier(base_apk, AETHERSX2_MALI_APK, "work_aethersx2_mali", is_mali=True)
-    print(f"Successfully built {AETHERSX2_MALI_APK}")
 
 
 def build_nethersx2_adreno() -> None:
@@ -965,33 +944,11 @@ def build_nethersx2_mali() -> None:
     print(f"Successfully built {NETHERSX2_MALI_APK}")
 
 
-def build_switch() -> None:
-    print("\n==========================================")
-    print("Building NetherSX2 Nintendo Switch (Tegra X1) APK")
-    print("==========================================")
-    base_apk = get_adreno_base_apk()
-    xdelta_bin = get_xdelta_bin()
-
-    if not ADRENO_NETHERSX2_XDELTA.exists():
-        raise SystemExit(f"Adreno NetherSX2 xdelta patch not found: {ADRENO_NETHERSX2_XDELTA}")
-
-    switch_nethersx2_base = REPO_ROOT / "switch_nethersx2_base.apk"
-    run_cmd([xdelta_bin, "-d", "-f", "-s", str(base_apk), str(ADRENO_NETHERSX2_XDELTA), str(switch_nethersx2_base)])
-
-    inject_scale_multiplier(switch_nethersx2_base, NETHERSX2_SWITCH_APK, "work_switch", is_switch=True)
-    if switch_nethersx2_base.exists():
-        switch_nethersx2_base.unlink()
-    shutil.copyfile(NETHERSX2_SWITCH_APK, REPO_ROOT / "nethersx2_switch.apk")
-    print(f"Successfully built {NETHERSX2_SWITCH_APK}")
-
-
 def build_adreno() -> None:
-    build_aethersx2_adreno()
     build_nethersx2_adreno()
 
 
 def build_mali() -> None:
-    build_aethersx2_mali()
     build_nethersx2_mali()
 
 
@@ -1003,7 +960,6 @@ def verify_all(target_apks: list[Path] | None = None) -> None:
         target_apks = [
             NETHERSX2_ADRENO_APK,
             NETHERSX2_MALI_APK,
-            NETHERSX2_SWITCH_APK,
         ]
     if not target_apks:
         raise SystemExit("ERROR: No output APKs specified to verify!")
@@ -1044,10 +1000,8 @@ def verify_all(target_apks: list[Path] | None = None) -> None:
             xml_buttons = [n for n in z.namelist() if n.startswith("res/drawable/ic_controller_") and n.endswith(".xml")]
             if len(xml_buttons) != 34:
                 raise SystemExit(f"ERROR: Expected 34 original controller XML buttons, found {len(xml_buttons)} in {apk.name}!")
-            if apk in [AETHERSX2_MALI_APK, NETHERSX2_MALI_APK] and b"Fast(Mali)/Unsafe Defaults" not in arsc:
+            if apk == NETHERSX2_MALI_APK and b"Fast(Mali)/Unsafe Defaults" not in arsc:
                 raise SystemExit(f"ERROR: 'Fast(Mali)/Unsafe Defaults' missing in {apk.name} resources.arsc!")
-            if apk == NETHERSX2_SWITCH_APK and b"Switch(Tegra X1) Defaults" not in arsc:
-                raise SystemExit(f"ERROR: 'Switch(Tegra X1) Defaults' missing in {apk.name} resources.arsc!")
             if shutil.which("aapt"):
                 out = subprocess.check_output(["aapt", "dump", "badging", str(apk)]).decode("utf-8", errors="ignore")
                 if "targetSdkVersion:'34'" not in out:
@@ -1081,31 +1035,12 @@ def verify_all(target_apks: list[Path] | None = None) -> None:
 
 
 def main() -> None:
-    target = os.environ.get("BUILD_TARGET", "nethersx2").lower()
-    built: list[Path] = []
-    if target in ("all", "aethersx2", "vanilla"):
-        print("\n==========================================")
-        print("Building Variant 1: Pure Vanilla AetherSX2 + PCSX2")
-        print("==========================================")
-        build_aethersx2_adreno()
-        build_aethersx2_mali()
-        built.extend([AETHERSX2_ADRENO_APK, AETHERSX2_MALI_APK])
-
-    if target in ("all", "nethersx2", "patch"):
-        print("\n==========================================")
-        print("Building NetherSX2 Patched + PCSX2 (Adreno & Mali)")
-        print("==========================================")
-        build_nethersx2_adreno()
-        build_nethersx2_mali()
-        built.extend([NETHERSX2_ADRENO_APK, NETHERSX2_MALI_APK])
-
-    if target in ("all", "switch"):
-        print("\n==========================================")
-        print("Building Nintendo Switch (Tegra X1) Variant")
-        print("==========================================")
-        build_switch()
-        built.append(NETHERSX2_SWITCH_APK)
-
+    print("\n==========================================")
+    print("Building NetherSX2 Patched + PCSX2 (Adreno & Mali)")
+    print("==========================================")
+    build_nethersx2_adreno()
+    build_nethersx2_mali()
+    built = [NETHERSX2_ADRENO_APK, NETHERSX2_MALI_APK]
     verify_all(built)
 
 
