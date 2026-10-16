@@ -276,6 +276,15 @@ def apply_mali_optimizations(work_dir: Path) -> None:
     for p in work_dir.rglob("system_preferences.xml"):
         if update_preference_xml(p, sys_updates):
             print(f"  ✓ Configured MTVU, Performance Core Affinity, and FastCDVD in {p.name}")
+    for p in work_dir.rglob("general_preferences.xml"):
+        if update_preference_xml(p, {"UI/EmulationActivityOrientation": "sensor", "UI/AutoDownloadCovers": "true"}):
+            print(f"  ✓ Defaulted EmulationActivityOrientation to sensor in {p.name}")
+    for p in work_dir.rglob("general_game_settings_preferences.xml"):
+        if update_preference_xml(p, {"UI/EmulationActivityOrientation": "sensor", "UI/AutoDownloadCovers": "true"}):
+            print(f"  ✓ Defaulted EmulationActivityOrientation to sensor in {p.name}")
+    for p in work_dir.rglob("touchscreen_controller_preferences.xml"):
+        if update_preference_xml(p, {"TouchscreenController/AutoHide": "true"}):
+            print(f"  ✓ Defaulted TouchscreenController/AutoHide to true in {p.name}")
 
     # Customize ONLY the Setup Wizard preset button text: change Fast/Unsafe to Fast(Mali)/Unsafe,
     # keeping the original descriptions and reset setting text untouched.
@@ -432,6 +441,15 @@ def apply_switch_optimizations(work_dir: Path) -> None:
     for p in work_dir.rglob("system_preferences.xml"):
         if update_preference_xml(p, sys_updates):
             print(f"  ✓ Configured MTVU, -1 EE Cycle Rate, and FastCDVD for Switch in {p.name}")
+    for p in work_dir.rglob("general_preferences.xml"):
+        if update_preference_xml(p, {"UI/EmulationActivityOrientation": "sensor", "UI/AutoDownloadCovers": "true"}):
+            print(f"  ✓ Defaulted EmulationActivityOrientation to sensor in {p.name}")
+    for p in work_dir.rglob("general_game_settings_preferences.xml"):
+        if update_preference_xml(p, {"UI/EmulationActivityOrientation": "sensor", "UI/AutoDownloadCovers": "true"}):
+            print(f"  ✓ Defaulted EmulationActivityOrientation to sensor in {p.name}")
+    for p in work_dir.rglob("touchscreen_controller_preferences.xml"):
+        if update_preference_xml(p, {"TouchscreenController/AutoHide": "true"}):
+            print(f"  ✓ Defaulted TouchscreenController/AutoHide to true in {p.name}")
 
     # Customize Setup Wizard preset text for Switch
     str_updated = 0
@@ -949,7 +967,7 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
     for dex_path in dex_files:
         original_bytes = dex_path.read_bytes()
         dex_md5 = hashlib.md5(original_bytes).hexdigest()
-        cache_key = f"{dex_md5}_{pcsx2_ver}_game_list_clean_v12_{'mali' if is_mali else 'adreno'}"
+        cache_key = f"{dex_md5}_{pcsx2_ver}_qol_features_v13_{'mali' if is_mali else 'adreno'}"
 
         if cache_key in _DEX_CACHE:
             patched_bytes = _DEX_CACHE[cache_key]
@@ -2404,7 +2422,70 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
                     content = content[:m_finish.start()] + restart_code + content[m_finish.end():]
                     print(f"  ✓ Patched Setup Wizard completion in MainActivity.smali to restart process cleanly")
 
+                set_main = "invoke-static {p0}, Lxyz/aethersx2/android/NativeLibrary;->setMainActivity(Lxyz/aethersx2/android/MainActivity;)V\n"
+                if set_main in content and "AutoCoversDownloader" not in content:
+                    content = content.replace(set_main, set_main + "\n    invoke-static {p0}, Lxyz/aethersx2/android/AutoCoversDownloader;->startAutoDownload(Landroid/content/Context;)V\n", 1)
+                    print(f"  ✓ Injected AutoCoversDownloader trigger into MainActivity.smali")
+
                 main_activity.write_text(content, encoding="utf-8")
+
+            # 4. Patch EmulationActivity.smali: DiscordRpcManager & GyroToRightStickManager
+            emu_act = smali_out / "xyz" / "aethersx2" / "android" / "EmulationActivity.smali"
+            if emu_act.exists():
+                ea_content = emu_act.read_text(encoding="utf-8")
+                if "DiscordRpcManager" not in ea_content:
+                    pattern_boot = r'(const-string [a-z0-9]+, \"bootPath\"\s+invoke-virtual \{[a-z0-9]+, [a-z0-9]+\}, Landroid/content/Intent;->getStringExtra\(Ljava/lang/String;\)Ljava/lang/String;\s+move-result-object ([a-z0-9]+)\s+iput-object \2, p0, Lxyz/aethersx2/android/EmulationActivity;->[A-Za-z0-9_]+:Ljava/lang/String;)'
+                    m_boot = re.search(pattern_boot, ea_content)
+                    if m_boot:
+                        reg = m_boot.group(2)
+                        repl_boot = m_boot.group(1) + f'\n\n    invoke-static {{p0, {reg}}}, Lxyz/aethersx2/android/DiscordRpcManager;->start(Landroid/content/Context;Ljava/lang/String;)V'
+                        ea_content = ea_content[:m_boot.start()] + repl_boot + ea_content[m_boot.end():]
+
+                    pattern_destroy = r'(\.method public final onDestroy\(\)V\s+\.registers 4\s+)'
+                    m_destroy = re.search(pattern_destroy, ea_content)
+                    if m_destroy:
+                        repl_destroy = m_destroy.group(1) + 'invoke-static {p0}, Lxyz/aethersx2/android/DiscordRpcManager;->stop(Landroid/content/Context;)V\n\n    invoke-static {}, Lxyz/aethersx2/android/GyroToRightStickManager;->stop()V\n\n    '
+                        ea_content = ea_content[:m_destroy.start()] + repl_destroy + ea_content[m_destroy.end():]
+
+                    pattern_resume = r'(invoke-super \{p0\}, L[a-z]+/e;->onPostResume\(\)V)'
+                    m_resume = re.search(pattern_resume, ea_content)
+                    if m_resume:
+                        repl_resume = m_resume.group(1) + '\n\n    invoke-static {p0}, Lxyz/aethersx2/android/GyroToRightStickManager;->start(Landroid/content/Context;)V'
+                        ea_content = ea_content[:m_resume.start()] + repl_resume + ea_content[m_resume.end():]
+
+                    emu_act.write_text(ea_content, encoding="utf-8")
+                    print(f"  ✓ Injected DiscordRpcManager and GyroToRightStickManager into EmulationActivity.smali")
+
+            # 5. Patch EmulationSurfaceView.smali: ExternalControllerHelper
+            esv_file = smali_out / "xyz" / "aethersx2" / "android" / "EmulationSurfaceView.smali"
+            if esv_file.exists():
+                esv_content = esv_file.read_text(encoding="utf-8")
+                if "ExternalControllerHelper" not in esv_content:
+                    pattern_esv = r'(iput-boolean\s+[a-z0-9]+,\s+[a-z0-9]+,\s+Lxyz/aethersx2/android/EmulationSurfaceView;->(?:d|j):Z)'
+                    m_esv = re.search(pattern_esv, esv_content)
+                    if m_esv:
+                        repl_esv = m_esv.group(1) + '\n\n    invoke-virtual {v1}, Landroid/view/View;->getContext()Landroid/content/Context;\n\n    move-result-object v11\n\n    invoke-static {v11, v9}, Lxyz/aethersx2/android/ExternalControllerHelper;->checkAndAutoMapPlayer1(Landroid/content/Context;Landroid/view/InputDevice;)V'
+                        esv_content = esv_content[:m_esv.start()] + repl_esv + esv_content[m_esv.end():]
+                        esv_file.write_text(esv_content, encoding="utf-8")
+                        print(f"  ✓ Injected ExternalControllerHelper auto-map into EmulationSurfaceView.smali")
+
+            # 6. Patch SetupWizardActivity$e$a.smali: default orientation & renderer
+            wizard_sub = smali_out / "xyz" / "aethersx2" / "android" / "SetupWizardActivity$e$a.smali"
+            if wizard_sub.exists():
+                wiz_content = wizard_sub.read_text(encoding="utf-8")
+                wiz_content = re.sub(
+                    r'(const-string v2, "UI/EmulationActivityOrientation"\s+const-string v3, )"unspecified"',
+                    r'\g<1>"sensor"',
+                    wiz_content
+                )
+                if is_mali:
+                    wiz_content = re.sub(
+                        r'(const-string v2, "EmuCore/GS/Renderer"\s+const-string v3, )"12"',
+                        r'\g<1>"14"',
+                        wiz_content
+                    )
+                wizard_sub.write_text(wiz_content, encoding="utf-8")
+                print(f"  ✓ Configured SetupWizardActivity$e$a.smali (Orientation: sensor{' + Renderer: Vulkan 14' if is_mali else ''})")
 
             print(f"  Reassembling {dex_path.name} with smali...")
             patched_dex = temp_dir / "classes.dex"
@@ -2657,6 +2738,14 @@ def verify_all(target_apks: list[Path] | None = None) -> None:
                     raise SystemExit(f"ERROR: classes.dex in {apk.name} missing deduplicateEntries!")
                 if b"https://github.com/mininxd/NetherSX2-patch/releases/latest" not in dex_bytes:
                     raise SystemExit(f"ERROR: classes.dex in {apk.name} missing Check Update releases URL!")
+                if b"DiscordRpcManager" not in dex_bytes:
+                    raise SystemExit(f"ERROR: classes.dex in {apk.name} missing DiscordRpcManager!")
+                if b"GyroToRightStickManager" not in dex_bytes:
+                    raise SystemExit(f"ERROR: classes.dex in {apk.name} missing GyroToRightStickManager!")
+                if b"ExternalControllerHelper" not in dex_bytes:
+                    raise SystemExit(f"ERROR: classes.dex in {apk.name} missing ExternalControllerHelper!")
+                if b"AutoCoversDownloader" not in dex_bytes:
+                    raise SystemExit(f"ERROR: classes.dex in {apk.name} missing AutoCoversDownloader!")
                 verify_dex_integrity(dex_bytes)
             for item in z.namelist():
                 if "menu_main_navigation" in item:
