@@ -36,6 +36,11 @@
                           app:key="UI/AutoDownloadCovers"
                           app:summary="Automatically downloads missing box art covers from online databases."
                           app:title="Auto Download Covers" />
+    <SwitchPreferenceCompat app:defaultValue="true"
+                          app:iconSpaceReserved="false"
+                          app:key="UI/EnableDiscordRpc"
+                          app:summary="Broadcasts current game to Discord RPC (Kizzy / Discord-App-RPC)."
+                          app:title="Discord Rich Presence" />
     <ListPreference app:defaultValue="-1"
                     app:entries="@array/display_alignment_entries"
                     app:entryValues="@array/display_alignment_values"

@@ -519,6 +519,102 @@ def patch_preserve_user_data_on_reset(work_dir: Path) -> None:
             print(f"  ✓ Patched {so_path.name} ({patches_applied} calls patched): Memory cards, achievements, and controls preserved on reset")
 
 
+def patch_ui_preferences(work_dir: Path, is_mali: bool = False) -> None:
+    """Inject QoL preference switches (Auto Covers, Discord RPC, Gyro to Stick) and defaults into decompiled preference XML files."""
+    def set_preference_default(text: str, key: str, new_val: str) -> str:
+        def replace_default(m: re.Match) -> str:
+            tag = m.group(0)
+            if 'app:defaultValue=' in tag:
+                return re.sub(r'app:defaultValue="[^"]*"', f'app:defaultValue="{new_val}"', tag)
+            elif tag.endswith('/>'):
+                return tag[:-2].rstrip() + f' app:defaultValue="{new_val}" />'
+            elif tag.endswith('>'):
+                return tag[:-1].rstrip() + f' app:defaultValue="{new_val}">'
+            return tag
+
+        pattern = re.compile(rf'<[^>]+app:key="{re.escape(key)}"[^>]*>', re.DOTALL)
+        return pattern.sub(replace_default, text)
+
+    # 1. general_preferences.xml
+    auto_covers_tag = """    <SwitchPreferenceCompat app:defaultValue="true"
+                          app:iconSpaceReserved="false"
+                          app:key="UI/AutoDownloadCovers"
+                          app:summary="Automatically downloads missing box art covers from online databases."
+                          app:title="Auto Download Covers" />"""
+    discord_rpc_tag = """    <SwitchPreferenceCompat app:defaultValue="true"
+                          app:iconSpaceReserved="false"
+                          app:key="UI/EnableDiscordRpc"
+                          app:summary="Broadcasts current game to Discord RPC (Kizzy / Discord-App-RPC)."
+                          app:title="Discord Rich Presence" />"""
+
+    for p in work_dir.rglob("general_preferences.xml"):
+        text = p.read_text(encoding="utf-8")
+        orig = text
+        if "UI/AutoDownloadCovers" not in text:
+            m = re.search(r'(<ListPreference[^>]+app:key="UI/EmulationActivityOrientation"[^>]*/>)', text)
+            if m:
+                text = text[:m.end()] + "\n" + auto_covers_tag + text[m.end():]
+            else:
+                m_cat = re.search(r'(<PreferenceCategory[^>]+app:title="@string/settings_category_interface"[^>]*>)', text)
+                if m_cat:
+                    text = text[:m_cat.end()] + "\n" + auto_covers_tag + text[m_cat.end():]
+
+        if "UI/EnableDiscordRpc" not in text:
+            m = re.search(r'(<SwitchPreferenceCompat[^>]+app:key="UI/AutoDownloadCovers"[^>]*/>)', text)
+            if m:
+                text = text[:m.end()] + "\n" + discord_rpc_tag + text[m.end():]
+            else:
+                m_cat = re.search(r'(<PreferenceCategory[^>]+app:title="@string/settings_category_interface"[^>]*>)', text)
+                if m_cat:
+                    text = text[:m_cat.end()] + "\n" + discord_rpc_tag + text[m_cat.end():]
+
+        text = set_preference_default(text, "UI/EmulationActivityOrientation", "sensor")
+        if text != orig:
+            p.write_text(text, encoding="utf-8")
+            print(f"  ✓ Injected/configured QoL preferences (Auto Covers, Discord RPC, Sensor Orientation) into {p.name}")
+
+    # 2. general_game_settings_preferences.xml
+    discord_rpc_tristate = """    <xyz.aethersx2.android.TriStatePreference app:iconSpaceReserved="false"
+                          app:key="UI/EnableDiscordRpc"
+                          app:summary="Broadcasts current game to Discord RPC (Kizzy / Discord-App-RPC)."
+                          app:title="Discord Rich Presence"
+                          app:useSimpleSummaryProvider="true" />"""
+    for p in work_dir.rglob("general_game_settings_preferences.xml"):
+        text = p.read_text(encoding="utf-8")
+        orig = text
+        if "UI/EnableDiscordRpc" not in text:
+            m = re.search(r'(<ListPreference[^>]+app:key="UI/EmulationActivityOrientation"[^>]*/>)', text)
+            if m:
+                text = text[:m.end()] + "\n" + discord_rpc_tristate + text[m.end():]
+        text = set_preference_default(text, "UI/EmulationActivityOrientation", "sensor")
+        if text != orig:
+            p.write_text(text, encoding="utf-8")
+            print(f"  ✓ Injected/configured Discord RPC into {p.name}")
+
+    # 3. touchscreen_controller_preferences.xml
+    gyro_tag = """    <SwitchPreferenceCompat app:defaultValue="false"
+                          app:iconSpaceReserved="false"
+                          app:key="Pad/GyroToRightStick"
+                          app:summary="Maps device gyroscope motion to the right analog stick for motion aiming."
+                          app:title="Gyro to Right Stick" />"""
+    for p in work_dir.rglob("touchscreen_controller_preferences.xml"):
+        text = p.read_text(encoding="utf-8")
+        orig = text
+        if "Pad/GyroToRightStick" not in text:
+            m = re.search(r'(<SwitchPreferenceCompat[^>]+app:key="TouchscreenController/BindToRightStick"[^>]*/>)', text)
+            if m:
+                text = text[:m.end()] + "\n" + gyro_tag + text[m.end():]
+            else:
+                m_auto = re.search(r'(<SwitchPreferenceCompat[^>]+app:key="TouchscreenController/AutoHide"[^>]*/>)', text)
+                if m_auto:
+                    text = text[:m_auto.end()] + "\n" + gyro_tag + text[m_auto.end():]
+
+        text = set_preference_default(text, "TouchscreenController/AutoHide", "true")
+        if text != orig:
+            p.write_text(text, encoding="utf-8")
+            print(f"  ✓ Injected/configured Gyro to Right Stick and Auto-Hide in {p.name}")
+
+
 def patch_libemucore_settings_defaults(work_dir: Path) -> None:
     """Patch libemucore.so:
     1. Full Texture Preloading (2) by default for both Optimal and Fast defaults in setDefaultSettings and GSSettings::Load.
@@ -976,7 +1072,7 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
     for dex_path in dex_files:
         original_bytes = dex_path.read_bytes()
         dex_md5 = hashlib.md5(original_bytes).hexdigest()
-        cache_key = f"{dex_md5}_{pcsx2_ver}_qol_features_v15_{'mali' if is_mali else 'adreno'}"
+        cache_key = f"{dex_md5}_{pcsx2_ver}_qol_features_v16_{'mali' if is_mali else 'adreno'}"
 
         if cache_key in _DEX_CACHE:
             patched_bytes = _DEX_CACHE[cache_key]
@@ -2536,6 +2632,9 @@ def inject_scale_multiplier(input_apk: Path, output_apk: Path, work_name: str, i
 
     # Inject updated PCSX2 GameDB, controller DB, cheats, and strip ad leftovers
     inject_updated_pcsx2_assets(work_dir)
+
+    # Inject QoL preference switches (Auto Covers, Discord RPC, Gyro) and default settings
+    patch_ui_preferences(work_dir, is_mali=is_mali)
 
     # Patch DEX to show PCSX2 version in Show Version dialog
     patch_dex_pcsx2_version(work_dir, is_mali=is_mali)
