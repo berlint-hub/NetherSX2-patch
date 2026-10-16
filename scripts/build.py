@@ -855,7 +855,7 @@ def verify_dex_integrity(dex_bytes: bytes) -> None:
 _DEX_CACHE: dict[str, bytes] = {}
 
 
-def patch_dex_pcsx2_version(work_dir: Path) -> None:
+def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
     """Inject PCSX2 upstream version into the Show Version dialog and SQLite GameListDatabase into classes.dex using baksmali/smali."""
     pcsx2_ver = get_pcsx2_version()
     target_needle = 'const-string v0, "\\nNative Version:\\n"'
@@ -867,12 +867,11 @@ def patch_dex_pcsx2_version(work_dir: Path) -> None:
 
     baksmali_cmd = ensure_baksmali()
     smali_cmd = ensure_smali()
-    smali_target_dir = REPO_ROOT / "smali_target"
 
     for dex_path in dex_files:
         original_bytes = dex_path.read_bytes()
         dex_md5 = hashlib.md5(original_bytes).hexdigest()
-        cache_key = f"{dex_md5}_{pcsx2_ver}_data_dir_wizard_v1"
+        cache_key = f"{dex_md5}_{pcsx2_ver}_data_dir_split_v3_{'mali' if is_mali else 'adreno'}"
 
         if cache_key in _DEX_CACHE:
             patched_bytes = _DEX_CACHE[cache_key]
@@ -887,18 +886,107 @@ def patch_dex_pcsx2_version(work_dir: Path) -> None:
             print(f"  Disassembling {dex_path.name} with baksmali...")
             run_cmd(baksmali_cmd + ["disassemble", str(dex_path), "-o", str(smali_out)])
 
-            # 1. Inject all smali classes from smali_target (GameListDatabase, SetupWizardDataDirectoryFragment, SetupWizardActivity, NativeLibrary, etc.)
-            if smali_target_dir.exists():
-                injected_count = 0
-                for smali_file in smali_target_dir.rglob("*.smali"):
-                    rel = smali_file.relative_to(smali_target_dir)
-                    dest = smali_out / rel
-                    dest.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copyfile(smali_file, dest)
-                    injected_count += 1
-                print(f"  ✓ Injected {injected_count} custom/updated smali classes into {dex_path.name}")
+            # 1. Inject target-specific smali classes (common + adreno or mali)
+            injected_count = 0
+            dirs_to_inject = [REPO_ROOT / "smali_target" / "common"]
+            if is_mali:
+                dirs_to_inject.append(REPO_ROOT / "smali_target" / "mali")
+            else:
+                dirs_to_inject.append(REPO_ROOT / "smali_target" / "adreno")
 
-            # 2. Patch runner to use GameListDatabase.getOrUpdateGameList (prevents rescanning on every open)
+            for src_dir in dirs_to_inject:
+                if src_dir.exists():
+                    for smali_file in src_dir.rglob("*.smali"):
+                        rel = smali_file.relative_to(src_dir)
+                        dest = smali_out / rel
+                        dest.parent.mkdir(parents=True, exist_ok=True)
+                        shutil.copyfile(smali_file, dest)
+                        injected_count += 1
+            print(f"  ✓ Injected {injected_count} custom/updated smali classes ({'Mali' if is_mali else 'Adreno'}) into {dex_path.name}")
+
+            # 2. Patch NativeLibrary.smali in-place (preserves target-specific obfuscated types & fields)
+            nat_lib = smali_out / "xyz" / "aethersx2" / "android" / "NativeLibrary.smali"
+            if nat_lib.exists():
+                nl_txt = nat_lib.read_text(encoding="utf-8")
+                if "setDataDirectory" not in nl_txt:
+                    set_data_dir = """
+.method public static setDataDirectory(Ljava/lang/String;)V
+    .registers 3
+
+    sput-object p0, Lxyz/aethersx2/android/NativeLibrary;->mDataDirectory:Ljava/lang/String;
+
+    if-eqz p0, :cond_e
+
+    new-instance v0, Ljava/io/File;
+
+    invoke-direct {v0, p0}, Ljava/io/File;-><init>(Ljava/lang/String;)V
+
+    invoke-virtual {v0}, Ljava/io/File;->mkdirs()Z
+
+    :cond_e
+    return-void
+.end method
+"""
+                    nl_txt = nl_txt.replace(".method private static native initialize", set_data_dir + "\n.method private static native initialize")
+
+                target_cond6 = """:cond_6
+    const/4 v0, 0x0
+
+    .line 2
+    invoke-virtual {p0, v0}, Landroid/content/Context;->getExternalFilesDir(Ljava/lang/String;)Ljava/io/File;"""
+
+                repl_cond6 = """:cond_6
+    invoke-static {p0}, Landroidx/preference/PreferenceManager;->getDefaultSharedPreferences(Landroid/content/Context;)Landroid/content/SharedPreferences;
+
+    move-result-object v0
+
+    const-string v2, "UI/DataDirectory"
+
+    const/4 v3, 0x0
+
+    invoke-interface {v0, v2, v3}, Landroid/content/SharedPreferences;->getString(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+
+    move-result-object v0
+
+    if-eqz v0, :use_internal_storage
+
+    invoke-virtual {v0}, Ljava/lang/String;->isEmpty()Z
+
+    move-result v2
+
+    if-nez v2, :use_internal_storage
+
+    const-string v2, "internal"
+
+    invoke-virtual {v2, v0}, Ljava/lang/String;->equalsIgnoreCase(Ljava/lang/String;)Z
+
+    move-result v2
+
+    if-nez v2, :use_internal_storage
+
+    new-instance v2, Ljava/io/File;
+
+    invoke-direct {v2, v0}, Ljava/io/File;-><init>(Ljava/lang/String;)V
+
+    invoke-virtual {v2}, Ljava/io/File;->mkdirs()Z
+
+    sput-object v0, Lxyz/aethersx2/android/NativeLibrary;->mDataDirectory:Ljava/lang/String;
+
+    goto :data_dir_ready
+
+    :use_internal_storage
+    const/4 v0, 0x0
+
+    .line 2
+    invoke-virtual {p0, v0}, Landroid/content/Context;->getExternalFilesDir(Ljava/lang/String;)Ljava/io/File;"""
+
+                if target_cond6 in nl_txt:
+                    nl_txt = nl_txt.replace(target_cond6, repl_cond6)
+                    nl_txt = nl_txt.replace("sput-object v2, Lxyz/aethersx2/android/NativeLibrary;->mDataDirectory:Ljava/lang/String;", "sput-object v2, Lxyz/aethersx2/android/NativeLibrary;->mDataDirectory:Ljava/lang/String;\n\n    :data_dir_ready", 1)
+                nat_lib.write_text(nl_txt, encoding="utf-8")
+                print(f"  ✓ Patched NativeLibrary data directory loader in {dex_path.name}")
+
+            # 3. Patch runner to use GameListDatabase.getOrUpdateGameList (prevents rescanning on every open)
             runner_patched = False
             for p in smali_out.rglob("*.smali"):
                 if p.name in ["GameListDatabase.smali", "NativeLibrary.smali"]:
@@ -926,7 +1014,7 @@ def patch_dex_pcsx2_version(work_dir: Path) -> None:
                         print(f"  ✓ Patched game list loader in {p.relative_to(smali_out)} to use SQLite persistence (eliminates startup folder rescan)")
                         break
 
-            # 3. Patch MainActivity.smali: inject PCSX2 version and cover path persistence
+            # 4. Patch MainActivity.smali: inject PCSX2 version and cover path persistence
             main_activity = smali_out / "xyz" / "aethersx2" / "android" / "MainActivity.smali"
             if main_activity.exists():
                 content = main_activity.read_text(encoding="utf-8")
@@ -973,7 +1061,7 @@ def inject_scale_multiplier(input_apk: Path, output_apk: Path, work_name: str, i
     inject_updated_pcsx2_assets(work_dir)
 
     # Patch DEX to show PCSX2 version in Show Version dialog
-    patch_dex_pcsx2_version(work_dir)
+    patch_dex_pcsx2_version(work_dir, is_mali=is_mali)
 
     # Patch GameIndex.yaml with database optimizations (Black, Downhill Domination)
     patch_gameindex(work_dir)
