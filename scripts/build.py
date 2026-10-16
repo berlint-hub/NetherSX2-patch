@@ -276,6 +276,9 @@ def apply_mali_optimizations(work_dir: Path) -> None:
     for p in work_dir.rglob("advanced_preferences.xml"):
         if update_preference_xml(p, adv_updates):
             print(f"  ✓ Configured DisableDualSourceBlend and SkipDuplicateFrames in {p.name}")
+    for p in work_dir.rglob("advanced_game_settings_preferences.xml"):
+        if update_preference_xml(p, adv_updates):
+            print(f"  ✓ Configured DisableDualSourceBlend and SkipDuplicateFrames in {p.name}")
     for p in work_dir.rglob("system_preferences.xml"):
         if update_preference_xml(p, sys_updates):
             print(f"  ✓ Configured MTVU, Performance Core Affinity, and FastCDVD in {p.name}")

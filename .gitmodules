@@ -3,3 +3,9 @@
 	url = https://github.com/pcsx2/pcsx2
 	branch = master
 	shallow = true
+[submodule "mali_gpu"]
+	path = mali_gpu
+	url = https://github.com/x-tinkerer/mali_gpu
+[submodule "adreno-gpu-vulkan-code-sample-framework"]
+	path = adreno-gpu-vulkan-code-sample-framework
+	url = https://github.com/SnapdragonGameStudios/adreno-gpu-vulkan-code-sample-framework

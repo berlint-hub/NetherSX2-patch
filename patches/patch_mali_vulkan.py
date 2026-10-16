@@ -2,11 +2,11 @@
 """Patch libemucore.so in NetherSX2/AetherSX2 APK to optimize Vulkan rendering on Mali GPUs.
 
 Modifications to the native core (libemucore.so):
-1. Unlock native hardware Dual-Source Blending for ARM Mali GPUs:
-   By default, GSDeviceVK hard-checks if the GPU vendor is ARM Mali (0x13b5), and if so,
-   actively disables dual-source blending even when the driver reports full hardware support.
-   This forces the emulator into slow multipass fallback pipelines with heavy texture barriers.
-   We patch the conditional branch so that Mali GPUs with dual-source blend support can use it directly.
+1. Enforce Dual-Source Blending deactivation on ARM Mali GPUs:
+   ARM Mali TBDR architectures (Midgard/Bifrost/Valhall) use a 16x16 on-chip tile memory buffer.
+   Dual-source blending requires two fragment outputs per thread simultaneously into tile memory,
+   which triggers severe tile memory bandwidth saturation and driver crashes/hangs on Mali.
+   GSDeviceVK's vendor check (0x13b5) is preserved to ensure dual-source blend stays deactivated.
 
 2. Remove fatal Vulkan format incompatibility lockouts:
    GSDeviceVK enforces strict optimal-tiling feature bitmasks across 6 texture formats.
@@ -66,14 +66,15 @@ def patch_mali_vulkan_core(decoded_dir: Path) -> int:
         data = bytearray(so_path.read_bytes())
         modified = False
 
-        # 1. Unlock Dual-Source Blending on Mali
-        idx = data.find(MALI_DUAL_SRC_PATTERN)
-        if idx != -1:
-            data[idx : idx + len(MALI_DUAL_SRC_PATTERN)] = MALI_DUAL_SRC_REPLACEMENT
+        # 1. Enforce Dual-Source Blending deactivation on Mali
+        # (Dual-source blending causes severe tile memory stalls and crashes on Mali Bifrost/Valhall TBDR)
+        if MALI_DUAL_SRC_REPLACEMENT in data:
+            idx = data.find(MALI_DUAL_SRC_REPLACEMENT)
+            data[idx : idx + len(MALI_DUAL_SRC_REPLACEMENT)] = MALI_DUAL_SRC_PATTERN
             modified = True
-            print(f"  ✓ [{so_path.name}] Unlocked native hardware Dual-Source Blending for Mali at 0x{idx+4:x}")
-        elif MALI_DUAL_SRC_REPLACEMENT in data:
-            print(f"  ✓ [{so_path.name}] Dual-Source Blending is already unlocked for Mali")
+            print(f"  ✓ [{so_path.name}] Restored Dual-Source Blending deactivation for Mali at 0x{idx+4:x}")
+        else:
+            print(f"  ✓ [{so_path.name}] Dual-Source Blending is deactivated for Mali (TBDR stability)")
 
         # 2. Bypass fatal format missing bits checks (Vulkan Renderer Unavailable)
         # Check if 3668 or 4248 by inspecting known search windows
