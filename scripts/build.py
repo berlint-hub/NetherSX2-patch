@@ -592,27 +592,94 @@ def patch_ui_preferences(work_dir: Path, is_mali: bool = False) -> None:
             print(f"  ✓ Injected/configured Discord RPC into {p.name}")
 
     # 3. touchscreen_controller_preferences.xml
-    gyro_tag = """    <SwitchPreferenceCompat app:defaultValue="false"
+    gyro_controls_touch = """    <SwitchPreferenceCompat app:defaultValue="false"
                           app:iconSpaceReserved="false"
                           app:key="Pad/GyroToRightStick"
-                          app:summary="Maps device gyroscope motion to the right analog stick for motion aiming."
-                          app:title="Gyro to Right Stick" />"""
+                          app:summary="Maps device gyroscope motion to the right analog stick for gyro aiming."
+                          app:title="Gyro to Right Stick" />
+    <SeekBarPreference app:defaultValue="60"
+                       app:dependency="Pad/GyroToRightStick"
+                       app:iconSpaceReserved="false"
+                       app:key="Pad/GyroSensitivity"
+                       app:min="5"
+                       app:seekBarIncrement="5"
+                       app:showSeekBarValue="true"
+                       app:summary="Adjust gyro aiming sensitivity percentage (Default: 60%)"
+                       app:title="Gyro Sensitivity" />
+    <SwitchPreferenceCompat app:defaultValue="false"
+                          app:dependency="Pad/GyroToRightStick"
+                          app:iconSpaceReserved="false"
+                          app:key="Pad/GyroInvertY"
+                          app:summary="Inverts vertical (pitch) axis for gyro aiming."
+                          app:title="Invert Gyro Y-Axis" />"""
     for p in work_dir.rglob("touchscreen_controller_preferences.xml"):
         text = p.read_text(encoding="utf-8")
         orig = text
         if "Pad/GyroToRightStick" not in text:
             m = re.search(r'(<SwitchPreferenceCompat[^>]+app:key="TouchscreenController/BindToRightStick"[^>]*/>)', text)
             if m:
-                text = text[:m.end()] + "\n" + gyro_tag + text[m.end():]
+                text = text[:m.end()] + "\n" + gyro_controls_touch + text[m.end():]
             else:
                 m_auto = re.search(r'(<SwitchPreferenceCompat[^>]+app:key="TouchscreenController/AutoHide"[^>]*/>)', text)
                 if m_auto:
-                    text = text[:m_auto.end()] + "\n" + gyro_tag + text[m_auto.end():]
+                    text = text[:m_auto.end()] + "\n" + gyro_controls_touch + text[m_auto.end():]
+        elif "Pad/GyroSensitivity" not in text:
+            m_gyro = re.search(r'(<SwitchPreferenceCompat[^>]+app:key="Pad/GyroToRightStick"[^>]*/>)', text)
+            if m_gyro:
+                sub_controls = """\n    <SeekBarPreference app:defaultValue="60"
+                       app:dependency="Pad/GyroToRightStick"
+                       app:iconSpaceReserved="false"
+                       app:key="Pad/GyroSensitivity"
+                       app:min="5"
+                       app:seekBarIncrement="5"
+                       app:showSeekBarValue="true"
+                       app:summary="Adjust gyro aiming sensitivity percentage (Default: 60%)"
+                       app:title="Gyro Sensitivity" />
+    <SwitchPreferenceCompat app:defaultValue="false"
+                          app:dependency="Pad/GyroToRightStick"
+                          app:iconSpaceReserved="false"
+                          app:key="Pad/GyroInvertY"
+                          app:summary="Inverts vertical (pitch) axis for gyro aiming."
+                          app:title="Invert Gyro Y-Axis" />"""
+                text = text[:m_gyro.end()] + sub_controls + text[m_gyro.end():]
 
         text = set_preference_default(text, "TouchscreenController/AutoHide", "true")
         if text != orig:
             p.write_text(text, encoding="utf-8")
-            print(f"  ✓ Injected/configured Gyro to Right Stick and Auto-Hide in {p.name}")
+            print(f"  ✓ Injected/configured Gyro to Right Stick and Sensitivity Slider in {p.name}")
+
+    # 3b. controller_preferences.xml
+    gyro_category_controller = """  <PreferenceCategory app:iconSpaceReserved="false"
+                      app:title="Motion &amp; Gyro Aiming">
+    <SwitchPreferenceCompat app:defaultValue="false"
+                          app:iconSpaceReserved="false"
+                          app:key="Pad/GyroToRightStick"
+                          app:summary="Maps device gyroscope motion to the right analog stick for gyro aiming."
+                          app:title="Enable Gyro Aiming" />
+    <SeekBarPreference app:defaultValue="60"
+                       app:dependency="Pad/GyroToRightStick"
+                       app:iconSpaceReserved="false"
+                       app:key="Pad/GyroSensitivity"
+                       app:min="5"
+                       app:seekBarIncrement="5"
+                       app:showSeekBarValue="true"
+                       app:summary="Adjust gyro aiming sensitivity percentage (Default: 60%)"
+                       app:title="Gyro Sensitivity" />
+    <SwitchPreferenceCompat app:defaultValue="false"
+                          app:dependency="Pad/GyroToRightStick"
+                          app:iconSpaceReserved="false"
+                          app:key="Pad/GyroInvertY"
+                          app:summary="Inverts vertical (pitch) axis for gyro aiming."
+                          app:title="Invert Gyro Y-Axis" />
+  </PreferenceCategory>"""
+    for p in work_dir.rglob("controller_preferences.xml"):
+        text = p.read_text(encoding="utf-8")
+        orig = text
+        if "Pad/GyroToRightStick" not in text:
+            if "</PreferenceScreen>" in text:
+                text = text.replace("</PreferenceScreen>", gyro_category_controller + "\n</PreferenceScreen>")
+                p.write_text(text, encoding="utf-8")
+                print(f"  ✓ Injected Motion & Gyro Aiming category into {p.name}")
 
     # 4. Inject Discord tab into settings_tabs in arrays.xml
     for p in work_dir.rglob("arrays.xml"):
@@ -935,7 +1002,7 @@ def inject_updated_pcsx2_assets(work_dir: Path) -> None:
         print(f"  ✓ Injected updated SDL Controller DB ({controller_db.stat().st_size} bytes)")
 
     # 3. Inject cheats and info assets
-    for asset_name in ["cheats_ws.zip", "cheats_ni.zip", "3rdparty.html", "faq.html"]:
+    for asset_name in ["cheats_ws.zip", "cheats_ni.zip", "3rdparty.html", "faq.html", "PS2.data.json"]:
         src = assets_dir / asset_name
         if src.exists():
             for ad in apk_assets_dirs:
@@ -1084,7 +1151,7 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
     for dex_path in dex_files:
         original_bytes = dex_path.read_bytes()
         dex_md5 = hashlib.md5(original_bytes).hexdigest()
-        cache_key = f"{dex_md5}_{pcsx2_ver}_qol_features_v23_{'mali' if is_mali else 'adreno'}"
+        cache_key = f"{dex_md5}_{pcsx2_ver}_qol_features_v24_{'mali' if is_mali else 'adreno'}"
 
         if cache_key in _DEX_CACHE:
             patched_bytes = _DEX_CACHE[cache_key]

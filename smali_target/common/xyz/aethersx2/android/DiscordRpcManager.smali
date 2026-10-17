@@ -1719,6 +1719,12 @@
 
     move-result-object v13
 
+    move-object/from16 v0, p1
+
+    invoke-static {v1, v0}, Lxyz/aethersx2/android/GameDataResolver;->resolveGameTitle(Landroid/content/Context;Ljava/lang/String;)Ljava/lang/String;
+
+    move-result-object v13
+
     .line 75
     sput-object v13, Lxyz/aethersx2/android/DiscordRpcManager;->sCurrentGame:Ljava/lang/String;
 

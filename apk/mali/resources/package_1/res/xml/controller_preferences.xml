@@ -38,4 +38,27 @@
                           app:summary="@string/settings_summary_multitap"
                           app:title="@string/settings_multitap_port_2" />
   </PreferenceCategory>
+  <PreferenceCategory app:iconSpaceReserved="false"
+                      app:title="Motion &amp; Gyro Aiming">
+    <SwitchPreferenceCompat app:defaultValue="false"
+                          app:iconSpaceReserved="false"
+                          app:key="Pad/GyroToRightStick"
+                          app:summary="Maps device gyroscope motion to the right analog stick for gyro aiming."
+                          app:title="Enable Gyro Aiming" />
+    <SeekBarPreference app:defaultValue="60"
+                       app:dependency="Pad/GyroToRightStick"
+                       app:iconSpaceReserved="false"
+                       app:key="Pad/GyroSensitivity"
+                       app:min="5"
+                       app:seekBarIncrement="5"
+                       app:showSeekBarValue="true"
+                       app:summary="Adjust gyro aiming sensitivity percentage (Default: 60%)"
+                       app:title="Gyro Sensitivity" />
+    <SwitchPreferenceCompat app:defaultValue="false"
+                          app:dependency="Pad/GyroToRightStick"
+                          app:iconSpaceReserved="false"
+                          app:key="Pad/GyroInvertY"
+                          app:summary="Inverts vertical (pitch) axis for gyro aiming."
+                          app:title="Invert Gyro Y-Axis" />
+  </PreferenceCategory>
 </PreferenceScreen>
