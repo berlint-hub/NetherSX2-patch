@@ -1084,7 +1084,7 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
     for dex_path in dex_files:
         original_bytes = dex_path.read_bytes()
         dex_md5 = hashlib.md5(original_bytes).hexdigest()
-        cache_key = f"{dex_md5}_{pcsx2_ver}_qol_features_v19_{'mali' if is_mali else 'adreno'}"
+        cache_key = f"{dex_md5}_{pcsx2_ver}_qol_features_v20_{'mali' if is_mali else 'adreno'}"
 
         if cache_key in _DEX_CACHE:
             patched_bytes = _DEX_CACHE[cache_key]
@@ -2694,6 +2694,93 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
             shutil.rmtree(temp_dir, ignore_errors=True)
 
 
+def inject_discord_tab_resources(work_dir: Path, is_mali: bool = False) -> None:
+    """Inject discord_preferences.xml, public.xml ID, and arrays.xml tab title into work_dir."""
+    discord_xml_id = "0x7f130017" if is_mali else "0x7f130018"
+    discord_xml_content = """<?xml version='1.0' encoding='utf-8' ?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+  <PreferenceCategory app:iconSpaceReserved="false"
+                      app:title="Discord Rich Presence">
+    <SwitchPreferenceCompat app:defaultValue="true"
+                          app:iconSpaceReserved="false"
+                          app:key="UI/EnableDiscordRpc"
+                          app:summary="Broadcasts current game to Discord RPC (Standalone Gateway, Kizzy, or Discord-App-RPC)."
+                          app:title="Enable Discord Rich Presence" />
+    <SwitchPreferenceCompat app:defaultValue="true"
+                          app:dependency="UI/EnableDiscordRpc"
+                          app:iconSpaceReserved="false"
+                          app:key="UI/DiscordShowTime"
+                          app:summary="Displays elapsed playing time on Discord."
+                          app:title="Show Elapsed Playtime" />
+  </PreferenceCategory>
+  <PreferenceCategory app:iconSpaceReserved="false"
+                      app:title="Direct Discord Gateway (Standalone)">
+    <EditTextPreference app:dependency="UI/EnableDiscordRpc"
+                        app:dialogTitle="Discord User Token"
+                        app:iconSpaceReserved="false"
+                        app:key="UI/DiscordToken"
+                        app:summary="Direct Discord Gateway connection (no external apps needed). Leave empty to use Kizzy / local RPC."
+                        app:title="Discord User Token" />
+    <EditTextPreference app:defaultValue="1196160538965807185"
+                        app:dependency="UI/EnableDiscordRpc"
+                        app:dialogTitle="Discord Application ID"
+                        app:iconSpaceReserved="false"
+                        app:key="UI/DiscordClientId"
+                        app:summary="Application ID for Rich Presence (Default: 1196160538965807185)"
+                        app:title="Discord Application (Client) ID" />
+  </PreferenceCategory>
+  <PreferenceCategory app:iconSpaceReserved="false"
+                      app:title="External Apps &amp; Media Detection">
+    <SwitchPreferenceCompat app:defaultValue="true"
+                          app:dependency="UI/EnableDiscordRpc"
+                          app:iconSpaceReserved="false"
+                          app:key="UI/EnableMediaSessionRpc"
+                          app:summary="Registers Android MediaSession so Kizzy and external media listeners can detect the active game."
+                          app:title="Enable Media RPC / Kizzy Detection" />
+  </PreferenceCategory>
+  <PreferenceCategory app:iconSpaceReserved="false"
+                      app:title="Information">
+    <Preference app:iconSpaceReserved="false"
+                app:summary="• Standalone Mode: Paste your Discord User Token above to show rich status directly on your Discord profile without any background apps.&#10;• Kizzy Mode: Leave token empty, open Kizzy, enable 'Media RPC', and toggle NetherSX2 ON."
+                app:title="How to Use" />
+  </PreferenceCategory>
+</PreferenceScreen>
+"""
+    # 1. Write discord_preferences.xml into every res/xml directory
+    xml_written = 0
+    for xml_dir in work_dir.rglob("res/xml"):
+        if xml_dir.is_dir():
+            target_xml = xml_dir / "discord_preferences.xml"
+            target_xml.write_text(discord_xml_content, encoding="utf-8")
+            xml_written += 1
+    print(f"  ✓ Injected discord_preferences.xml into {xml_written} xml directory(ies)")
+
+    # 2. Add discord_preferences to public.xml
+    pub_entry = f'  <public id="{discord_xml_id}" type="xml" name="discord_preferences" />\n'
+    for pub_path in work_dir.rglob("public.xml"):
+        content = pub_path.read_text(encoding="utf-8")
+        if 'name="discord_preferences"' not in content:
+            if "</resources>" in content:
+                content = content.replace("</resources>", pub_entry + "</resources>")
+            else:
+                content += "\n" + pub_entry
+            pub_path.write_text(content, encoding="utf-8")
+            print(f"  ✓ Added discord_preferences ({discord_xml_id}) to {pub_path.name}")
+
+    # 3. Add Discord to settings_tabs in arrays.xml
+    tab_item = "    <item>Discord</item>\n"
+    arrays_patched = 0
+    for arr_path in work_dir.rglob("arrays.xml"):
+        content = arr_path.read_text(encoding="utf-8")
+        if 'name="settings_tabs"' in content and "<item>Discord</item>" not in content:
+            pattern = r'(<string-array\b[^>]*name="settings_tabs"[^>]*>.*?)(\s*</string-array>)'
+            new_content, count = re.subn(pattern, rf"\g<1>\n{tab_item}\g<2>", content, flags=re.DOTALL)
+            if count > 0:
+                arr_path.write_text(new_content, encoding="utf-8")
+                arrays_patched += count
+    print(f"  ✓ Injected 'Discord' tab into {arrays_patched} arrays.xml files")
+
+
 def inject_scale_multiplier(input_apk: Path, output_apk: Path, work_name: str, is_mali: bool = False, is_switch: bool = False) -> None:
     work_dir = REPO_ROOT / work_name
     if work_dir.exists():
@@ -2711,6 +2798,9 @@ def inject_scale_multiplier(input_apk: Path, output_apk: Path, work_name: str, i
 
     # Inject QoL preference switches (Auto Covers, Discord RPC, Gyro) and default settings
     patch_ui_preferences(work_dir, is_mali=is_mali)
+
+    # Inject dedicated Discord tab resources into work_dir
+    inject_discord_tab_resources(work_dir, is_mali=is_mali)
 
     # Patch DEX to show PCSX2 version in Show Version dialog
     patch_dex_pcsx2_version(work_dir, is_mali=is_mali)
@@ -2942,8 +3032,8 @@ def verify_all(target_apks: list[Path] | None = None) -> None:
                     raise SystemExit(f"ERROR: classes.dex in {apk.name} missing GyroToRightStickManager!")
                 if b"ExternalControllerHelper" not in dex_bytes:
                     raise SystemExit(f"ERROR: classes.dex in {apk.name} missing ExternalControllerHelper!")
-                if b"AutoCoversDownloader" not in dex_bytes:
-                    raise SystemExit(f"ERROR: classes.dex in {apk.name} missing AutoCoversDownloader!")
+                if "res/xml/discord_preferences.xml" not in z.namelist():
+                    raise SystemExit(f"ERROR: res/xml/discord_preferences.xml missing in {apk.name}!")
                 verify_dex_integrity(dex_bytes)
             for item in z.namelist():
                 if "menu_main_navigation" in item:
