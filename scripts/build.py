@@ -1084,7 +1084,7 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
     for dex_path in dex_files:
         original_bytes = dex_path.read_bytes()
         dex_md5 = hashlib.md5(original_bytes).hexdigest()
-        cache_key = f"{dex_md5}_{pcsx2_ver}_qol_features_v22_{'mali' if is_mali else 'adreno'}"
+        cache_key = f"{dex_md5}_{pcsx2_ver}_qol_features_v23_{'mali' if is_mali else 'adreno'}"
 
         if cache_key in _DEX_CACHE:
             patched_bytes = _DEX_CACHE[cache_key]
@@ -2714,12 +2714,12 @@ def inject_discord_tab_resources(work_dir: Path, is_mali: bool = False) -> None:
                           app:title="Show Elapsed Playtime" />
   </PreferenceCategory>
   <PreferenceCategory app:iconSpaceReserved="false"
-                      app:title="Direct Discord Gateway (Standalone)">
+                      app:title="Discord Gateway">
     <EditTextPreference app:dependency="UI/EnableDiscordRpc"
                         app:dialogTitle="Discord User Token"
                         app:iconSpaceReserved="false"
                         app:key="UI/DiscordToken"
-                        app:summary="Direct Discord Gateway connection. Paste your account token to display activity."
+                        app:summary="Discord Gateway connection. Paste your account token to display activity."
                         app:title="Discord User Token" />
     <EditTextPreference app:defaultValue="1560829866645917746"
                         app:dependency="UI/EnableDiscordRpc"

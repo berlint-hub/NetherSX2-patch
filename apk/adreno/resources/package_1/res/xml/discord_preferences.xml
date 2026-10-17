@@ -15,12 +15,12 @@
                           app:title="Show Elapsed Playtime" />
   </PreferenceCategory>
   <PreferenceCategory app:iconSpaceReserved="false"
-                      app:title="Direct Discord Gateway (Standalone)">
+                      app:title="Discord Gateway">
     <EditTextPreference app:dependency="UI/EnableDiscordRpc"
                         app:dialogTitle="Discord User Token"
                         app:iconSpaceReserved="false"
                         app:key="UI/DiscordToken"
-                        app:summary="Direct Discord Gateway connection. Paste your account token to display activity."
+                        app:summary="Discord Gateway connection. Paste your account token to display activity."
                         app:title="Discord User Token" />
     <EditTextPreference app:defaultValue="1560829866645917746"
                         app:dependency="UI/EnableDiscordRpc"
