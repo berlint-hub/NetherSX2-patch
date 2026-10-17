@@ -22,12 +22,12 @@
                         app:key="UI/DiscordToken"
                         app:summary="Direct Discord Gateway connection (no external apps needed). Leave empty to use Kizzy / local RPC."
                         app:title="Discord User Token" />
-    <EditTextPreference app:defaultValue="1196160538965807185"
+    <EditTextPreference app:defaultValue="1560829866645917746"
                         app:dependency="UI/EnableDiscordRpc"
                         app:dialogTitle="Discord Application ID"
                         app:iconSpaceReserved="false"
                         app:key="UI/DiscordClientId"
-                        app:summary="Application ID for Rich Presence (Default: 1196160538965807185)"
+                        app:summary="Application ID for Rich Presence (Default: 1560829866645917746)"
                         app:title="Discord Application (Client) ID" />
   </PreferenceCategory>
   <PreferenceCategory app:iconSpaceReserved="false"

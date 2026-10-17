@@ -4,7 +4,7 @@
 
 
 # static fields
-.field private static final DEFAULT_CLIENT_ID:Ljava/lang/String; = "1196160538965807185"
+.field private static final DEFAULT_CLIENT_ID:Ljava/lang/String; = "1560829866645917746"
 
 .field private static final TAG:Ljava/lang/String; = "DiscordRpc"
 
@@ -754,7 +754,7 @@
 
     move-result-object v0
 
-    const-string v5, ",\"assets\":{\"large_image\":\"nethersx2\",\"large_text\":\"NetherSX2\"}}],\"afk\":false}}}"
+    const-string v5, ",\"assets\":{\"large_image\":\"app\",\"large_text\":\"NetherSX2\"}}],\"afk\":false}}}"
 
     invoke-virtual {v0, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
 
@@ -1188,7 +1188,7 @@
 
     move-result-object v3
 
-    const-string v4, "},\"assets\":{\"large_image\":\"nethersx2\",\"large_text\":\"NetherSX2\"}}},\"nonce\":\"1\"}"
+    const-string v4, "},\"assets\":{\"large_image\":\"app\",\"large_text\":\"NetherSX2\"}}},\"nonce\":\"1\"}"
 
     invoke-virtual {v3, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
 
@@ -1509,7 +1509,7 @@
     .line 50
     const-string v8, ""
 
-    const-string v9, "1196160538965807185"
+    const-string v9, "1560829866645917746"
 
     const-string v10, "DiscordRpc"
 
@@ -2221,7 +2221,7 @@
     .line 142
     const-string v9, "large_image"
 
-    const-string v11, "nethersx2"
+    const-string v11, "app"
 
     invoke-virtual {v0, v9, v11}, Landroid/content/Intent;->putExtra(Ljava/lang/String;Ljava/lang/String;)Landroid/content/Intent;
 
