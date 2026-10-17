@@ -322,24 +322,26 @@
     .line 355
     invoke-direct {p0, p1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getSelectableItemBackground(Landroid/content/Context;)I
 
-    move-result p1
-
-    invoke-virtual {v0, p1}, Landroid/widget/RelativeLayout;->setBackgroundResource(I)V
+    move-result v1
 
     .line 356
-    const/4 p1, 0x1
-
-    invoke-virtual {v0, p1}, Landroid/widget/RelativeLayout;->setClickable(Z)V
+    invoke-virtual {v0, v1}, Landroid/widget/RelativeLayout;->setBackgroundResource(I)V
 
     .line 357
-    invoke-virtual {v0, p1}, Landroid/widget/RelativeLayout;->setFocusable(Z)V
+    const/4 v1, 0x1
 
     .line 358
+    invoke-virtual {v0, v1}, Landroid/widget/RelativeLayout;->setClickable(Z)V
+
+    .line 359
+    invoke-virtual {v0, v1}, Landroid/widget/RelativeLayout;->setFocusable(Z)V
+
+    .line 360
     return-object v0
 .end method
 
 .method private createTextColumn(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;)Landroid/widget/LinearLayout;
-    .registers 8
+    .registers 9
 
     .line 362
     new-instance v0, Landroid/widget/LinearLayout;
@@ -360,23 +362,23 @@
     invoke-virtual {v1, p2}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
 
     .line 367
-    const/high16 p2, 0x41880000    # 17.0f
+    const/high16 v2, 0x41880000    # 17.0f
 
-    const/4 v2, 0x2
+    const/4 v3, 0x2
 
-    invoke-virtual {v1, v2, p2}, Landroid/widget/TextView;->setTextSize(IF)V
+    invoke-virtual {v1, v3, v2}, Landroid/widget/TextView;->setTextSize(IF)V
 
     .line 368
-    sget-object p2, Landroid/graphics/Typeface;->DEFAULT_BOLD:Landroid/graphics/Typeface;
+    sget-object v2, Landroid/graphics/Typeface;->DEFAULT_BOLD:Landroid/graphics/Typeface;
 
-    invoke-virtual {v1, p2}, Landroid/widget/TextView;->setTypeface(Landroid/graphics/Typeface;)V
+    invoke-virtual {v1, v2}, Landroid/widget/TextView;->setTypeface(Landroid/graphics/Typeface;)V
 
     .line 369
     invoke-direct {p0, p1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getPrimaryTextColor(Landroid/content/Context;)I
 
-    move-result p2
+    move-result v2
 
-    invoke-virtual {v1, p2}, Landroid/widget/TextView;->setTextColor(I)V
+    invoke-virtual {v1, v2}, Landroid/widget/TextView;->setTextColor(I)V
 
     .line 370
     invoke-virtual {v0, v1}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
@@ -386,41 +388,39 @@
 
     invoke-direct {v1, p1}, Landroid/widget/TextView;-><init>(Landroid/content/Context;)V
 
-    .line 373
     invoke-virtual {v1, p3}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
 
     .line 374
-    const/high16 p3, 0x41500000    # 13.0f
+    const/high16 v2, 0x41500000    # 13.0f
 
-    invoke-virtual {v1, v2, p3}, Landroid/widget/TextView;->setTextSize(IF)V
+    invoke-virtual {v1, v3, v2}, Landroid/widget/TextView;->setTextSize(IF)V
 
-    .line 375
     invoke-direct {p0, p1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getSecondaryTextColor(Landroid/content/Context;)I
 
-    move-result p2
+    move-result v2
 
-    invoke-virtual {v1, p2}, Landroid/widget/TextView;->setTextColor(I)V
+    invoke-virtual {v1, v2}, Landroid/widget/TextView;->setTextColor(I)V
 
     .line 376
-    new-instance p2, Landroid/widget/LinearLayout$LayoutParams;
+    new-instance v4, Landroid/widget/LinearLayout$LayoutParams;
 
-    const/4 p3, -0x1
+    const/4 v2, -0x1
 
-    const/4 v2, -0x2
+    const/4 v3, -0x2
 
-    invoke-direct {p2, p3, v2}, Landroid/widget/LinearLayout$LayoutParams;-><init>(II)V
+    invoke-direct {v4, v2, v3}, Landroid/widget/LinearLayout$LayoutParams;-><init>(II)V
 
     .line 378
-    const/4 p3, 0x4
+    const/4 v2, 0x4
 
-    invoke-direct {p0, p1, p3}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
+    invoke-direct {p0, p1, v2}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->dp(Landroid/content/Context;I)I
 
-    move-result p1
+    move-result v2
 
-    iput p1, p2, Landroid/widget/LinearLayout$LayoutParams;->topMargin:I
+    iput v2, v4, Landroid/widget/LinearLayout$LayoutParams;->topMargin:I
 
     .line 379
-    invoke-virtual {v1, p2}, Landroid/widget/TextView;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
+    invoke-virtual {v1, v4}, Landroid/widget/TextView;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
 
     .line 380
     invoke-virtual {v0, v1}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
@@ -430,7 +430,7 @@
 .end method
 
 .method private dp(Landroid/content/Context;I)I
-    .registers 4
+    .registers 6
 
     .line 402
     if-nez p1, :cond_3
@@ -439,35 +439,31 @@
 
     .line 403
     :cond_3
-    int-to-float p2, p2
+    int-to-float v0, p2
 
     .line 404
     invoke-virtual {p1}, Landroid/content/Context;->getResources()Landroid/content/res/Resources;
 
-    move-result-object p1
+    move-result-object v1
 
-    invoke-virtual {p1}, Landroid/content/Context;->getResources()Landroid/content/res/Resources;
+    invoke-virtual {v1}, Landroid/content/res/Resources;->getDisplayMetrics()Landroid/util/DisplayMetrics;
 
-    move-result-object p1
+    move-result-object v1
 
-    invoke-virtual {p1}, Landroid/content/res/Resources;->getDisplayMetrics()Landroid/util/DisplayMetrics;
+    .line 405
+    const/4 v2, 0x1
 
-    move-result-object p1
+    invoke-static {v2, v0, v1}, Landroid/util/TypedValue;->applyDimension(IFLandroid/util/DisplayMetrics;)F
 
-    .line 403
-    const/4 v0, 0x1
+    move-result v0
 
-    invoke-static {v0, p2, p1}, Landroid/util/TypedValue;->applyDimension(IFLandroid/util/DisplayMetrics;)F
+    float-to-int v0, v0
 
-    move-result p1
-
-    float-to-int p1, p1
-
-    return p1
+    return v0
 .end method
 
 .method private getAppDrawable(Landroid/content/Context;Ljava/lang/String;)Landroid/graphics/drawable/Drawable;
-    .registers 7
+    .registers 8
 
     .line 393
     const/4 v0, 0x0
@@ -490,74 +486,78 @@
 
     invoke-virtual {v1, p2, v2, v3}, Landroid/content/res/Resources;->getIdentifier(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I
 
-    move-result p2
+    move-result v4
 
-    if-nez p2, :cond_10
+    if-nez v4, :cond_10
 
-    const-string p2, "ic_baseline_check_green_24"
+    const-string v0, "ic_baseline_check_green_24"
 
-    invoke-virtual {v1, p2, v2, v3}, Landroid/content/res/Resources;->getIdentifier(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I
+    invoke-virtual {v1, v0, v2, v3}, Landroid/content/res/Resources;->getIdentifier(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I
 
-    move-result p2
+    move-result v4
 
     .line 395
     :cond_10
-    if-eqz p2, :cond_17
+    if-eqz v4, :cond_17
 
     .line 396
-    invoke-virtual {p1, p2}, Landroid/content/Context;->getDrawable(I)Landroid/graphics/drawable/Drawable;
+    invoke-virtual {p1, v4}, Landroid/content/Context;->getDrawable(I)Landroid/graphics/drawable/Drawable;
 
-    move-result-object p1
+    move-result-object v0
 
-    return-object p1
+    return-object v0
 
     .line 398
     :cond_17
+    const/4 v0, 0x0
+
     return-object v0
 .end method
 
 .method private isNightMode(Landroid/content/Context;)Z
-    .registers 3
+    .registers 4
 
     if-nez p1, :cond_4
 
-    const/4 p1, 0x1
+    const/4 v0, 0x1
 
-    return p1
+    return v0
 
     :cond_4
     :try_start_4
     invoke-virtual {p1}, Landroid/content/Context;->getResources()Landroid/content/res/Resources;
 
-    move-result-object p1
+    move-result-object v0
 
-    invoke-virtual {p1}, Landroid/content/res/Resources;->getConfiguration()Landroid/content/res/Configuration;
+    invoke-virtual {v0}, Landroid/content/res/Resources;->getConfiguration()Landroid/content/res/Configuration;
 
-    move-result-object p1
+    move-result-object v0
 
-    iget p1, p1, Landroid/content/res/Configuration;->uiMode:I
+    iget v0, v0, Landroid/content/res/Configuration;->uiMode:I
 
-    and-int/lit8 p1, p1, 0x30
+    and-int/lit8 v0, v0, 0x30
 
-    const/16 v0, 0x20
+    const/16 v1, 0x20
 
-    if-ne p1, v0, :cond_16
+    if-ne v0, v1, :cond_16
 
-    const/4 p1, 0x1
+    const/4 v0, 0x1
 
-    return p1
+    return v0
 
     :cond_16
-    const/4 p1, 0x0
+    const/4 v0, 0x0
 
-    return p1
+    return v0
     :try_end_18
-    .catchall {:try_start_4 .. :try_end_18} :catch_all
+    .catchall {:try_start_4 .. :try_end_18} :catchall_18
 
-    :catch_all
-    const/4 p1, 0x1
+    :catchall_18
+    move-exception v0
 
-    return p1
+    const/4 v0, 0x1
+
+    return v0
 .end method
 
 .method private getPrimaryTextColor(Landroid/content/Context;)I
@@ -565,18 +565,18 @@
 
     invoke-direct {p0, p1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->isNightMode(Landroid/content/Context;)Z
 
-    move-result p1
+    move-result v0
 
-    if-eqz p1, :cond_8
+    if-eqz v0, :cond_8
 
-    const/4 p1, -0x1
+    const/4 v0, -0x1
 
-    return p1
+    return v0
 
     :cond_8
-    const p1, -0xdededf
+    const v0, -0xdededf
 
-    return p1
+    return v0
 .end method
 
 .method private getSecondaryTextColor(Landroid/content/Context;)I
@@ -584,18 +584,18 @@
 
     invoke-direct {p0, p1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->isNightMode(Landroid/content/Context;)Z
 
-    move-result p1
+    move-result v0
 
-    if-eqz p1, :cond_9
+    if-eqz v0, :cond_9
 
-    const p1, -0x4f413b
+    const v0, -0x4f413b
 
-    return p1
+    return v0
 
     :cond_9
-    const p1, -0x8a8a8b
+    const v0, -0x8a8a8b
 
-    return p1
+    return v0
 .end method
 
 .method private getDividerColor(Landroid/content/Context;)I
@@ -603,18 +603,18 @@
 
     invoke-direct {p0, p1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->isNightMode(Landroid/content/Context;)Z
 
-    move-result p1
+    move-result v0
 
-    if-eqz p1, :cond_8
+    if-eqz v0, :cond_8
 
-    const p1, 0x1fffffff
+    const v0, 0x1fffffff
 
-    return p1
+    return v0
 
     :cond_8
-    const p1, 0x1f000000
+    const v0, 0x1f000000
 
-    return p1
+    return v0
 .end method
 
 .method private static getPrefs(Landroid/content/Context;)Landroid/content/SharedPreferences;
@@ -623,20 +623,20 @@
     .line 339
     if-nez p0, :cond_4
 
-    const/4 p0, 0x0
+    const/4 v0, 0x0
 
-    return-object p0
+    return-object v0
 
     .line 341
     :cond_4
     :try_start_4
     invoke-static {p0}, Landroidx/preference/PreferenceManager;->getDefaultSharedPreferences(Landroid/content/Context;)Landroid/content/SharedPreferences;
 
-    move-result-object p0
+    move-result-object v0
     :try_end_8
     .catchall {:try_start_4 .. :try_end_8} :catchall_9
 
-    return-object p0
+    return-object v0
 
     .line 342
     :catchall_9
@@ -669,20 +669,20 @@
 
     invoke-virtual {p0, v0, v1}, Landroid/content/Context;->getSharedPreferences(Ljava/lang/String;I)Landroid/content/SharedPreferences;
 
-    move-result-object p0
+    move-result-object v0
 
-    return-object p0
+    return-object v0
 .end method
 
 .method private getSelectableItemBackground(Landroid/content/Context;)I
-    .registers 5
+    .registers 6
 
     .line 386
     if-nez p1, :cond_4
 
-    const/4 p1, 0x0
+    const/4 v0, 0x0
 
-    return p1
+    return v0
 
     .line 387
     :cond_4
@@ -693,18 +693,18 @@
     .line 388
     invoke-virtual {p1}, Landroid/content/Context;->getTheme()Landroid/content/res/Resources$Theme;
 
-    move-result-object p1
+    move-result-object v1
 
-    const v1, 0x101030e
+    const v2, 0x101030e
 
-    const/4 v2, 0x1
+    const/4 v3, 0x1
 
-    invoke-virtual {p1, v1, v0, v2}, Landroid/content/res/Resources$Theme;->resolveAttribute(ILandroid/util/TypedValue;Z)Z
+    invoke-virtual {v1, v2, v0, v3}, Landroid/content/res/Resources$Theme;->resolveAttribute(ILandroid/util/TypedValue;Z)Z
 
     .line 389
-    iget p1, v0, Landroid/util/TypedValue;->resourceId:I
+    iget v0, v0, Landroid/util/TypedValue;->resourceId:I
 
-    return p1
+    return v0
 .end method
 
 .method private openFolderPicker()V
@@ -1695,9 +1695,9 @@
     .line 132
     invoke-direct {v0, v1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getDividerColor(Landroid/content/Context;)I
 
-    move-result v9
+    move-result v14
 
-    invoke-virtual {v8, v9}, Landroid/view/View;->setBackgroundColor(I)V
+    invoke-virtual {v8, v14}, Landroid/view/View;->setBackgroundColor(I)V
 
     .line 133
     invoke-virtual {v5, v8}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
