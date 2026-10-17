@@ -614,6 +614,18 @@ def patch_ui_preferences(work_dir: Path, is_mali: bool = False) -> None:
             p.write_text(text, encoding="utf-8")
             print(f"  ✓ Injected/configured Gyro to Right Stick and Auto-Hide in {p.name}")
 
+    # 4. Inject Discord tab into settings_tabs in arrays.xml
+    for p in work_dir.rglob("arrays.xml"):
+        text = p.read_text(encoding="utf-8")
+        if 'name="settings_tabs"' in text and '<item>Discord</item>' not in text:
+            text = re.sub(
+                r'(<string-array\s+name="settings_tabs"[^>]*>[\s\S]*?)(</string-array>)',
+                r'\1    <item>Discord</item>\n  \2',
+                text
+            )
+            p.write_text(text, encoding="utf-8")
+            print(f"  ✓ Injected Discord tab into {p.name}")
+
 
 def patch_libemucore_settings_defaults(work_dir: Path) -> None:
     """Patch libemucore.so:
@@ -1072,7 +1084,7 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
     for dex_path in dex_files:
         original_bytes = dex_path.read_bytes()
         dex_md5 = hashlib.md5(original_bytes).hexdigest()
-        cache_key = f"{dex_md5}_{pcsx2_ver}_qol_features_v17_{'mali' if is_mali else 'adreno'}"
+        cache_key = f"{dex_md5}_{pcsx2_ver}_qol_features_v18_{'mali' if is_mali else 'adreno'}"
 
         if cache_key in _DEX_CACHE:
             patched_bytes = _DEX_CACHE[cache_key]
@@ -2606,6 +2618,67 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
                 wizard_sub.write_text(wiz_content, encoding="utf-8")
                 print(f"  ✓ Configured SetupWizardActivity$e$a.smali (Orientation: sensor{' + Renderer: Vulkan 14' if is_mali else ''})")
 
+            # 7. Patch j$d.smali: Add 10th tab (Discord) to Settings ViewPager adapter
+            jd_file = smali_out / "xyz" / "aethersx2" / "android" / "j$d.smali"
+            if jd_file.exists():
+                jd_content = jd_file.read_text(encoding="utf-8")
+                jd_content = re.sub(
+                    r'(\.method public final c\(\)I\s+\.registers 2\s+const/16 v0, )0x9',
+                    r'\g<1>0xa',
+                    jd_content
+                )
+                pswitch_discord = """    :pswitch_discord
+    new-instance p1, Lxyz/aethersx2/android/DiscordPreferenceFragment;
+
+    invoke-direct {p1}, Lxyz/aethersx2/android/DiscordPreferenceFragment;-><init>()V
+
+    return-object p1
+
+"""
+                if ":pswitch_discord" not in jd_content:
+                    jd_content = jd_content.replace("    :pswitch_data_4c", pswitch_discord + "    :pswitch_data_4c")
+                    jd_content = re.sub(r'(:pswitch_9\s+)(\.end packed-switch)', r'\1    :pswitch_discord\n    \2', jd_content)
+                jd_file.write_text(jd_content, encoding="utf-8")
+                print(f"  ✓ Injected Discord tab into j$d.smali")
+
+            # 8. Patch l6/j0.smali: Safe tab title boundary check
+            j0_file = smali_out / "l6" / "j0.smali"
+            if j0_file.exists():
+                j0_content = j0_file.read_text(encoding="utf-8")
+                old_j0 = """    invoke-virtual {v0, v1}, Landroid/content/res/Resources;->getStringArray(I)[Ljava/lang/String;
+
+    move-result-object v0
+
+    aget-object p2, v0, p2
+
+    invoke-virtual {p1, p2}, Lcom/google/android/material/tabs/TabLayout$f;->b(Ljava/lang/CharSequence;)Lcom/google/android/material/tabs/TabLayout$f;
+
+    return-void"""
+                new_j0 = """    invoke-virtual {v0, v1}, Landroid/content/res/Resources;->getStringArray(I)[Ljava/lang/String;
+
+    move-result-object v0
+
+    array-length v1, v0
+
+    if-ge p2, v1, :cond_tab_fallback
+
+    aget-object p2, v0, p2
+
+    invoke-virtual {p1, p2}, Lcom/google/android/material/tabs/TabLayout$f;->b(Ljava/lang/CharSequence;)Lcom/google/android/material/tabs/TabLayout$f;
+
+    return-void
+
+    :cond_tab_fallback
+    const-string p2, "Discord"
+
+    invoke-virtual {p1, p2}, Lcom/google/android/material/tabs/TabLayout$f;->b(Ljava/lang/CharSequence;)Lcom/google/android/material/tabs/TabLayout$f;
+
+    return-void"""
+                if old_j0 in j0_content:
+                    j0_content = j0_content.replace(old_j0, new_j0)
+                    j0_file.write_text(j0_content, encoding="utf-8")
+                    print(f"  ✓ Patched l6/j0.smali with safe Discord tab title resolution")
+
             print(f"  Reassembling {dex_path.name} with smali...")
             patched_dex = temp_dir / "classes.dex"
             run_cmd(smali_cmd + ["assemble", str(smali_out), "-o", str(patched_dex)])
@@ -2868,6 +2941,8 @@ def verify_all(target_apks: list[Path] | None = None) -> None:
                     raise SystemExit(f"ERROR: classes.dex in {apk.name} missing ExternalControllerHelper!")
                 if b"AutoCoversDownloader" not in dex_bytes:
                     raise SystemExit(f"ERROR: classes.dex in {apk.name} missing AutoCoversDownloader!")
+                if b"DiscordPreferenceFragment" not in dex_bytes:
+                    raise SystemExit(f"ERROR: classes.dex in {apk.name} missing DiscordPreferenceFragment!")
                 verify_dex_integrity(dex_bytes)
             for item in z.namelist():
                 if "menu_main_navigation" in item:

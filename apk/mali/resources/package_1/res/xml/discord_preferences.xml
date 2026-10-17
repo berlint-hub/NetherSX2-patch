@@ -1,0 +1,48 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+  <PreferenceCategory app:iconSpaceReserved="false"
+                      app:title="Discord Rich Presence">
+    <SwitchPreferenceCompat app:defaultValue="true"
+                          app:iconSpaceReserved="false"
+                          app:key="UI/EnableDiscordRpc"
+                          app:summary="Broadcasts current game to Discord RPC (Standalone Gateway, Kizzy, or Discord-App-RPC)."
+                          app:title="Enable Discord Rich Presence" />
+    <SwitchPreferenceCompat app:defaultValue="true"
+                          app:dependency="UI/EnableDiscordRpc"
+                          app:iconSpaceReserved="false"
+                          app:key="UI/DiscordShowTime"
+                          app:summary="Displays elapsed playing time on Discord."
+                          app:title="Show Elapsed Playtime" />
+  </PreferenceCategory>
+  <PreferenceCategory app:iconSpaceReserved="false"
+                      app:title="Direct Discord Gateway (Standalone)">
+    <EditTextPreference app:dependency="UI/EnableDiscordRpc"
+                        app:dialogTitle="Discord User Token"
+                        app:iconSpaceReserved="false"
+                        app:key="UI/DiscordToken"
+                        app:summary="Direct Discord Gateway connection (no external apps needed). Leave empty to use Kizzy / local RPC."
+                        app:title="Discord User Token" />
+    <EditTextPreference app:defaultValue="1196160538965807185"
+                        app:dependency="UI/EnableDiscordRpc"
+                        app:dialogTitle="Discord Application ID"
+                        app:iconSpaceReserved="false"
+                        app:key="UI/DiscordClientId"
+                        app:summary="Application ID for Rich Presence (Default: 1196160538965807185)"
+                        app:title="Discord Application (Client) ID" />
+  </PreferenceCategory>
+  <PreferenceCategory app:iconSpaceReserved="false"
+                      app:title="External Apps &amp; Media Detection">
+    <SwitchPreferenceCompat app:defaultValue="true"
+                          app:dependency="UI/EnableDiscordRpc"
+                          app:iconSpaceReserved="false"
+                          app:key="UI/EnableMediaSessionRpc"
+                          app:summary="Registers Android MediaSession so Kizzy and external media listeners can detect the active game."
+                          app:title="Enable Media RPC / Kizzy Detection" />
+  </PreferenceCategory>
+  <PreferenceCategory app:iconSpaceReserved="false"
+                      app:title="Information">
+    <Preference app:iconSpaceReserved="false"
+                app:summary="• Standalone Mode: Paste your Discord User Token above to show rich status directly on your Discord profile without any background apps.&#10;• Kizzy Mode: Leave token empty, open Kizzy, enable 'Media RPC', and toggle NetherSX2 ON."
+                app:title="How to Use" />
+  </PreferenceCategory>
+</PreferenceScreen>

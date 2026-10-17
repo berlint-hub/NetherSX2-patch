@@ -246,6 +246,7 @@
     <item>BIOS</item>
     <item>Succès</item>
     <item>Avancé</item>
+      <item>Discord</item>
   </string-array>
   <string-array name="settings_touchscreen_controller_port_entries">
     <item>Port 1</item>

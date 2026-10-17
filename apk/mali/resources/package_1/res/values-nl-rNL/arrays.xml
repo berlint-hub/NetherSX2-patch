@@ -240,6 +240,7 @@
     <item>BIOS</item>
     <item>Prestaties</item>
     <item>Geavanceerd</item>
+      <item>Discord</item>
   </string-array>
   <string-array name="settings_touchscreen_controller_port_entries">
     <item>Poort 1</item>

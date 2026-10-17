@@ -246,6 +246,7 @@
     <item>ไบออส</item>
     <item>เป้าหมายความสำเร็จ</item>
     <item>ขั้นสูง</item>
+      <item>Discord</item>
   </string-array>
   <string-array name="settings_touchscreen_controller_port_entries">
     <item>พอร์ต 1</item>

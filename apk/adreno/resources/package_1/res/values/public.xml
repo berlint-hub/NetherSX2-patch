@@ -5783,4 +5783,5 @@
   <public id="0x7f130014" type="xml" name="system_game_settings_preferences" />
   <public id="0x7f130015" type="xml" name="system_preferences" />
   <public id="0x7f130016" type="xml" name="touchscreen_controller_preferences" />
+  <public id="0x7f130018" type="xml" name="discord_preferences" />
 </resources>

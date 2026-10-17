@@ -246,6 +246,7 @@
     <item>BIOS</item>
     <item>成就</item>
     <item>進階</item>
+      <item>Discord</item>
   </string-array>
   <string-array name="settings_touchscreen_controller_port_entries">
     <item>連接埠 1</item>

@@ -246,6 +246,7 @@
     <item>BIOS</item>
     <item>دەستکەوتەکان</item>
     <item>پێشکەوتوو</item>
+      <item>Discord</item>
   </string-array>
   <string-array name="settings_touchscreen_controller_port_entries">
     <item>دەروازە 1</item>

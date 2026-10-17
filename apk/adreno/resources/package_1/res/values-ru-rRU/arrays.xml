@@ -246,6 +246,7 @@
     <item>BIOS</item>
     <item>Достижения</item>
     <item>Расширенные</item>
+      <item>Discord</item>
   </string-array>
   <string-array name="settings_touchscreen_controller_port_entries">
     <item>Порт 1</item>

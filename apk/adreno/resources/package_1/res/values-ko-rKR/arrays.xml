@@ -246,6 +246,7 @@
     <item>바이오스</item>
     <item>업적</item>
     <item>고급</item>
+      <item>Discord</item>
   </string-array>
   <string-array name="settings_touchscreen_controller_port_entries">
     <item>포트 1</item>

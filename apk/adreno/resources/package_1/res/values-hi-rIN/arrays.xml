@@ -101,6 +101,7 @@
     <item>बायोस</item>
     <item>Achievements</item>
     <item>Advanced</item>
+      <item>Discord</item>
   </string-array>
   <string-array name="settings_touchscreen_controller_port_entries">
     <item>पोर्ट 1</item>
