@@ -544,7 +544,7 @@ def patch_ui_preferences(work_dir: Path, is_mali: bool = False) -> None:
     discord_rpc_tag = """    <SwitchPreferenceCompat app:defaultValue="true"
                           app:iconSpaceReserved="false"
                           app:key="UI/EnableDiscordRpc"
-                          app:summary="Broadcasts current game to Discord RPC (Kizzy / Discord-App-RPC)."
+                          app:summary="Broadcasts current game to Discord Rich Presence."
                           app:title="Discord Rich Presence" />"""
 
     for p in work_dir.rglob("general_preferences.xml"):
@@ -576,7 +576,7 @@ def patch_ui_preferences(work_dir: Path, is_mali: bool = False) -> None:
     # 2. general_game_settings_preferences.xml
     discord_rpc_tristate = """    <xyz.aethersx2.android.TriStatePreference app:iconSpaceReserved="false"
                           app:key="UI/EnableDiscordRpc"
-                          app:summary="Broadcasts current game to Discord RPC (Kizzy / Discord-App-RPC)."
+                          app:summary="Broadcasts current game to Discord Rich Presence."
                           app:title="Discord Rich Presence"
                           app:useSimpleSummaryProvider="true" />"""
     for p in work_dir.rglob("general_game_settings_preferences.xml"):
@@ -1084,7 +1084,7 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
     for dex_path in dex_files:
         original_bytes = dex_path.read_bytes()
         dex_md5 = hashlib.md5(original_bytes).hexdigest()
-        cache_key = f"{dex_md5}_{pcsx2_ver}_qol_features_v21_{'mali' if is_mali else 'adreno'}"
+        cache_key = f"{dex_md5}_{pcsx2_ver}_qol_features_v22_{'mali' if is_mali else 'adreno'}"
 
         if cache_key in _DEX_CACHE:
             patched_bytes = _DEX_CACHE[cache_key]
@@ -2704,7 +2704,7 @@ def inject_discord_tab_resources(work_dir: Path, is_mali: bool = False) -> None:
     <SwitchPreferenceCompat app:defaultValue="true"
                           app:iconSpaceReserved="false"
                           app:key="UI/EnableDiscordRpc"
-                          app:summary="Broadcasts current game to Discord RPC (Standalone Gateway, Kizzy, or Discord-App-RPC)."
+                          app:summary="Broadcasts current game to Discord Rich Presence."
                           app:title="Enable Discord Rich Presence" />
     <SwitchPreferenceCompat app:defaultValue="true"
                           app:dependency="UI/EnableDiscordRpc"
@@ -2719,7 +2719,7 @@ def inject_discord_tab_resources(work_dir: Path, is_mali: bool = False) -> None:
                         app:dialogTitle="Discord User Token"
                         app:iconSpaceReserved="false"
                         app:key="UI/DiscordToken"
-                        app:summary="Direct Discord Gateway connection (no external apps needed). Leave empty to use Kizzy / local RPC."
+                        app:summary="Direct Discord Gateway connection. Paste your account token to display activity."
                         app:title="Discord User Token" />
     <EditTextPreference app:defaultValue="1560829866645917746"
                         app:dependency="UI/EnableDiscordRpc"
@@ -2730,18 +2730,9 @@ def inject_discord_tab_resources(work_dir: Path, is_mali: bool = False) -> None:
                         app:title="Discord Application (Client) ID" />
   </PreferenceCategory>
   <PreferenceCategory app:iconSpaceReserved="false"
-                      app:title="External Apps &amp; Media Detection">
-    <SwitchPreferenceCompat app:defaultValue="true"
-                          app:dependency="UI/EnableDiscordRpc"
-                          app:iconSpaceReserved="false"
-                          app:key="UI/EnableMediaSessionRpc"
-                          app:summary="Registers Android MediaSession so Kizzy and external media listeners can detect the active game."
-                          app:title="Enable Media RPC / Kizzy Detection" />
-  </PreferenceCategory>
-  <PreferenceCategory app:iconSpaceReserved="false"
                       app:title="Information">
     <Preference app:iconSpaceReserved="false"
-                app:summary="• Standalone Mode: Paste your Discord User Token above to show rich status directly on your Discord profile without any background apps.&#10;• Kizzy Mode: Leave token empty, open Kizzy, enable 'Media RPC', and toggle NetherSX2 ON."
+                app:summary="Paste your Discord User Token above to show rich status directly on your Discord profile without any background apps."
                 app:title="How to Use" />
   </PreferenceCategory>
 </PreferenceScreen>

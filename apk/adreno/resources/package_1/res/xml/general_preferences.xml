@@ -39,7 +39,7 @@
     <SwitchPreferenceCompat app:defaultValue="true"
                           app:iconSpaceReserved="false"
                           app:key="UI/EnableDiscordRpc"
-                          app:summary="Broadcasts current game to Discord RPC (Kizzy / Discord-App-RPC)."
+                          app:summary="Broadcasts current game to Discord Rich Presence."
                           app:title="Discord Rich Presence" />
     <ListPreference app:defaultValue="-1"
                     app:entries="@array/display_alignment_entries"

@@ -5,7 +5,7 @@
     <SwitchPreferenceCompat app:defaultValue="true"
                           app:iconSpaceReserved="false"
                           app:key="UI/EnableDiscordRpc"
-                          app:summary="Broadcasts current game to Discord RPC (Standalone Gateway, Kizzy, or Discord-App-RPC)."
+                          app:summary="Broadcasts current game to Discord Rich Presence."
                           app:title="Enable Discord Rich Presence" />
     <SwitchPreferenceCompat app:defaultValue="true"
                           app:dependency="UI/EnableDiscordRpc"
@@ -20,7 +20,7 @@
                         app:dialogTitle="Discord User Token"
                         app:iconSpaceReserved="false"
                         app:key="UI/DiscordToken"
-                        app:summary="Direct Discord Gateway connection (no external apps needed). Leave empty to use Kizzy / local RPC."
+                        app:summary="Direct Discord Gateway connection. Paste your account token to display activity."
                         app:title="Discord User Token" />
     <EditTextPreference app:defaultValue="1560829866645917746"
                         app:dependency="UI/EnableDiscordRpc"
@@ -31,18 +31,9 @@
                         app:title="Discord Application (Client) ID" />
   </PreferenceCategory>
   <PreferenceCategory app:iconSpaceReserved="false"
-                      app:title="External Apps &amp; Media Detection">
-    <SwitchPreferenceCompat app:defaultValue="true"
-                          app:dependency="UI/EnableDiscordRpc"
-                          app:iconSpaceReserved="false"
-                          app:key="UI/EnableMediaSessionRpc"
-                          app:summary="Registers Android MediaSession so Kizzy and external media listeners can detect the active game."
-                          app:title="Enable Media RPC / Kizzy Detection" />
-  </PreferenceCategory>
-  <PreferenceCategory app:iconSpaceReserved="false"
                       app:title="Information">
     <Preference app:iconSpaceReserved="false"
-                app:summary="• Standalone Mode: Paste your Discord User Token above to show rich status directly on your Discord profile without any background apps.&#10;• Kizzy Mode: Leave token empty, open Kizzy, enable 'Media RPC', and toggle NetherSX2 ON."
+                app:summary="Paste your Discord User Token above to show rich status directly on your Discord profile without any background apps."
                 app:title="How to Use" />
   </PreferenceCategory>
 </PreferenceScreen>
