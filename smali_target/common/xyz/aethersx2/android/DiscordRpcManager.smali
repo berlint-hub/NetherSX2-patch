@@ -1296,435 +1296,601 @@
 .end method
 
 .method public static start(Landroid/content/Context;Ljava/lang/String;)V
-    .registers 23
+    .registers 18
 
-    move-object/from16 v1, p0
+    move-object/from16 v0, p1
 
-    const-string v7, "NetherSX2"
+    if-nez v0, :cond_check_empty
 
-    if-eqz p1, :cond_2e2
-
-    invoke-virtual/range {p1 .. p1}, Ljava/lang/String;->isEmpty()Z
-    move-result v0
-    if-eqz v0, :cond_18
-    goto/16 :goto_2e2
-
-    :cond_18
-    invoke-static/range {p0 .. p0}, Lxyz/aethersx2/android/DiscordRpcManager;->stop(Landroid/content/Context;)V
-
-    const-string v8, ""
-    const-string v9, "1560829866645917746"
-    const-string v10, "DiscordRpc"
-    const/4 v11, 0x1
-
-    if-eqz v1, :cond_72
-
-    :try_start_29
-    invoke-static/range {p0 .. p0}, Landroidx/preference/PreferenceManager;->getDefaultSharedPreferences(Landroid/content/Context;)Landroid/content/SharedPreferences;
-    move-result-object v0
-    const-string v12, "UI/EnableDiscordRpc"
-    invoke-interface {v0, v12, v11}, Landroid/content/SharedPreferences;->getBoolean(Ljava/lang/String;Z)Z
-    move-result v12
-    if-nez v12, :cond_3b
-    const-string v0, "Discord RPC disabled by user setting"
-    invoke-static {v10, v0}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
     return-void
 
-    :cond_3b
-    const-string v12, "UI/DiscordToken"
-    invoke-interface {v0, v12, v8}, Landroid/content/SharedPreferences;->getString(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-    move-result-object v12
-    invoke-virtual {v12}, Ljava/lang/String;->trim()Ljava/lang/String;
-    move-result-object v8
-    const-string v12, "UI/DiscordClientId"
-    invoke-interface {v0, v12, v9}, Landroid/content/SharedPreferences;->getString(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-    move-result-object v12
-    invoke-virtual {v12}, Ljava/lang/String;->trim()Ljava/lang/String;
-    move-result-object v12
-    :try_end_4f
-    .catchall {:try_start_29 .. :try_end_4f} :catchall_69
+    :cond_check_empty
+    invoke-virtual {v0}, Ljava/lang/String;->isEmpty()Z
 
-    :try_start_4f
-    invoke-virtual {v12}, Ljava/lang/String;->isEmpty()Z
-    move-result v13
-    :try_end_53
-    .catchall {:try_start_4f .. :try_end_53} :catchall_66
+    move-result v1
 
-    if-eqz v13, :cond_56
-    goto :goto_57
+    if-eqz v1, :cond_start_stop
 
-    :cond_56
-    move-object v9, v12
+    return-void
 
-    :goto_57
-    :try_start_57
-    const-string v12, "UI/DiscordShowTime"
-    invoke-interface {v0, v12, v11}, Landroid/content/SharedPreferences;->getBoolean(Ljava/lang/String;Z)Z
-    move-result v12
-    :try_end_5d
-    .catchall {:try_start_57 .. :try_end_5d} :catchall_69
+    :cond_start_stop
+    invoke-static/range {p0 .. p0}, Lxyz/aethersx2/android/DiscordRpcManager;->stop(Landroid/content/Context;)V
 
-    :try_start_5d
-    const-string v13, "UI/EnableMediaSessionRpc"
-    invoke-interface {v0, v13, v11}, Landroid/content/SharedPreferences;->getBoolean(Ljava/lang/String;Z)Z
-    move-result v0
-    :try_end_63
-    .catchall {:try_start_5d .. :try_end_63} :catchall_64
-    goto :goto_74
+    move-object/from16 v2, p0
 
-    :catchall_64
+    const-string v3, ""
+
+    const-string v4, "1560829866645917746"
+
+    const/4 v5, 0x1
+
+    const/4 v6, 0x1
+
+    if-eqz v2, :cond_read_prefs_done
+
+    :try_start_prefs
+    invoke-static {v2}, Landroidx/preference/PreferenceManager;->getDefaultSharedPreferences(Landroid/content/Context;)Landroid/content/SharedPreferences;
+
+    move-result-object v0
+
+    const-string v1, "UI/EnableDiscordRpc"
+
+    const/4 v7, 0x1
+
+    invoke-interface {v0, v1, v7}, Landroid/content/SharedPreferences;->getBoolean(Ljava/lang/String;Z)Z
+
+    move-result v1
+
+    if-nez v1, :cond_prefs_token
+
+    const-string v0, "DiscordRpc"
+
+    const-string v1, "Discord RPC disabled by user setting"
+
+    invoke-static {v0, v1}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
+
+    return-void
+
+    :cond_prefs_token
+    const-string v1, "UI/DiscordToken"
+
+    invoke-interface {v0, v1, v3}, Landroid/content/SharedPreferences;->getString(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+
+    move-result-object v1
+
+    if-eqz v1, :cond_prefs_client
+
+    invoke-virtual {v1}, Ljava/lang/String;->trim()Ljava/lang/String;
+
+    move-result-object v3
+
+    :cond_prefs_client
+    const-string v1, "UI/DiscordClientId"
+
+    invoke-interface {v0, v1, v4}, Landroid/content/SharedPreferences;->getString(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+
+    move-result-object v1
+
+    if-eqz v1, :cond_prefs_showtime
+
+    invoke-virtual {v1}, Ljava/lang/String;->trim()Ljava/lang/String;
+
+    move-result-object v1
+
+    invoke-virtual {v1}, Ljava/lang/String;->isEmpty()Z
+
+    move-result v7
+
+    if-nez v7, :cond_prefs_showtime
+
+    move-object v4, v1
+
+    :cond_prefs_showtime
+    const-string v1, "UI/DiscordShowTime"
+
+    invoke-interface {v0, v1, v5}, Landroid/content/SharedPreferences;->getBoolean(Ljava/lang/String;Z)Z
+
+    move-result v5
+
+    const-string v1, "UI/EnableMediaSessionRpc"
+
+    invoke-interface {v0, v1, v6}, Landroid/content/SharedPreferences;->getBoolean(Ljava/lang/String;Z)Z
+
+    move-result v6
+    :try_end_prefs
+    .catchall {:try_start_prefs .. :try_end_prefs} :catchall_prefs
+
+    goto :cond_read_prefs_done
+
+    :catchall_prefs
     move-exception v0
-    goto :goto_6b
 
-    :catchall_66
-    move-exception v0
-    move-object v9, v12
-    goto :goto_6a
+    const-string v1, "DiscordRpc"
 
-    :catchall_69
-    move-exception v0
-    :goto_6a
-    move v12, v11
+    const-string v7, "Failed to read Discord RPC preference"
 
-    :goto_6b
-    const-string v13, "Failed to read Discord RPC preference"
-    invoke-static {v10, v13, v0}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
-    move v0, v11
-    goto :goto_74
+    invoke-static {v1, v7, v0}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
 
-    :cond_72
-    move v0, v11
-    move v12, v0
-
-    :goto_74
+    :cond_read_prefs_done
     invoke-static/range {p1 .. p1}, Lxyz/aethersx2/android/FileHelper;->getFileNameForPath(Ljava/lang/String;)Ljava/lang/String;
-    move-result-object v13
-    const-string v14, ".iso"
-    invoke-virtual {v13, v14}, Ljava/lang/String;->endsWith(Ljava/lang/String;)Z
-    move-result v14
-    if-nez v14, :cond_a0
-    const-string v14, ".chd"
-    invoke-virtual {v13, v14}, Ljava/lang/String;->endsWith(Ljava/lang/String;)Z
-    move-result v14
-    if-nez v14, :cond_a0
-    const-string v14, ".cso"
-    invoke-virtual {v13, v14}, Ljava/lang/String;->endsWith(Ljava/lang/String;)Z
-    move-result v14
-    if-nez v14, :cond_a0
-    const-string v14, ".bin"
-    invoke-virtual {v13, v14}, Ljava/lang/String;->endsWith(Ljava/lang/String;)Z
-    move-result v14
-    if-nez v14, :cond_a0
-    const-string v14, ".gz"
-    invoke-virtual {v13, v14}, Ljava/lang/String;->endsWith(Ljava/lang/String;)Z
-    move-result v14
-    if-eqz v14, :cond_ad
 
-    :cond_a0
-    const/16 v14, 0x2e
-    invoke-virtual {v13, v14}, Ljava/lang/String;->lastIndexOf(I)I
-    move-result v14
-    if-lez v14, :cond_ad
-    const/4 v15, 0x0
-    invoke-virtual {v13, v15, v14}, Ljava/lang/String;->substring(II)Ljava/lang/String;
-    move-result-object v13
+    move-result-object v7
 
-    :cond_ad
-    const-string v14, "%20"
-    const-string v15, " "
-    invoke-virtual {v13, v14, v15}, Ljava/lang/String;->replace(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Ljava/lang/String;
-    move-result-object v13
-    invoke-virtual {v13}, Ljava/lang/String;->trim()Ljava/lang/String;
-    move-result-object v13
-    move-object/from16 v0, p1
-    invoke-static {v1, v0}, Lxyz/aethersx2/android/GameDataResolver;->resolveGameTitle(Landroid/content/Context;Ljava/lang/String;)Ljava/lang/String;
-    move-result-object v13
+    if-eqz v7, :cond_resolve_title
 
-    sput-object v13, Lxyz/aethersx2/android/DiscordRpcManager;->sCurrentGame:Ljava/lang/String;
-    invoke-static {}, Ljava/lang/System;->currentTimeMillis()J
-    move-result-wide v14
-    const-wide/16 v16, 0x3e8
-    div-long v14, v14, v16
-    sput-wide v14, Lxyz/aethersx2/android/DiscordRpcManager;->sStartTimeSeconds:J
-    sput-boolean v11, Lxyz/aethersx2/android/DiscordRpcManager;->sRunning:Z
-    sput-object v1, Lxyz/aethersx2/android/DiscordRpcManager;->sAppContext:Landroid/content/Context;
-    sput-object v9, Lxyz/aethersx2/android/DiscordRpcManager;->sClientId:Ljava/lang/String;
+    const-string v0, ".iso"
 
-    if-eqz v1, :cond_2bb
-    if-eqz v0, :cond_2bb
+    invoke-virtual {v7, v0}, Ljava/lang/String;->endsWith(Ljava/lang/String;)Z
 
-    :try_start_cb
-    new-instance v14, Landroid/media/session/MediaSession;
-    invoke-direct {v14, v1, v7}, Landroid/media/session/MediaSession;-><init>(Landroid/content/Context;Ljava/lang/String;)V
-    new-instance v15, Landroid/media/MediaMetadata$Builder;
-    invoke-direct {v15}, Landroid/media/MediaMetadata$Builder;-><init>()V
-    const-string v0, "android.media.metadata.TITLE"
-    invoke-virtual {v15, v0, v13}, Landroid/media/MediaMetadata$Builder;->putString(Ljava/lang/String;Ljava/lang/String;)Landroid/media/MediaMetadata$Builder;
-    const-string v0, "android.media.metadata.ARTIST"
-    const-string v11, "PlayStation 2"
-    invoke-virtual {v15, v0, v11}, Landroid/media/MediaMetadata$Builder;->putString(Ljava/lang/String;Ljava/lang/String;)Landroid/media/MediaMetadata$Builder;
-    const-string v0, "android.media.metadata.ALBUM"
-    invoke-virtual {v15, v0, v7}, Landroid/media/MediaMetadata$Builder;->putString(Ljava/lang/String;Ljava/lang/String;)Landroid/media/MediaMetadata$Builder;
-    const-string v0, "android.media.metadata.DISPLAY_TITLE"
-    invoke-virtual {v15, v0, v13}, Landroid/media/MediaMetadata$Builder;->putString(Ljava/lang/String;Ljava/lang/String;)Landroid/media/MediaMetadata$Builder;
-    const-string v0, "android.media.metadata.DISPLAY_SUBTITLE"
-    const-string v11, "Playing on NetherSX2"
-    invoke-virtual {v15, v0, v11}, Landroid/media/MediaMetadata$Builder;->putString(Ljava/lang/String;Ljava/lang/String;)Landroid/media/MediaMetadata$Builder;
-    :try_end_f2
-    .catchall {:try_start_cb .. :try_end_f2} :catchall_218
-
-    if-eqz v12, :cond_10c
-    :try_start_f4
-    const-string v0, "android.media.metadata.DURATION"
-    :try_end_f6
-    .catchall {:try_start_f4 .. :try_end_f6} :catchall_105
-
-    move-object v11, v8
-    move-object/from16 v18, v9
-    const-wide/32 v8, 0x5265c00
-    :try_start_fc
-    invoke-virtual {v15, v0, v8, v9}, Landroid/media/MediaMetadata$Builder;->putLong(Ljava/lang/String;J)Landroid/media/MediaMetadata$Builder;
-    :try_end_ff
-    .catchall {:try_start_fc .. :try_end_ff} :catchall_100
-    goto :goto_10f
-
-    :catchall_100
-    move-exception v0
-    move-object/from16 p1, v11
-    goto/16 :goto_21d
-
-    :catchall_105
-    move-exception v0
-    move-object/from16 v18, v9
-    move-object/from16 p1, v8
-    goto/16 :goto_21d
-
-    :cond_10c
-    move-object v11, v8
-    move-object/from16 v18, v9
-
-    :goto_10f
-    :try_start_110
-    invoke-static {}, Lxyz/aethersx2/android/NativeLibrary;->getCoversDirectory()Ljava/lang/String;
-    move-result-object v0
-    :try_end_114
-    .catchall {:try_start_110 .. :try_end_114} :catchall_1cf
-
-    const-string v8, ".png"
-    const-string v9, ".jpg"
-    move-object/from16 p1, v11
-    if-eqz v0, :cond_162
-
-    :try_start_11c
-    new-instance v11, Ljava/io/File;
-    :try_end_11e
-    .catchall {:try_start_11c .. :try_end_11e} :catchall_15f
-
-    move/from16 v20, v12
-
-    :try_start_120
-    new-instance v12, Ljava/lang/StringBuilder;
-    invoke-direct {v12}, Ljava/lang/StringBuilder;-><init>()V
-    invoke-virtual {v12, v13}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-    move-result-object v12
-    invoke-virtual {v12, v9}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-    move-result-object v12
-    invoke-virtual {v12, v9}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
-    move-result-object v12
-    invoke-direct {v11, v0, v12}, Ljava/io/File;-><init>(Ljava/lang/String;Ljava/lang/String;)V
-    invoke-virtual {v11}, Ljava/io/File;->exists()Z
-    move-result v12
-    if-nez v12, :cond_150
-    new-instance v11, Ljava/io/File;
-    new-instance v12, Ljava/lang/StringBuilder;
-    invoke-direct {v12}, Ljava/lang/StringBuilder;-><init>()V
-    invoke-virtual {v12, v13}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-    move-result-object v12
-    invoke-virtual {v12, v8}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-    move-result-object v12
-    invoke-virtual {v12, v8}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
-    move-result-object v12
-    invoke-direct {v11, v0, v12}, Ljava/io/File;-><init>(Ljava/lang/String;Ljava/lang/String;)V
-
-    :cond_150
-    invoke-virtual {v11}, Ljava/io/File;->exists()Z
     move-result v0
-    if-eqz v0, :cond_164
-    invoke-virtual {v11}, Ljava/io/File;->getAbsolutePath()Ljava/lang/String;
-    move-result-object v0
-    invoke-static {v0}, Landroid/graphics/BitmapFactory;->decodeFile(Ljava/lang/String;)Landroid/graphics/Bitmap;
-    move-result-object v0
-    goto :goto_165
 
-    :catchall_15f
+    if-nez v0, :cond_strip_ext
+
+    const-string v0, ".chd"
+
+    invoke-virtual {v7, v0}, Ljava/lang/String;->endsWith(Ljava/lang/String;)Z
+
+    move-result v0
+
+    if-nez v0, :cond_strip_ext
+
+    const-string v0, ".cso"
+
+    invoke-virtual {v7, v0}, Ljava/lang/String;->endsWith(Ljava/lang/String;)Z
+
+    move-result v0
+
+    if-nez v0, :cond_strip_ext
+
+    const-string v0, ".bin"
+
+    invoke-virtual {v7, v0}, Ljava/lang/String;->endsWith(Ljava/lang/String;)Z
+
+    move-result v0
+
+    if-nez v0, :cond_strip_ext
+
+    const-string v0, ".gz"
+
+    invoke-virtual {v7, v0}, Ljava/lang/String;->endsWith(Ljava/lang/String;)Z
+
+    move-result v0
+
+    if-eqz v0, :cond_clean_name
+
+    :cond_strip_ext
+    const/16 v0, 0x2e
+
+    invoke-virtual {v7, v0}, Ljava/lang/String;->lastIndexOf(I)I
+
+    move-result v0
+
+    if-lez v0, :cond_clean_name
+
+    const/4 v1, 0x0
+
+    invoke-virtual {v7, v1, v0}, Ljava/lang/String;->substring(II)Ljava/lang/String;
+
+    move-result-object v7
+
+    :cond_clean_name
+    const-string v0, "%20"
+
+    const-string v1, " "
+
+    invoke-virtual {v7, v0, v1}, Ljava/lang/String;->replace(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Ljava/lang/String;
+
+    move-result-object v7
+
+    invoke-virtual {v7}, Ljava/lang/String;->trim()Ljava/lang/String;
+
+    move-result-object v7
+
+    :cond_resolve_title
+    :try_start_gdr
+    move-object/from16 v0, p1
+
+    invoke-static {v2, v0}, Lxyz/aethersx2/android/GameDataResolver;->resolveGameTitle(Landroid/content/Context;Ljava/lang/String;)Ljava/lang/String;
+
+    move-result-object v0
+
+    if-eqz v0, :cond_gdr_done
+
+    invoke-virtual {v0}, Ljava/lang/String;->isEmpty()Z
+
+    move-result v1
+
+    if-nez v1, :cond_gdr_done
+
+    move-object v7, v0
+    :cond_gdr_done
+    :try_end_gdr
+    .catchall {:try_start_gdr .. :try_end_gdr} :catchall_gdr
+
+    goto :cond_gdr_exit
+
+    :catchall_gdr
     move-exception v0
-    goto/16 :goto_1d2
 
-    :cond_162
-    move/from16 v20, v12
+    const-string v1, "DiscordRpc"
 
-    :cond_164
+    const-string v8, "Could not resolve game title via GameDataResolver"
+
+    invoke-static {v1, v8, v0}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+
+    :cond_gdr_exit
+    if-nez v7, :cond_store_fields
+
+    const-string v7, "NetherSX2 Game"
+
+    :cond_store_fields
+    sput-object v7, Lxyz/aethersx2/android/DiscordRpcManager;->sCurrentGame:Ljava/lang/String;
+
+    invoke-static {}, Ljava/lang/System;->currentTimeMillis()J
+
+    move-result-wide v0
+
+    const-wide/16 v8, 0x3e8
+
+    div-long/2addr v0, v8
+
+    sput-wide v0, Lxyz/aethersx2/android/DiscordRpcManager;->sStartTimeSeconds:J
+
+    const/4 v0, 0x1
+
+    sput-boolean v0, Lxyz/aethersx2/android/DiscordRpcManager;->sRunning:Z
+
+    sput-object v2, Lxyz/aethersx2/android/DiscordRpcManager;->sAppContext:Landroid/content/Context;
+
+    sput-object v4, Lxyz/aethersx2/android/DiscordRpcManager;->sClientId:Ljava/lang/String;
+
+    if-eqz v6, :cond_media_done
+
+    if-nez v2, :cond_media_start
+
+    goto/16 :cond_media_done
+
+    :cond_media_start
+    :try_start_media_1
+    new-instance v8, Landroid/media/session/MediaSession;
+
+    const-string v0, "NetherSX2"
+
+    invoke-direct {v8, v2, v0}, Landroid/media/session/MediaSession;-><init>(Landroid/content/Context;Ljava/lang/String;)V
+
+    new-instance v9, Landroid/media/MediaMetadata$Builder;
+
+    invoke-direct {v9}, Landroid/media/MediaMetadata$Builder;-><init>()V
+
+    const-string v0, "android.media.metadata.TITLE"
+
+    invoke-virtual {v9, v0, v7}, Landroid/media/MediaMetadata$Builder;->putString(Ljava/lang/String;Ljava/lang/String;)Landroid/media/MediaMetadata$Builder;
+
+    const-string v0, "android.media.metadata.ARTIST"
+
+    const-string v1, "PlayStation 2"
+
+    invoke-virtual {v9, v0, v1}, Landroid/media/MediaMetadata$Builder;->putString(Ljava/lang/String;Ljava/lang/String;)Landroid/media/MediaMetadata$Builder;
+
+    const-string v0, "android.media.metadata.ALBUM"
+
+    const-string v1, "NetherSX2"
+
+    invoke-virtual {v9, v0, v1}, Landroid/media/MediaMetadata$Builder;->putString(Ljava/lang/String;Ljava/lang/String;)Landroid/media/MediaMetadata$Builder;
+
+    const-string v0, "android.media.metadata.DISPLAY_TITLE"
+
+    invoke-virtual {v9, v0, v7}, Landroid/media/MediaMetadata$Builder;->putString(Ljava/lang/String;Ljava/lang/String;)Landroid/media/MediaMetadata$Builder;
+
+    const-string v0, "android.media.metadata.DISPLAY_SUBTITLE"
+
+    const-string v1, "Playing on NetherSX2"
+
+    invoke-virtual {v9, v0, v1}, Landroid/media/MediaMetadata$Builder;->putString(Ljava/lang/String;Ljava/lang/String;)Landroid/media/MediaMetadata$Builder;
+
+    if-eqz v5, :cond_media_builder_ready
+
+    const-string v0, "android.media.metadata.DURATION"
+
+    const-wide/32 v10, 0x5265c00
+
+    invoke-virtual {v9, v0, v10, v11}, Landroid/media/MediaMetadata$Builder;->putLong(Ljava/lang/String;J)Landroid/media/MediaMetadata$Builder;
+    :try_end_media_1
+    .catchall {:try_start_media_1 .. :try_end_media_1} :catchall_media
+
+    :cond_media_builder_ready
+    const/4 v12, 0x0
+
+    :try_start_cover
+    invoke-static {}, Lxyz/aethersx2/android/NativeLibrary;->getCoversDirectory()Ljava/lang/String;
+
+    move-result-object v0
+
+    if-eqz v0, :cond_check_external_cover
+
+    new-instance v11, Ljava/io/File;
+
+    new-instance v1, Ljava/lang/StringBuilder;
+
+    invoke-direct {v1}, Ljava/lang/StringBuilder;-><init>()V
+
+    invoke-virtual {v1, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+
+    move-result-object v1
+
+    const-string v10, ".jpg"
+
+    invoke-virtual {v1, v10}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+
+    move-result-object v1
+
+    invoke-virtual {v1}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+
+    move-result-object v1
+
+    invoke-direct {v11, v0, v1}, Ljava/io/File;-><init>(Ljava/lang/String;Ljava/lang/String;)V
+
+    invoke-virtual {v11}, Ljava/io/File;->exists()Z
+
+    move-result v1
+
+    if-nez v1, :cond_cover_file_found
+
+    new-instance v11, Ljava/io/File;
+
+    new-instance v1, Ljava/lang/StringBuilder;
+
+    invoke-direct {v1}, Ljava/lang/StringBuilder;-><init>()V
+
+    invoke-virtual {v1, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+
+    move-result-object v1
+
+    const-string v10, ".png"
+
+    invoke-virtual {v1, v10}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+
+    move-result-object v1
+
+    invoke-virtual {v1}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+
+    move-result-object v1
+
+    invoke-direct {v11, v0, v1}, Ljava/io/File;-><init>(Ljava/lang/String;Ljava/lang/String;)V
+
+    :cond_cover_file_found
+    invoke-virtual {v11}, Ljava/io/File;->exists()Z
+
+    move-result v0
+
+    if-eqz v0, :cond_check_external_cover
+
+    invoke-virtual {v11}, Ljava/io/File;->getAbsolutePath()Ljava/lang/String;
+
+    move-result-object v0
+
+    invoke-static {v0}, Landroid/graphics/BitmapFactory;->decodeFile(Ljava/lang/String;)Landroid/graphics/Bitmap;
+
+    move-result-object v12
+
+    :cond_check_external_cover
+    if-nez v12, :cond_cover_put
+
+    new-instance v11, Ljava/io/File;
+
     const/4 v0, 0x0
 
-    :goto_165
-    if-nez v0, :cond_1be
-    new-instance v11, Ljava/io/File;
-    const/4 v12, 0x0
-    invoke-virtual {v1, v12}, Landroid/content/Context;->getExternalFilesDir(Ljava/lang/String;)Ljava/io/File;
-    move-result-object v12
-    move-object/from16 v19, v0
-    const-string v0, "covers"
-    invoke-direct {v11, v12, v0}, Ljava/io/File;-><init>(Ljava/io/File;Ljava/lang/String;)V
+    invoke-virtual {v2, v0}, Landroid/content/Context;->getExternalFilesDir(Ljava/lang/String;)Ljava/io/File;
+
+    move-result-object v0
+
+    const-string v1, "covers"
+
+    invoke-direct {v11, v0, v1}, Ljava/io/File;-><init>(Ljava/io/File;Ljava/lang/String;)V
+
     invoke-virtual {v11}, Ljava/io/File;->exists()Z
+
     move-result v0
-    if-eqz v0, :cond_1c0
-    new-instance v0, Ljava/io/File;
-    new-instance v12, Ljava/lang/StringBuilder;
-    invoke-direct {v12}, Ljava/lang/StringBuilder;-><init>()V
-    invoke-virtual {v12, v13}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-    move-result-object v12
-    invoke-virtual {v12, v9}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-    move-result-object v9
-    invoke-virtual {v9}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
-    move-result-object v9
-    invoke-direct {v0, v11, v9}, Ljava/io/File;-><init>(Ljava/io/File;Ljava/lang/String;)V
-    invoke-virtual {v0}, Ljava/io/File;->exists()Z
-    move-result v9
-    if-nez v9, :cond_1ad
-    new-instance v0, Ljava/io/File;
-    new-instance v9, Ljava/lang/StringBuilder;
-    invoke-direct {v9}, Ljava/lang/StringBuilder;-><init>()V
-    invoke-virtual {v9, v13}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-    move-result-object v9
-    invoke-virtual {v9, v8}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-    move-result-object v8
-    invoke-virtual {v8}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
-    move-result-object v8
-    invoke-direct {v0, v11, v8}, Ljava/io/File;-><init>(Ljava/io/File;Ljava/lang/String;)V
 
-    :cond_1ad
+    if-eqz v0, :cond_cover_put
+
+    new-instance v0, Ljava/io/File;
+
+    new-instance v1, Ljava/lang/StringBuilder;
+
+    invoke-direct {v1}, Ljava/lang/StringBuilder;-><init>()V
+
+    invoke-virtual {v1, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+
+    move-result-object v1
+
+    const-string v10, ".jpg"
+
+    invoke-virtual {v1, v10}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+
+    move-result-object v1
+
+    invoke-virtual {v1}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+
+    move-result-object v1
+
+    invoke-direct {v0, v11, v1}, Ljava/io/File;-><init>(Ljava/io/File;Ljava/lang/String;)V
+
     invoke-virtual {v0}, Ljava/io/File;->exists()Z
-    move-result v8
-    if-eqz v8, :cond_1c0
+
+    move-result v1
+
+    if-nez v1, :cond_ext_cover_found
+
+    new-instance v0, Ljava/io/File;
+
+    new-instance v1, Ljava/lang/StringBuilder;
+
+    invoke-direct {v1}, Ljava/lang/StringBuilder;-><init>()V
+
+    invoke-virtual {v1, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+
+    move-result-object v1
+
+    const-string v10, ".png"
+
+    invoke-virtual {v1, v10}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+
+    move-result-object v1
+
+    invoke-virtual {v1}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+
+    move-result-object v1
+
+    invoke-direct {v0, v11, v1}, Ljava/io/File;-><init>(Ljava/io/File;Ljava/lang/String;)V
+
+    :cond_ext_cover_found
+    invoke-virtual {v0}, Ljava/io/File;->exists()Z
+
+    move-result v1
+
+    if-eqz v1, :cond_cover_put
+
     invoke-virtual {v0}, Ljava/io/File;->getAbsolutePath()Ljava/lang/String;
+
     move-result-object v0
+
     invoke-static {v0}, Landroid/graphics/BitmapFactory;->decodeFile(Ljava/lang/String;)Landroid/graphics/Bitmap;
-    move-result-object v0
-    goto :goto_1c2
 
-    :catchall_1bc
+    move-result-object v12
+
+    :cond_cover_put
+    if-eqz v12, :cond_media_finalize
+
+    const-string v0, "android.media.metadata.ALBUM_ART"
+
+    invoke-virtual {v9, v0, v12}, Landroid/media/MediaMetadata$Builder;->putBitmap(Ljava/lang/String;Landroid/graphics/Bitmap;)Landroid/media/MediaMetadata$Builder;
+
+    const-string v0, "android.media.metadata.ART"
+
+    invoke-virtual {v9, v0, v12}, Landroid/media/MediaMetadata$Builder;->putBitmap(Ljava/lang/String;Landroid/graphics/Bitmap;)Landroid/media/MediaMetadata$Builder;
+    :try_end_cover
+    .catchall {:try_start_cover .. :try_end_cover} :catchall_cover
+
+    goto :cond_media_finalize
+
+    :catchall_cover
     move-exception v0
-    goto :goto_1d4
 
-    :cond_1be
-    move-object/from16 v19, v0
+    const-string v1, "DiscordRpc"
 
-    :cond_1c0
-    move-object/from16 v0, v19
+    const-string v10, "Could not load cover for MediaSession"
 
-    :goto_1c2
-    if-eqz v0, :cond_1ce
-    const-string v8, "android.media.metadata.ALBUM_ART"
-    invoke-virtual {v15, v8, v0}, Landroid/media/MediaMetadata$Builder;->putBitmap(Ljava/lang/String;Landroid/graphics/Bitmap;)Landroid/media/MediaMetadata$Builder;
-    const-string v8, "android.media.metadata.ART"
-    invoke-virtual {v15, v8, v0}, Landroid/media/MediaMetadata$Builder;->putBitmap(Ljava/lang/String;Landroid/graphics/Bitmap;)Landroid/media/MediaMetadata$Builder;
-    :try_end_1ce
-    .catchall {:try_start_120 .. :try_end_1ce} :catchall_1bc
+    invoke-static {v1, v10, v0}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
 
-    :cond_1ce
-    goto :goto_1d9
+    :cond_media_finalize
+    :try_start_media_2
+    invoke-virtual {v9}, Landroid/media/MediaMetadata$Builder;->build()Landroid/media/MediaMetadata;
 
-    :catchall_1cf
+    move-result-object v0
+
+    invoke-virtual {v8, v0}, Landroid/media/session/MediaSession;->setMetadata(Landroid/media/MediaMetadata;)V
+
+    new-instance v10, Landroid/media/session/PlaybackState$Builder;
+
+    invoke-direct {v10}, Landroid/media/session/PlaybackState$Builder;-><init>()V
+
+    const-wide/16 v0, 0x7
+
+    invoke-virtual {v10, v0, v1}, Landroid/media/session/PlaybackState$Builder;->setActions(J)Landroid/media/session/PlaybackState$Builder;
+
+    const/4 v11, 0x3
+
+    const-wide/16 v12, 0x0
+
+    const/high16 v14, 0x3f800000    # 1.0f
+
+    invoke-virtual/range {v10 .. v14}, Landroid/media/session/PlaybackState$Builder;->setState(IJF)Landroid/media/session/PlaybackState$Builder;
+
+    invoke-virtual {v10}, Landroid/media/session/PlaybackState$Builder;->build()Landroid/media/session/PlaybackState;
+
+    move-result-object v0
+
+    invoke-virtual {v8, v0}, Landroid/media/session/MediaSession;->setPlaybackState(Landroid/media/session/PlaybackState;)V
+
+    const/4 v0, 0x1
+
+    invoke-virtual {v8, v0}, Landroid/media/session/MediaSession;->setActive(Z)V
+
+    sput-object v8, Lxyz/aethersx2/android/DiscordRpcManager;->sMediaSession:Landroid/media/session/MediaSession;
+
+    const-string v0, "DiscordRpc"
+
+    new-instance v1, Ljava/lang/StringBuilder;
+
+    invoke-direct {v1}, Ljava/lang/StringBuilder;-><init>()V
+
+    const-string v10, "MediaSession active for: "
+
+    invoke-virtual {v1, v10}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+
+    move-result-object v1
+
+    invoke-virtual {v1, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+
+    move-result-object v1
+
+    invoke-virtual {v1}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+
+    move-result-object v1
+
+    invoke-static {v0, v1}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
+    :try_end_media_2
+    .catchall {:try_start_media_2 .. :try_end_media_2} :catchall_media
+
+    goto :cond_media_done
+
+    :catchall_media
     move-exception v0
-    move-object/from16 p1, v11
-    :goto_1d2
-    move/from16 v20, v12
 
-    :goto_1d4
-    :try_start_1d4
-    const-string v8, "Could not load cover for MediaSession"
-    invoke-static {v10, v8, v0}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+    const-string v1, "DiscordRpc"
 
-    :goto_1d9
-    invoke-virtual {v15}, Landroid/media/MediaMetadata$Builder;->build()Landroid/media/MediaMetadata;
-    move-result-object v0
-    invoke-virtual {v14, v0}, Landroid/media/session/MediaSession;->setMetadata(Landroid/media/MediaMetadata;)V
-
-    new-instance v0, Landroid/media/session/PlaybackState$Builder;
-    invoke-direct {v0}, Landroid/media/session/PlaybackState$Builder;-><init>()V
-    const-wide/16 v8, 0x7
-    invoke-virtual {v0, v8, v9}, Landroid/media/session/PlaybackState$Builder;->setActions(J)Landroid/media/session/PlaybackState$Builder;
-    const-wide/16 v8, 0x0
-    const/high16 v11, 0x3f800000    # 1.0f
-    const/4 v12, 0x3
-    invoke-virtual {v0, v12, v8, v9, v11}, Landroid/media/session/PlaybackState$Builder;->setState(IJF)Landroid/media/session/PlaybackState$Builder;
-    invoke-virtual {v0}, Landroid/media/session/PlaybackState$Builder;->build()Landroid/media/session/PlaybackState;
-    move-result-object v0
-    invoke-virtual {v14, v0}, Landroid/media/session/MediaSession;->setPlaybackState(Landroid/media/session/PlaybackState;)V
-
-    const/4 v8, 0x1
-    invoke-virtual {v14, v8}, Landroid/media/session/MediaSession;->setActive(Z)V
-    sput-object v14, Lxyz/aethersx2/android/DiscordRpcManager;->sMediaSession:Landroid/media/session/MediaSession;
-
-    new-instance v0, Ljava/lang/StringBuilder;
-    invoke-direct {v0}, Ljava/lang/StringBuilder;-><init>()V
-    const-string v8, "MediaSession active for: "
-    invoke-virtual {v0, v8}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-    move-result-object v0
-    invoke-virtual {v0, v13}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-    move-result-object v0
-    invoke-virtual {v0}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
-    move-result-object v0
-    invoke-static {v10, v0}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
-    :try_end_215
-    .catchall {:try_start_1d4 .. :try_end_215} :catchall_216
-
-    goto :goto_224
-
-    :catchall_216
-    move-exception v0
-    goto :goto_21f
-
-    :catchall_218
-    move-exception v0
-    move-object/from16 p1, v8
-    move-object/from16 v18, v9
-
-    :goto_21d
-    move/from16 v20, v12
-
-    :goto_21f
     const-string v8, "Failed to start MediaSession"
-    invoke-static {v10, v8, v0}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
 
-    :goto_224
-    goto :goto_2c1
+    invoke-static {v1, v8, v0}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
 
-    :cond_2bb
-    move-object/from16 p1, v8
-    move-object/from16 v18, v9
-    move/from16 v20, v12
-
-    :goto_2c1
+    :cond_media_done
+    :try_start_thread
     invoke-static {}, Lxyz/aethersx2/android/DiscordRpcManager;->resendBroadcastPresence()V
 
     new-instance v0, Ljava/lang/Thread;
+
     new-instance v1, Lxyz/aethersx2/android/DiscordRpcManager$1;
-    move-object/from16 v8, p1
-    move-object/from16 v9, v18
-    move/from16 v12, v20
-    invoke-direct {v1, v8, v9, v12}, Lxyz/aethersx2/android/DiscordRpcManager$1;-><init>(Ljava/lang/String;Ljava/lang/String;Z)V
-    const-string v2, "DiscordRpcThread"
-    invoke-direct {v0, v1, v2}, Ljava/lang/Thread;-><init>(Ljava/lang/Runnable;Ljava/lang/String;)V
+
+    invoke-direct {v1, v3, v4, v5}, Lxyz/aethersx2/android/DiscordRpcManager$1;-><init>(Ljava/lang/String;Ljava/lang/String;Z)V
+
+    const-string v7, "DiscordRpcThread"
+
+    invoke-direct {v0, v1, v7}, Ljava/lang/Thread;-><init>(Ljava/lang/Runnable;Ljava/lang/String;)V
+
     sput-object v0, Lxyz/aethersx2/android/DiscordRpcManager;->sWorkerThread:Ljava/lang/Thread;
 
     const/4 v1, 0x1
-    invoke-virtual {v0, v1}, Ljava/lang/Thread;->setDaemon(Z)V
-    sget-object v0, Lxyz/aethersx2/android/DiscordRpcManager;->sWorkerThread:Ljava/lang/Thread;
-    invoke-virtual {v0}, Ljava/lang/Thread;->start()V
 
-    :cond_2e2
-    :goto_2e2
+    invoke-virtual {v0, v1}, Ljava/lang/Thread;->setDaemon(Z)V
+
+    sget-object v0, Lxyz/aethersx2/android/DiscordRpcManager;->sWorkerThread:Ljava/lang/Thread;
+
+    invoke-virtual {v0}, Ljava/lang/Thread;->start()V
+    :try_end_thread
+    .catchall {:try_start_thread .. :try_end_thread} :catchall_thread
+
+    return-void
+
+    :catchall_thread
+    move-exception v0
+
+    const-string v1, "DiscordRpc"
+
+    const-string v2, "Failed to start DiscordRpcThread"
+
+    invoke-static {v1, v2, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+
     return-void
 .end method
 
