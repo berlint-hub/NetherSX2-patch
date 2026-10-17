@@ -1087,7 +1087,7 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
     for dex_path in dex_files:
         original_bytes = dex_path.read_bytes()
         dex_md5 = hashlib.md5(original_bytes).hexdigest()
-        cache_key = f"{dex_md5}_{pcsx2_ver}_qol_features_v25_{'mali' if is_mali else 'adreno'}"
+        cache_key = f"{dex_md5}_{pcsx2_ver}_qol_features_v27_{'mali' if is_mali else 'adreno'}"
 
         if cache_key in _DEX_CACHE:
             patched_bytes = _DEX_CACHE[cache_key]
@@ -2418,10 +2418,18 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
                     content = content[:m_finish.start()] + restart_code + content[m_finish.end():]
                     print(f"  ✓ Patched Setup Wizard completion in MainActivity.smali to restart process cleanly")
 
+                on_create_super = "invoke-super {p0, p1}, Landroidx/fragment/app/t;->onCreate(Landroid/os/Bundle;)V\n"
+                if on_create_super in content:
+                    inject_create = "\n    invoke-static {p0}, Lxyz/aethersx2/android/GameDataResolver;->ensureLoaded(Landroid/content/Context;)V\n"
+                    if inject_create not in content:
+                        content = content.replace(on_create_super, on_create_super + inject_create, 1)
+                        print(f"  ✓ Injected early GameDataResolver preloader into MainActivity.onCreate()")
+
                 set_main = "invoke-static {p0}, Lxyz/aethersx2/android/NativeLibrary;->setMainActivity(Lxyz/aethersx2/android/MainActivity;)V\n"
                 if set_main in content:
-                    if "GameDataResolver" not in content:
-                        content = content.replace(set_main, set_main + "\n    invoke-static {p0}, Lxyz/aethersx2/android/GameDataResolver;->ensureLoaded(Landroid/content/Context;)V\n", 1)
+                    inject_gdr = "\n    invoke-static {p0}, Lxyz/aethersx2/android/GameDataResolver;->ensureLoaded(Landroid/content/Context;)V\n"
+                    if inject_gdr not in content[content.find(set_main):content.find(set_main)+200]:
+                        content = content.replace(set_main, set_main + inject_gdr, 1)
                     if "AutoCoversDownloader" not in content:
                         content = content.replace(set_main, set_main + "\n    invoke-static {p0}, Lxyz/aethersx2/android/AutoCoversDownloader;->startAutoDownload(Landroid/content/Context;)V\n", 1)
                     print(f"  ✓ Injected GameDataResolver preloader and AutoCoversDownloader trigger into MainActivity.smali")
