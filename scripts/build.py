@@ -2627,10 +2627,13 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
                     r'\g<1>0xa',
                     jd_content
                 )
-                pswitch_discord = """    :pswitch_discord
-    new-instance p1, Lxyz/aethersx2/android/DiscordPreferenceFragment;
+                discord_xml_id = "0x7f130017" if is_mali else "0x7f130018"
+                pswitch_discord = f"""    :pswitch_discord
+    new-instance p1, Lxyz/aethersx2/android/j$e;
 
-    invoke-direct {p1}, Lxyz/aethersx2/android/DiscordPreferenceFragment;-><init>()V
+    const v0, {discord_xml_id}
+
+    invoke-direct {{p1, v0}}, Lxyz/aethersx2/android/j$e;-><init>(I)V
 
     return-object p1
 
@@ -2639,7 +2642,7 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
                     jd_content = jd_content.replace("    :pswitch_data_4c", pswitch_discord + "    :pswitch_data_4c")
                     jd_content = re.sub(r'(:pswitch_9\s+)(\.end packed-switch)', r'\1    :pswitch_discord\n    \2', jd_content)
                 jd_file.write_text(jd_content, encoding="utf-8")
-                print(f"  ✓ Injected Discord tab into j$d.smali")
+                print(f"  ✓ Injected Discord tab ({discord_xml_id}) into j$d.smali")
 
             # 8. Patch l6/j0.smali: Safe tab title boundary check
             j0_file = smali_out / "l6" / "j0.smali"
@@ -2941,8 +2944,6 @@ def verify_all(target_apks: list[Path] | None = None) -> None:
                     raise SystemExit(f"ERROR: classes.dex in {apk.name} missing ExternalControllerHelper!")
                 if b"AutoCoversDownloader" not in dex_bytes:
                     raise SystemExit(f"ERROR: classes.dex in {apk.name} missing AutoCoversDownloader!")
-                if b"DiscordPreferenceFragment" not in dex_bytes:
-                    raise SystemExit(f"ERROR: classes.dex in {apk.name} missing DiscordPreferenceFragment!")
                 verify_dex_integrity(dex_bytes)
             for item in z.namelist():
                 if "menu_main_navigation" in item:

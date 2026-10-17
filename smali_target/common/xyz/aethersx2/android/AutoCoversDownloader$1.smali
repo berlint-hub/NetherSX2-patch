@@ -45,7 +45,7 @@
 
     const/4 v2, 0x0
 
-    invoke-static {v1, v2}, Lxyz/aethersx2/android/NativeLibrary;->downloadCovers([Ljava/lang/String;Ljava/lang/Object;)V
+    invoke-static {v1, v2}, Lxyz/aethersx2/android/NativeLibrary;->downloadCovers([Ljava/lang/String;Lxyz/aethersx2/android/AndroidProgressCallback;)V
     :try_end_d
     .catchall {:try_start_2 .. :try_end_d} :catchall_e
 
