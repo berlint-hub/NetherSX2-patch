@@ -692,9 +692,7 @@
 .end method
 
 .method private static runGatewayLoop(Ljava/lang/String;Ljava/lang/String;Z)V
-    .registers 16
-
-    const-string v1, "DiscordRpc"
+    .registers 20
 
     :goto_outer
     sget-boolean v0, Lxyz/aethersx2/android/DiscordRpcManager;->sRunning:Z
@@ -703,8 +701,9 @@
     const/4 v2, 0x0
 
     :try_start_gw
-    const-string v0, "Connecting to Discord Gateway..."
-    invoke-static {v1, v0}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
+    const-string v0, "DiscordRpc"
+    const-string v1, "Connecting to Discord Gateway..."
+    invoke-static {v0, v1}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
 
     invoke-static {}, Ljavax/net/ssl/SSLSocketFactory;->getDefault()Ljavax/net/SocketFactory;
     move-result-object v0
@@ -716,12 +715,12 @@
     check-cast v2, Ljavax/net/ssl/SSLSocket;
 
     new-instance v0, Ljava/net/InetSocketAddress;
-    const-string v3, "gateway.discord.gg"
-    const/16 v4, 0x1bb
-    invoke-direct {v0, v3, v4}, Ljava/net/InetSocketAddress;-><init>(Ljava/lang/String;I)V
+    const-string v1, "gateway.discord.gg"
+    const/16 v3, 0x1bb
+    invoke-direct {v0, v1, v3}, Ljava/net/InetSocketAddress;-><init>(Ljava/lang/String;I)V
 
-    const/16 v3, 0x1f40
-    invoke-virtual {v2, v0, v3}, Ljavax/net/ssl/SSLSocket;->connect(Ljava/net/SocketAddress;I)V
+    const/16 v1, 0x1f40
+    invoke-virtual {v2, v0, v1}, Ljavax/net/ssl/SSLSocket;->connect(Ljava/net/SocketAddress;I)V
 
     invoke-virtual {v2}, Ljavax/net/ssl/SSLSocket;->startHandshake()V
 
@@ -737,47 +736,47 @@
     move-result-object v4
 
     const-string v0, "GET /?v=10&encoding=json HTTP/1.1\r\nHost: gateway.discord.gg\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\nUser-Agent: NetherSX2\r\n\r\n"
-    sget-object v5, Ljava/nio/charset/StandardCharsets;->UTF_8:Ljava/nio/charset/Charset;
-    invoke-virtual {v0, v5}, Ljava/lang/String;->getBytes(Ljava/nio/charset/Charset;)[B
+    sget-object v1, Ljava/nio/charset/StandardCharsets;->UTF_8:Ljava/nio/charset/Charset;
+    invoke-virtual {v0, v1}, Ljava/lang/String;->getBytes(Ljava/nio/charset/Charset;)[B
     move-result-object v0
     invoke-virtual {v3, v0}, Ljava/io/OutputStream;->write([B)V
     invoke-virtual {v3}, Ljava/io/OutputStream;->flush()V
 
     new-instance v0, Ljava/io/BufferedReader;
-    new-instance v5, Ljava/io/InputStreamReader;
-    sget-object v6, Ljava/nio/charset/StandardCharsets;->UTF_8:Ljava/nio/charset/Charset;
-    invoke-direct {v5, v4, v6}, Ljava/io/InputStreamReader;-><init>(Ljava/io/InputStream;Ljava/nio/charset/Charset;)V
-    invoke-direct {v0, v5}, Ljava/io/BufferedReader;-><init>(Ljava/io/Reader;)V
+    new-instance v1, Ljava/io/InputStreamReader;
+    sget-object v5, Ljava/nio/charset/StandardCharsets;->UTF_8:Ljava/nio/charset/Charset;
+    invoke-direct {v1, v4, v5}, Ljava/io/InputStreamReader;-><init>(Ljava/io/InputStream;Ljava/nio/charset/Charset;)V
+    invoke-direct {v0, v1}, Ljava/io/BufferedReader;-><init>(Ljava/io/Reader;)V
 
     invoke-virtual {v0}, Ljava/io/BufferedReader;->readLine()Ljava/lang/String;
-    move-result-object v5
-    if-eqz v5, :cond_fail_handshake
-    const-string v6, "101"
-    invoke-virtual {v5, v6}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
-    move-result v6
-    if-nez v6, :cond_read_headers
+    move-result-object v1
+    if-eqz v1, :cond_fail_handshake
+    const-string v5, "101"
+    invoke-virtual {v1, v5}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+    move-result v5
+    if-nez v5, :cond_read_headers
 
     :cond_fail_handshake
     new-instance v0, Ljava/io/IOException;
-    new-instance v6, Ljava/lang/StringBuilder;
-    invoke-direct {v6}, Ljava/lang/StringBuilder;-><init>()V
-    const-string v7, "Gateway handshake failed: "
-    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-    move-result-object v6
-    invoke-virtual {v6, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    new-instance v5, Ljava/lang/StringBuilder;
+    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
+    const-string v6, "Gateway handshake failed: "
+    invoke-virtual {v5, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
     move-result-object v5
-    invoke-virtual {v5}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
-    move-result-object v5
-    invoke-direct {v0, v5}, Ljava/io/IOException;-><init>(Ljava/lang/String;)V
+    invoke-virtual {v5, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    move-result-object v1
+    invoke-virtual {v1}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    move-result-object v1
+    invoke-direct {v0, v1}, Ljava/io/IOException;-><init>(Ljava/lang/String;)V
     throw v0
 
     :cond_read_headers
     invoke-virtual {v0}, Ljava/io/BufferedReader;->readLine()Ljava/lang/String;
-    move-result-object v5
-    if-eqz v5, :cond_hello_frame
-    invoke-virtual {v5}, Ljava/lang/String;->isEmpty()Z
-    move-result v5
-    if-nez v5, :cond_hello_frame
+    move-result-object v1
+    if-eqz v1, :cond_hello_frame
+    invoke-virtual {v1}, Ljava/lang/String;->isEmpty()Z
+    move-result v1
+    if-nez v1, :cond_hello_frame
     goto :cond_read_headers
 
     :cond_hello_frame
@@ -785,58 +784,59 @@
     move-result-object v0
     if-nez v0, :cond_parse_hello
     new-instance v0, Ljava/io/IOException;
-    const-string v5, "Null Hello frame from Gateway"
-    invoke-direct {v0, v5}, Ljava/io/IOException;-><init>(Ljava/lang/String;)V
+    const-string v1, "Null Hello frame from Gateway"
+    invoke-direct {v0, v1}, Ljava/io/IOException;-><init>(Ljava/lang/String;)V
     throw v0
 
     :cond_parse_hello
-    const-wide/32 v5, 0xa122
-    const-string v7, "\"heartbeat_interval\":"
-    invoke-virtual {v0, v7}, Ljava/lang/String;->indexOf(Ljava/lang/String;)I
-    move-result v7
-    if-lez v7, :cond_build_identify
-    add-int/lit8 v8, v7, 0x15
-    const-string v9, ","
-    invoke-virtual {v0, v9, v8}, Ljava/lang/String;->indexOf(Ljava/lang/String;I)I
-    move-result v9
-    if-gez v9, :cond_check_idx
-    const-string v9, "}"
-    invoke-virtual {v0, v9, v8}, Ljava/lang/String;->indexOf(Ljava/lang/String;I)I
-    move-result v9
+    const-wide/32 v6, 0xa122
+    const-string v1, "\"heartbeat_interval\":"
+    invoke-virtual {v0, v1}, Ljava/lang/String;->indexOf(Ljava/lang/String;)I
+    move-result v1
+    if-lez v1, :cond_build_identify
+    add-int/lit8 v5, v1, 0x15
+    const-string v8, ","
+    invoke-virtual {v0, v8, v5}, Ljava/lang/String;->indexOf(Ljava/lang/String;I)I
+    move-result v8
+    if-gez v8, :cond_check_idx
+    const-string v8, "}"
+    invoke-virtual {v0, v8, v5}, Ljava/lang/String;->indexOf(Ljava/lang/String;I)I
+    move-result v8
 
     :cond_check_idx
-    if-le v9, v7, :cond_build_identify
+    if-le v8, v1, :cond_build_identify
     :try_start_parse_hb
-    invoke-virtual {v0, v8, v9}, Ljava/lang/String;->substring(II)Ljava/lang/String;
+    invoke-virtual {v0, v5, v8}, Ljava/lang/String;->substring(II)Ljava/lang/String;
     move-result-object v0
     invoke-virtual {v0}, Ljava/lang/String;->trim()Ljava/lang/String;
     move-result-object v0
     invoke-static {v0}, Ljava/lang/Long;->parseLong(Ljava/lang/String;)J
-    move-result-wide v5
+    move-result-wide v6
     :try_end_parse_hb
     .catch Ljava/lang/Exception; {:try_start_parse_hb .. :try_end_parse_hb} :catchall_parse_hb
     :catchall_parse_hb
 
     :cond_build_identify
-    invoke-static {p0, p1, p2}, Lxyz/aethersx2/android/DiscordRpcManager;->buildIdentifyPayload(Ljava/lang/String;Ljava/lang/String;Z)Ljava/lang/String;
+    invoke-static/range {p0 .. p2}, Lxyz/aethersx2/android/DiscordRpcManager;->buildIdentifyPayload(Ljava/lang/String;Ljava/lang/String;Z)Ljava/lang/String;
     move-result-object v0
     invoke-static {v3, v0}, Lxyz/aethersx2/android/DiscordRpcManager;->sendWsTextFrame(Ljava/io/OutputStream;Ljava/lang/String;)V
 
     sget-object v0, Lxyz/aethersx2/android/DiscordRpcManager;->sCurrentGame:Ljava/lang/String;
-    new-instance v7, Ljava/lang/StringBuilder;
-    invoke-direct {v7}, Ljava/lang/StringBuilder;-><init>()V
-    const-string v8, "Sent IDENTIFY to Discord Gateway for game: "
-    invoke-virtual {v7, v8}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-    move-result-object v7
-    invoke-virtual {v7, v0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    new-instance v1, Ljava/lang/StringBuilder;
+    invoke-direct {v1}, Ljava/lang/StringBuilder;-><init>()V
+    const-string v5, "Sent IDENTIFY to Discord Gateway for game: "
+    invoke-virtual {v1, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    move-result-object v1
+    invoke-virtual {v1, v0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
     move-result-object v0
     invoke-virtual {v0}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
     move-result-object v0
+    const-string v1, "DiscordRpc"
     invoke-static {v1, v0}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
 
     invoke-static {}, Ljava/lang/System;->currentTimeMillis()J
-    move-result-wide v7
-    move-wide v9, v7
+    move-result-wide v8
+    move-wide v10, v8
 
     :goto_gw_loop
     sget-boolean v0, Lxyz/aethersx2/android/DiscordRpcManager;->sRunning:Z
@@ -847,25 +847,25 @@
     if-nez v0, :cond_gw_loop_exit
 
     invoke-static {}, Ljava/lang/System;->currentTimeMillis()J
-    move-result-wide v11
-    sub-long v11, v11, v7
-    cmp-long v0, v11, v5
+    move-result-wide v12
+    sub-long v12, v12, v8
+    cmp-long v0, v12, v6
     if-ltz v0, :cond_check_gw_bc
     const-string v0, "{\"op\":1,\"d\":null}"
     invoke-static {v3, v0}, Lxyz/aethersx2/android/DiscordRpcManager;->sendWsTextFrame(Ljava/io/OutputStream;Ljava/lang/String;)V
     invoke-static {}, Ljava/lang/System;->currentTimeMillis()J
-    move-result-wide v7
+    move-result-wide v8
 
     :cond_check_gw_bc
     invoke-static {}, Ljava/lang/System;->currentTimeMillis()J
-    move-result-wide v11
-    sub-long v11, v11, v9
-    const-wide/16 v0, 0x4e20
-    cmp-long v0, v11, v0
+    move-result-wide v12
+    sub-long v12, v12, v10
+    const-wide/16 v14, 0x4e20
+    cmp-long v0, v12, v14
     if-ltz v0, :cond_try_read_frame
     invoke-static {}, Lxyz/aethersx2/android/DiscordRpcManager;->resendBroadcastPresence()V
     invoke-static {}, Ljava/lang/System;->currentTimeMillis()J
-    move-result-wide v9
+    move-result-wide v10
 
     :cond_try_read_frame
     const/4 v0, 0x0
@@ -876,35 +876,37 @@
     .catch Ljava/net/SocketTimeoutException; {:try_start_read_frame .. :try_end_read_frame} :catch_timeout
 
     if-nez v0, :cond_check_opcodes
-    const-string v0, "Discord Gateway closed connection (null frame)"
-    invoke-static {v1, v0}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
+    const-string v0, "DiscordRpc"
+    const-string v1, "Discord Gateway closed connection (null frame)"
+    invoke-static {v0, v1}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
     goto :cond_gw_loop_exit
 
     :cond_check_opcodes
-    const-string v11, "\"op\":7"
-    invoke-virtual {v0, v11}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
-    move-result v11
-    if-nez v11, :cond_reconnect_op
+    const-string v1, "\"op\":7"
+    invoke-virtual {v0, v1}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+    move-result v1
+    if-nez v1, :cond_reconnect_op
 
-    const-string v11, "\"op\":9"
-    invoke-virtual {v0, v11}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
-    move-result v11
-    if-eqz v11, :cond_check_op1
+    const-string v1, "\"op\":9"
+    invoke-virtual {v0, v1}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+    move-result v1
+    if-eqz v1, :cond_check_op1
 
     :cond_reconnect_op
-    const-string v0, "Discord Gateway requested reconnect (op 7/9)"
-    invoke-static {v1, v0}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
+    const-string v0, "DiscordRpc"
+    const-string v1, "Discord Gateway requested reconnect (op 7/9)"
+    invoke-static {v0, v1}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
     goto :cond_gw_loop_exit
 
     :cond_check_op1
-    const-string v11, "\"op\":1"
-    invoke-virtual {v0, v11}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+    const-string v1, "\"op\":1"
+    invoke-virtual {v0, v1}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
     move-result v0
     if-eqz v0, :cond_catch_timeout
     const-string v0, "{\"op\":1,\"d\":null}"
     invoke-static {v3, v0}, Lxyz/aethersx2/android/DiscordRpcManager;->sendWsTextFrame(Ljava/io/OutputStream;Ljava/lang/String;)V
     invoke-static {}, Ljava/lang/System;->currentTimeMillis()J
-    move-result-wide v7
+    move-result-wide v8
 
     :catch_timeout
     :cond_catch_timeout
@@ -927,19 +929,19 @@
 
     :catchall_gw
     move-exception v0
-    const-string v3, "DiscordRpc"
-    new-instance v4, Ljava/lang/StringBuilder;
-    invoke-direct {v4}, Ljava/lang/StringBuilder;-><init>()V
+    const-string v1, "DiscordRpc"
+    new-instance v3, Ljava/lang/StringBuilder;
+    invoke-direct {v3}, Ljava/lang/StringBuilder;-><init>()V
     const-string v5, "Discord Gateway error: "
-    invoke-virtual {v4, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-    move-result-object v4
+    invoke-virtual {v3, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    move-result-object v3
     invoke-virtual {v0}, Ljava/lang/Throwable;->getMessage()Ljava/lang/String;
     move-result-object v0
-    invoke-virtual {v4, v0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    invoke-virtual {v3, v0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
     move-result-object v0
     invoke-virtual {v0}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
     move-result-object v0
-    invoke-static {v3, v0}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;)I
+    invoke-static {v1, v0}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;)I
 
     if-eqz v2, :cond_cleanup_gw2
     :try_start_close_gw2
