@@ -6,3 +6,4 @@ apk/revanced/
 __pycache__/
 *.pyc
 reference/
+.xerj-data/

@@ -21,7 +21,7 @@
 .method constructor <init>()V
     .registers 1
 
-    .line 89
+    .line 156
     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
 
     return-void
@@ -32,9 +32,9 @@
 .method public run()V
     .registers 1
 
-    .line 92
+    .line 159
     invoke-static {}, Lxyz/aethersx2/android/DiscordRpcManager;->-$$Nest$smrunRpcLoop()V
 
-    .line 93
+    .line 160
     return-void
 .end method
