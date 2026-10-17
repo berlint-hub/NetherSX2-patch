@@ -363,7 +363,9 @@
     invoke-virtual {v1, p2}, Landroid/widget/TextView;->setTypeface(Landroid/graphics/Typeface;)V
 
     .line 369
-    const/4 p2, -0x1
+    invoke-direct {p0, p1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getPrimaryTextColor(Landroid/content/Context;)I
+
+    move-result p2
 
     invoke-virtual {v1, p2}, Landroid/widget/TextView;->setTextColor(I)V
 
@@ -384,13 +386,11 @@
     invoke-virtual {v1, v2, p3}, Landroid/widget/TextView;->setTextSize(IF)V
 
     .line 375
-    const-string p3, "#9E9E9E"
+    invoke-direct {p0, p1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getSecondaryTextColor(Landroid/content/Context;)I
 
-    invoke-static {p3}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
+    move-result p2
 
-    move-result p3
-
-    invoke-virtual {v1, p3}, Landroid/widget/TextView;->setTextColor(I)V
+    invoke-virtual {v1, p2}, Landroid/widget/TextView;->setTextColor(I)V
 
     .line 376
     new-instance p3, Landroid/widget/LinearLayout$LayoutParams;
@@ -477,6 +477,15 @@
 
     move-result p2
 
+    if-nez p2, :cond_id_found
+
+    const-string p2, "ic_baseline_check_green_24"
+
+    invoke-virtual {v1, p2, v2, v3}, Landroid/content/res/Resources;->getIdentifier(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I
+
+    move-result p2
+
+    :cond_id_found
     .line 395
     if-eqz p2, :cond_19
 
@@ -490,6 +499,196 @@
     .line 398
     :cond_19
     return-object v0
+.end method
+
+.method private getThemeColor(Landroid/content/Context;II)I
+    .registers 7
+
+    if-nez p1, :cond_3
+
+    return p3
+
+    :cond_3
+    :try_start_3
+    new-instance v0, Landroid/util/TypedValue;
+
+    invoke-direct {v0}, Landroid/util/TypedValue;-><init>()V
+
+    invoke-virtual {p1}, Landroid/content/Context;->getTheme()Landroid/content/res/Resources$Theme;
+
+    move-result-object v1
+
+    const/4 v2, 0x1
+
+    invoke-virtual {v1, p2, v0, v2}, Landroid/content/res/Resources$Theme;->resolveAttribute(ILandroid/util/TypedValue;Z)Z
+
+    move-result p2
+
+    if-eqz p2, :cond_2b
+
+    iget p2, v0, Landroid/util/TypedValue;->type:I
+
+    const/16 v1, 0x1c
+
+    if-lt p2, v1, :cond_20
+
+    const/16 v1, 0x1f
+
+    if-gt p2, v1, :cond_20
+
+    iget p1, v0, Landroid/util/TypedValue;->data:I
+
+    return p1
+
+    :cond_20
+    iget p2, v0, Landroid/util/TypedValue;->resourceId:I
+
+    if-eqz p2, :cond_2b
+
+    invoke-virtual {p1, p2}, Landroid/content/Context;->getColor(I)I
+
+    move-result p1
+    :try_end_28
+    .catch Ljava/lang/Exception; {:try_start_3 .. :try_end_28} :catch_29
+
+    return p1
+
+    :catch_29
+    move-exception p1
+
+    :cond_2b
+    return p3
+.end method
+
+.method private isNightMode(Landroid/content/Context;)Z
+    .registers 4
+
+    if-nez p1, :cond_4
+
+    const/4 p1, 0x1
+
+    return p1
+
+    :cond_4
+    :try_start_4
+    invoke-virtual {p1}, Landroid/content/Context;->getResources()Landroid/content/res/Resources;
+
+    move-result-object p1
+
+    invoke-virtual {p1}, Landroid/content/res/Resources;->getConfiguration()Landroid/content/res/Configuration;
+
+    move-result-object p1
+
+    iget p1, p1, Landroid/content/res/Configuration;->uiMode:I
+
+    and-int/lit8 p1, p1, 0x30
+
+    const/16 v0, 0x20
+
+    if-ne p1, v0, :cond_16
+
+    const/4 p1, 0x1
+
+    return p1
+
+    :cond_16
+    const/4 p1, 0x0
+
+    return p1
+    :try_end_18
+    .catch Ljava/lang/Exception; {:try_start_4 .. :try_end_18} :catch_19
+
+    :catch_19
+    move-exception p1
+
+    const/4 p1, 0x1
+
+    return p1
+.end method
+
+.method private getPrimaryTextColor(Landroid/content/Context;)I
+    .registers 5
+
+    invoke-direct {p0, p1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->isNightMode(Landroid/content/Context;)Z
+
+    move-result v0
+
+    if-eqz v0, :cond_9
+
+    const/4 v0, -0x1
+
+    goto :goto_c
+
+    :cond_9
+    const v0, -0xdededf
+
+    :goto_c
+    const v1, 0x1010036
+
+    invoke-direct {p0, p1, v1, v0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getThemeColor(Landroid/content/Context;II)I
+
+    move-result p1
+
+    return p1
+.end method
+
+.method private getSecondaryTextColor(Landroid/content/Context;)I
+    .registers 5
+
+    invoke-direct {p0, p1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->isNightMode(Landroid/content/Context;)Z
+
+    move-result v0
+
+    if-eqz v0, :cond_a
+
+    const v0, -0x4f413b
+
+    goto :goto_d
+
+    :cond_a
+    const v0, -0x8a8a8b
+
+    :goto_d
+    const v1, 0x1010038
+
+    invoke-direct {p0, p1, v1, v0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getThemeColor(Landroid/content/Context;II)I
+
+    move-result p1
+
+    return p1
+.end method
+
+.method private getDividerColor(Landroid/content/Context;)I
+    .registers 3
+
+    invoke-direct {p0, p1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->isNightMode(Landroid/content/Context;)Z
+
+    move-result p1
+
+    if-eqz p1, :cond_9
+
+    const p1, 0x1fffffff
+
+    return p1
+
+    :cond_9
+    const p1, 0x1f000000
+
+    return p1
+.end method
+
+.method private getAccentColor(Landroid/content/Context;)I
+    .registers 5
+
+    const v0, 0x101042b
+
+    const v1, -0x16e19d
+
+    invoke-direct {p0, p1, v0, v1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getThemeColor(Landroid/content/Context;II)I
+
+    move-result p1
+
+    return p1
 .end method
 
 .method private static getPrefs(Landroid/content/Context;)Landroid/content/SharedPreferences;
@@ -825,18 +1024,24 @@
     :cond_32
     iget-object v1, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvCustomSubtitle:Landroid/widget/TextView;
 
-    if-eqz v1, :cond_65
+    if-eqz v1, :cond_66
 
     .line 195
-    iget-object v1, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->customSavedPath:Ljava/lang/String;
+    invoke-virtual {p0}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getContext()Landroid/content/Context;
 
-    invoke-virtual {v1}, Ljava/lang/String;->isEmpty()Z
+    move-result-object v1
 
-    move-result v1
+    invoke-direct {p0, v1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getSecondaryTextColor(Landroid/content/Context;)I
 
-    const-string v2, "#9E9E9E"
+    move-result v2
 
-    if-eqz v1, :cond_51
+    iget-object v3, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->customSavedPath:Ljava/lang/String;
+
+    invoke-virtual {v3}, Ljava/lang/String;->isEmpty()Z
+
+    move-result v3
+
+    if-eqz v3, :cond_52
 
     .line 196
     iget-object v0, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvCustomSubtitle:Landroid/widget/TextView;
@@ -848,42 +1053,38 @@
     .line 197
     iget-object v0, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvCustomSubtitle:Landroid/widget/TextView;
 
-    invoke-static {v2}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
+    invoke-virtual {v0, v2}, Landroid/widget/TextView;->setTextColor(I)V
 
-    move-result v1
-
-    invoke-virtual {v0, v1}, Landroid/widget/TextView;->setTextColor(I)V
-
-    goto :goto_65
+    goto :goto_66
 
     .line 199
-    :cond_51
-    iget-object v1, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvCustomSubtitle:Landroid/widget/TextView;
+    :cond_52
+    iget-object v3, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvCustomSubtitle:Landroid/widget/TextView;
 
-    iget-object v3, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->customSavedPath:Ljava/lang/String;
+    iget-object v4, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->customSavedPath:Ljava/lang/String;
 
-    invoke-virtual {v1, v3}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+    invoke-virtual {v3, v4}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
 
     .line 200
-    iget-object v1, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvCustomSubtitle:Landroid/widget/TextView;
+    iget-object v3, p0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->tvCustomSubtitle:Landroid/widget/TextView;
 
-    if-eqz v0, :cond_61
+    if-eqz v0, :cond_60
 
-    invoke-static {v2}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
+    move v0, v2
+
+    goto :goto_64
+
+    :cond_60
+    invoke-direct {p0, v1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getPrimaryTextColor(Landroid/content/Context;)I
 
     move-result v0
 
-    goto :goto_62
-
-    :cond_61
-    const/4 v0, -0x1
-
-    :goto_62
-    invoke-virtual {v1, v0}, Landroid/widget/TextView;->setTextColor(I)V
+    :goto_64
+    invoke-virtual {v3, v0}, Landroid/widget/TextView;->setTextColor(I)V
 
     .line 203
-    :cond_65
-    :goto_65
+    :cond_66
+    :goto_66
     return-void
 .end method
 
@@ -1339,7 +1540,11 @@
     invoke-virtual {v8, v9}, Landroid/widget/TextView;->setTypeface(Landroid/graphics/Typeface;)V
 
     .line 80
-    invoke-virtual {v8, v4}, Landroid/widget/TextView;->setTextColor(I)V
+    invoke-direct {v0, v1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getPrimaryTextColor(Landroid/content/Context;)I
+
+    move-result v9
+
+    invoke-virtual {v8, v9}, Landroid/widget/TextView;->setTextColor(I)V
 
     .line 81
     invoke-virtual {v5, v8}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
@@ -1360,9 +1565,7 @@
     invoke-virtual {v8, v10, v9}, Landroid/widget/TextView;->setTextSize(IF)V
 
     .line 87
-    const-string v9, "#B0BEC5"
-
-    invoke-static {v9}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
+    invoke-direct {v0, v1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getSecondaryTextColor(Landroid/content/Context;)I
 
     move-result v9
 
@@ -1474,7 +1677,11 @@
     .line 110
     iget-object v9, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->ivDefaultCheck:Landroid/widget/ImageView;
 
-    invoke-virtual {v9, v4}, Landroid/widget/ImageView;->setColorFilter(I)V
+    invoke-direct {v0, v1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getAccentColor(Landroid/content/Context;)I
+
+    move-result v11
+
+    invoke-virtual {v9, v11}, Landroid/widget/ImageView;->setColorFilter(I)V
 
     .line 111
     new-instance v9, Landroid/widget/RelativeLayout$LayoutParams;
@@ -1556,9 +1763,7 @@
     invoke-virtual {v8, v9}, Landroid/view/View;->setLayoutParams(Landroid/view/ViewGroup$LayoutParams;)V
 
     .line 132
-    const-string v9, "#1FFFFFFF"
-
-    invoke-static {v9}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
+    invoke-direct {v0, v1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getDividerColor(Landroid/content/Context;)I
 
     move-result v9
 
@@ -1653,7 +1858,11 @@
     .line 151
     iget-object v3, v0, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->ivCustomCheck:Landroid/widget/ImageView;
 
-    invoke-virtual {v3, v4}, Landroid/widget/ImageView;->setColorFilter(I)V
+    invoke-direct {v0, v1}, Lxyz/aethersx2/android/SetupWizardDataDirectoryFragment;->getAccentColor(Landroid/content/Context;)I
+
+    move-result v6
+
+    invoke-virtual {v3, v6}, Landroid/widget/ImageView;->setColorFilter(I)V
 
     .line 152
     new-instance v3, Landroid/widget/RelativeLayout$LayoutParams;

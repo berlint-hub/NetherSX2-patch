@@ -7,3 +7,6 @@ __pycache__/
 *.pyc
 reference/
 .xerj-data/
+*.swp
+unpacked/
+xyz.nethersx2.android_*.apk
