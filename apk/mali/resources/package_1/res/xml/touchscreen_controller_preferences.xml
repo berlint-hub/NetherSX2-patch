@@ -67,11 +67,6 @@
                           app:title="@string/settings_bind_to_right_stick" />
     <SwitchPreferenceCompat app:defaultValue="false"
                           app:iconSpaceReserved="false"
-                          app:key="Pad/GyroToRightStick"
-                          app:summary="Maps device gyroscope motion to the right analog stick for motion aiming."
-                          app:title="Gyro to Right Stick" />
-    <SwitchPreferenceCompat app:defaultValue="false"
-                          app:iconSpaceReserved="false"
                           app:key="TouchscreenController/TouchGliding"
                           app:summary="@string/settings_summary_touch_gliding"
                           app:title="@string/settings_touch_gliding" />

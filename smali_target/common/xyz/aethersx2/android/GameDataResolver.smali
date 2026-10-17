@@ -37,6 +37,8 @@
 
 .field private static final TOKEN_PATTERN:Ljava/util/regex/Pattern;
 
+.field private static sAppContext:Landroid/content/Context;
+
 .field private static volatile sInitialized:Z
 
 .field private static final sNormToTitle:Ljava/util/Map;
@@ -276,7 +278,11 @@
 
     invoke-interface {v0, v1, v2}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
 
-    .line 43
+    .line 77
+    const/4 v0, 0x0
+
+    sput-object v0, Lxyz/aethersx2/android/GameDataResolver;->sAppContext:Landroid/content/Context;
+
     return-void
 .end method
 
@@ -289,44 +295,183 @@
     return-void
 .end method
 
+.method private static cleanRaw(Ljava/lang/String;)Ljava/lang/String;
+    .registers 4
+
+    .line 71
+    const-string v0, ""
+
+    if-eqz p0, :cond_22
+
+    invoke-virtual {p0}, Ljava/lang/String;->isEmpty()Z
+
+    move-result v1
+
+    if-eqz v1, :cond_b
+
+    goto :goto_22
+
+    .line 72
+    :cond_b
+    const-string v1, "%20"
+
+    const-string v2, " "
+
+    invoke-virtual {p0, v1, v2}, Ljava/lang/String;->replace(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Ljava/lang/String;
+
+    move-result-object p0
+
+    .line 73
+    sget-object v1, Lxyz/aethersx2/android/GameDataResolver;->EXTENSION_PATTERN:Ljava/util/regex/Pattern;
+
+    invoke-virtual {v1, p0}, Ljava/util/regex/Pattern;->matcher(Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;
+
+    move-result-object p0
+
+    invoke-virtual {p0, v0}, Ljava/util/regex/Matcher;->replaceAll(Ljava/lang/String;)Ljava/lang/String;
+
+    move-result-object p0
+
+    .line 74
+    invoke-virtual {p0}, Ljava/lang/String;->trim()Ljava/lang/String;
+
+    move-result-object p0
+
+    return-object p0
+
+    .line 71
+    :cond_22
+    :goto_22
+    return-object v0
+.end method
+
 .method public static ensureLoaded(Landroid/content/Context;)V
     .registers 8
 
-    .line 71
+    .line 80
+    if-eqz p0, :cond_10
+
+    sget-object v0, Lxyz/aethersx2/android/GameDataResolver;->sAppContext:Landroid/content/Context;
+
+    if-nez v0, :cond_10
+
+    .line 82
+    :try_start_6
+    invoke-virtual {p0}, Landroid/content/Context;->getApplicationContext()Landroid/content/Context;
+
+    move-result-object v0
+
+    sput-object v0, Lxyz/aethersx2/android/GameDataResolver;->sAppContext:Landroid/content/Context;
+    :try_end_c
+    .catchall {:try_start_6 .. :try_end_c} :catchall_d
+
+    .line 85
+    goto :goto_10
+
+    .line 83
+    :catchall_d
+    move-exception v0
+
+    .line 84
+    sput-object p0, Lxyz/aethersx2/android/GameDataResolver;->sAppContext:Landroid/content/Context;
+
+    .line 87
+    :cond_10
+    :goto_10
     sget-boolean v0, Lxyz/aethersx2/android/GameDataResolver;->sInitialized:Z
 
-    if-nez v0, :cond_ee
+    if-eqz v0, :cond_15
 
-    if-nez p0, :cond_8
+    return-void
 
-    goto/16 :goto_ee
-
-    .line 72
-    :cond_8
+    .line 88
+    :cond_15
     sget-object v0, Lxyz/aethersx2/android/GameDataResolver;->LOCK:Ljava/lang/Object;
 
     monitor-enter v0
 
-    .line 73
-    :try_start_b
+    .line 89
+    :try_start_18
     sget-boolean v1, Lxyz/aethersx2/android/GameDataResolver;->sInitialized:Z
 
-    if-eqz v1, :cond_11
+    if-eqz v1, :cond_1e
 
     monitor-exit v0
-    :try_end_10
-    .catchall {:try_start_b .. :try_end_10} :catchall_eb
 
     return-void
 
-    .line 75
-    :cond_11
-    :try_start_11
+    .line 90
+    :cond_1e
+    if-nez p0, :cond_22
+
+    .line 91
+    sget-object p0, Lxyz/aethersx2/android/GameDataResolver;->sAppContext:Landroid/content/Context;
+    :try_end_22
+    .catchall {:try_start_18 .. :try_end_22} :catchall_112
+
+    .line 93
+    :cond_22
+    if-nez p0, :cond_2b
+
+    .line 95
+    :try_start_24
+    invoke-static {}, Lxyz/aethersx2/android/NativeLibrary;->getContext()Landroid/content/Context;
+
+    move-result-object p0
+    :try_end_28
+    .catchall {:try_start_24 .. :try_end_28} :catchall_29
+
+    .line 96
+    :goto_28
+    goto :goto_2b
+
+    :catchall_29
+    move-exception v1
+
+    goto :goto_28
+
+    .line 98
+    :cond_2b
+    :goto_2b
+    if-nez p0, :cond_34
+
+    .line 100
+    :try_start_2d
+    invoke-static {}, Lxyz/aethersx2/android/NativeLibrary;->getMainActivity()Lxyz/aethersx2/android/MainActivity;
+
+    move-result-object p0
+    :try_end_31
+    .catchall {:try_start_2d .. :try_end_31} :catchall_32
+
+    .line 101
+    :goto_31
+    goto :goto_34
+
+    :catchall_32
+    move-exception v1
+
+    goto :goto_31
+
+    .line 103
+    :cond_34
+    :goto_34
+    if-nez p0, :cond_38
+
+    :try_start_36
+    monitor-exit v0
+    :try_end_37
+    .catchall {:try_start_36 .. :try_end_37} :catchall_112
+
+    return-void
+
+    .line 106
+    :cond_38
+    :try_start_38
     invoke-static {}, Ljava/lang/System;->currentTimeMillis()J
 
     move-result-wide v1
 
-    .line 76
+    .line 107
     invoke-virtual {p0}, Landroid/content/Context;->getAssets()Landroid/content/res/AssetManager;
 
     move-result-object p0
@@ -337,7 +482,7 @@
 
     move-result-object p0
 
-    .line 77
+    .line 108
     new-instance v3, Landroid/util/JsonReader;
 
     new-instance v4, Ljava/io/InputStreamReader;
@@ -348,79 +493,79 @@
 
     invoke-direct {v3, v4}, Landroid/util/JsonReader;-><init>(Ljava/io/Reader;)V
 
-    .line 78
+    .line 109
     invoke-virtual {v3}, Landroid/util/JsonReader;->beginObject()V
 
-    .line 79
-    :goto_2e
+    .line 110
+    :goto_55
     invoke-virtual {v3}, Landroid/util/JsonReader;->hasNext()Z
 
     move-result p0
 
-    if-eqz p0, :cond_94
+    if-eqz p0, :cond_bb
 
-    .line 80
+    .line 111
     invoke-virtual {v3}, Landroid/util/JsonReader;->nextName()Ljava/lang/String;
 
     move-result-object p0
 
-    .line 81
+    .line 112
     invoke-virtual {v3}, Landroid/util/JsonReader;->beginObject()V
 
-    .line 82
+    .line 113
     const/4 v4, 0x0
 
-    .line 83
-    :goto_3c
+    .line 114
+    :goto_63
     invoke-virtual {v3}, Landroid/util/JsonReader;->hasNext()Z
 
     move-result v5
 
-    if-eqz v5, :cond_57
+    if-eqz v5, :cond_7e
 
-    .line 84
+    .line 115
     invoke-virtual {v3}, Landroid/util/JsonReader;->nextName()Ljava/lang/String;
 
     move-result-object v5
 
-    .line 85
+    .line 116
     const-string v6, "title"
 
     invoke-virtual {v6, v5}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
 
     move-result v5
 
-    if-eqz v5, :cond_53
+    if-eqz v5, :cond_7a
 
-    .line 86
+    .line 117
     invoke-virtual {v3}, Landroid/util/JsonReader;->nextString()Ljava/lang/String;
 
     move-result-object v4
 
-    goto :goto_56
+    goto :goto_7d
 
-    .line 88
-    :cond_53
+    .line 119
+    :cond_7a
     invoke-virtual {v3}, Landroid/util/JsonReader;->skipValue()V
 
-    .line 90
-    :goto_56
-    goto :goto_3c
+    .line 121
+    :goto_7d
+    goto :goto_63
 
-    .line 91
-    :cond_57
+    .line 122
+    :cond_7e
     invoke-virtual {v3}, Landroid/util/JsonReader;->endObject()V
 
-    .line 93
-    if-eqz v4, :cond_93
+    .line 124
+    if-eqz v4, :cond_ba
 
     invoke-virtual {v4}, Ljava/lang/String;->isEmpty()Z
 
     move-result v5
 
-    if-nez v5, :cond_93
+    if-nez v5, :cond_ba
 
-    .line 94
+    .line 125
     const-string v5, "-"
 
     const-string v6, ""
@@ -433,12 +578,12 @@
 
     move-result-object v5
 
-    .line 95
+    .line 126
     sget-object v6, Lxyz/aethersx2/android/GameDataResolver;->sSerialToTitle:Ljava/util/Map;
 
     invoke-interface {v6, v5, v4}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
 
-    .line 96
+    .line 127
     sget-object v5, Lxyz/aethersx2/android/GameDataResolver;->sSerialToTitle:Ljava/util/Map;
 
     invoke-virtual {p0}, Ljava/lang/String;->toUpperCase()Ljava/lang/String;
@@ -447,17 +592,17 @@
 
     invoke-interface {v5, p0, v4}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
 
-    .line 98
+    .line 129
     invoke-static {v4}, Lxyz/aethersx2/android/GameDataResolver;->normalize(Ljava/lang/String;)Ljava/lang/String;
 
     move-result-object p0
 
-    .line 99
+    .line 130
     invoke-virtual {p0}, Ljava/lang/String;->isEmpty()Z
 
     move-result v5
 
-    if-nez v5, :cond_93
+    if-nez v5, :cond_ba
 
     sget-object v5, Lxyz/aethersx2/android/GameDataResolver;->sNormToTitle:Ljava/util/Map;
 
@@ -465,35 +610,35 @@
 
     move-result v5
 
-    if-nez v5, :cond_93
+    if-nez v5, :cond_ba
 
-    .line 100
+    .line 131
     sget-object v5, Lxyz/aethersx2/android/GameDataResolver;->sNormToTitle:Ljava/util/Map;
 
     invoke-interface {v5, p0, v4}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
 
-    .line 103
-    :cond_93
-    goto :goto_2e
+    .line 134
+    :cond_ba
+    goto :goto_55
 
-    .line 104
-    :cond_94
+    .line 135
+    :cond_bb
     invoke-virtual {v3}, Landroid/util/JsonReader;->endObject()V
 
-    .line 105
+    .line 136
     invoke-virtual {v3}, Landroid/util/JsonReader;->close()V
 
-    .line 106
+    .line 137
     const/4 p0, 0x1
 
     sput-boolean p0, Lxyz/aethersx2/android/GameDataResolver;->sInitialized:Z
 
-    .line 107
+    .line 138
     invoke-static {}, Ljava/lang/System;->currentTimeMillis()J
 
     move-result-wide v3
 
-    .line 108
+    .line 139
     const-string p0, "GameDataResolver"
 
     sub-long/2addr v3, v1
@@ -555,45 +700,46 @@
     move-result-object v1
 
     invoke-static {p0, v1}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
-    :try_end_e0
-    .catchall {:try_start_11 .. :try_end_e0} :catchall_e1
+    :try_end_107
+    .catchall {:try_start_38 .. :try_end_107} :catchall_108
 
-    .line 111
-    goto :goto_e9
+    .line 142
+    goto :goto_110
 
-    .line 109
-    :catchall_e1
+    .line 140
+    :catchall_108
     move-exception p0
 
-    .line 110
-    :try_start_e2
+    .line 141
+    :try_start_109
     const-string v1, "GameDataResolver"
 
     const-string v2, "Failed to load PS2.data.json"
 
     invoke-static {v1, v2, p0}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
 
-    .line 112
-    :goto_e9
+    .line 143
+    :goto_110
     monitor-exit v0
 
-    .line 113
+    .line 144
     return-void
 
-    .line 112
-    :catchall_eb
+    .line 143
+    :catchall_112
     move-exception p0
 
     monitor-exit v0
-    :try_end_ed
-    .catchall {:try_start_e2 .. :try_end_ed} :catchall_eb
+    :try_end_114
+    .catchall {:try_start_109 .. :try_end_114} :catchall_112
 
+    goto :goto_116
+
+    :goto_115
     throw p0
 
-    .line 71
-    :cond_ee
-    :goto_ee
-    return-void
+    :goto_116
+    goto :goto_115
 .end method
 
 .method public static normalize(Ljava/lang/String;)Ljava/lang/String;
@@ -772,313 +918,306 @@
     return-object v0
 .end method
 
+.method public static resolveEntryTitle(Lxyz/aethersx2/android/GameListEntry;)Ljava/lang/String;
+    .registers 4
+
+    .line 203
+    if-nez p0, :cond_5
+
+    const-string p0, ""
+
+    return-object p0
+
+    .line 204
+    :cond_5
+    const/4 v0, 0x0
+
+    invoke-static {v0}, Lxyz/aethersx2/android/GameDataResolver;->ensureLoaded(Landroid/content/Context;)V
+
+    .line 206
+    iget-object v0, p0, Lxyz/aethersx2/android/GameListEntry;->e:Ljava/lang/String;
+
+    .line 207
+    iget-object v1, p0, Lxyz/aethersx2/android/GameListEntry;->d:Ljava/lang/String;
+
+    .line 208
+    iget-object v2, p0, Lxyz/aethersx2/android/GameListEntry;->c:Ljava/lang/String;
+
+    .line 209
+    invoke-static {v0, v1, v2}, Lxyz/aethersx2/android/GameDataResolver;->resolveTitle(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+
+    move-result-object v1
+
+    .line 210
+    if-eqz v1, :cond_1e
+
+    invoke-virtual {v1}, Ljava/lang/String;->isEmpty()Z
+
+    move-result v2
+
+    if-nez v2, :cond_1e
+
+    .line 211
+    iput-object v1, p0, Lxyz/aethersx2/android/GameListEntry;->e:Ljava/lang/String;
+
+    .line 212
+    return-object v1
+
+    .line 215
+    :cond_1e
+    invoke-static {v0}, Lxyz/aethersx2/android/GameDataResolver;->cleanRaw(Ljava/lang/String;)Ljava/lang/String;
+
+    move-result-object p0
+
+    return-object p0
+.end method
+
 .method public static resolveGameTitle(Landroid/content/Context;Ljava/lang/String;)Ljava/lang/String;
-    .registers 13
+    .registers 7
 
-    .line 116
-    const-string v0, "-"
-
-    const-string v1, ") -> "
-
-    const-string v2, "GameDataResolver"
-
-    if-eqz p1, :cond_1fa
+    .line 219
+    if-eqz p1, :cond_42
 
     invoke-virtual {p1}, Ljava/lang/String;->isEmpty()Z
 
-    move-result v3
+    move-result v0
 
-    if-eqz v3, :cond_10
+    if-eqz v0, :cond_9
 
-    goto/16 :goto_1fa
+    goto :goto_42
 
-    .line 120
-    :cond_10
-    invoke-static {p1}, Lxyz/aethersx2/android/FileHelper;->getFileNameForPath(Ljava/lang/String;)Ljava/lang/String;
-
-    move-result-object v3
-
-    .line 121
-    if-eqz v3, :cond_1c
-
-    invoke-virtual {v3}, Ljava/lang/String;->isEmpty()Z
-
-    move-result v4
-
-    if-eqz v4, :cond_1d
-
-    .line 122
-    :cond_1c
-    move-object v3, p1
-
-    .line 124
-    :cond_1d
-    sget-object v4, Lxyz/aethersx2/android/GameDataResolver;->EXTENSION_PATTERN:Ljava/util/regex/Pattern;
-
-    invoke-virtual {v4, v3}, Ljava/util/regex/Pattern;->matcher(Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;
-
-    move-result-object v3
-
-    const-string v4, ""
-
-    invoke-virtual {v3, v4}, Ljava/util/regex/Matcher;->replaceAll(Ljava/lang/String;)Ljava/lang/String;
-
-    move-result-object v3
-
-    .line 125
-    const-string v5, "%20"
-
-    const-string v6, " "
-
-    invoke-virtual {v3, v5, v6}, Ljava/lang/String;->replace(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Ljava/lang/String;
-
-    move-result-object v3
-
-    invoke-virtual {v3}, Ljava/lang/String;->trim()Ljava/lang/String;
-
-    move-result-object v3
-
-    .line 128
-    :try_start_35
+    .line 223
+    :cond_9
     invoke-static {p0}, Lxyz/aethersx2/android/GameDataResolver;->ensureLoaded(Landroid/content/Context;)V
-    :try_end_38
-    .catchall {:try_start_35 .. :try_end_38} :catchall_1e2
 
-    .line 131
-    :try_start_38
+    .line 226
+    :try_start_c
     invoke-static {}, Lxyz/aethersx2/android/NativeLibrary;->getGameListEntries()[Lxyz/aethersx2/android/GameListEntry;
 
     move-result-object p0
 
-    .line 132
-    if-eqz p0, :cond_ce
+    .line 227
+    if-eqz p0, :cond_3b
 
-    .line 133
-    array-length v5, p0
+    .line 228
+    array-length v0, p0
 
-    const/4 v6, 0x0
+    const/4 v1, 0x0
 
-    :goto_40
-    if-ge v6, v5, :cond_ce
+    :goto_14
+    if-ge v1, v0, :cond_3b
 
-    aget-object v7, p0, v6
+    aget-object v2, p0, v1
 
-    .line 134
-    if-eqz v7, :cond_c9
+    .line 229
+    if-eqz v2, :cond_37
 
-    invoke-virtual {v7}, Lxyz/aethersx2/android/GameListEntry;->getPath()Ljava/lang/String;
+    iget-object v3, v2, Lxyz/aethersx2/android/GameListEntry;->c:Ljava/lang/String;
 
-    move-result-object v8
+    if-eqz v3, :cond_37
 
-    if-eqz v8, :cond_c9
+    .line 230
+    iget-object v3, v2, Lxyz/aethersx2/android/GameListEntry;->c:Ljava/lang/String;
 
-    .line 135
-    invoke-virtual {v7}, Lxyz/aethersx2/android/GameListEntry;->getPath()Ljava/lang/String;
-
-    move-result-object v8
-
-    .line 136
-    invoke-virtual {p1, v8}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
-
-    move-result v9
-
-    if-nez v9, :cond_62
-
-    invoke-virtual {p1, v8}, Ljava/lang/String;->endsWith(Ljava/lang/String;)Z
-
-    move-result v9
-
-    if-nez v9, :cond_62
-
-    invoke-virtual {v8, p1}, Ljava/lang/String;->endsWith(Ljava/lang/String;)Z
-
-    move-result v8
-
-    if-eqz v8, :cond_c9
-
-    .line 137
-    :cond_62
-    invoke-virtual {v7}, Lxyz/aethersx2/android/GameListEntry;->getSerial()Ljava/lang/String;
-
-    move-result-object v8
-
-    .line 138
-    if-eqz v8, :cond_ad
-
-    invoke-virtual {v8}, Ljava/lang/String;->isEmpty()Z
-
-    move-result v9
-
-    if-nez v9, :cond_ad
-
-    .line 139
-    sget-object v9, Lxyz/aethersx2/android/GameDataResolver;->sSerialToTitle:Ljava/util/Map;
-
-    invoke-virtual {v8}, Ljava/lang/String;->toUpperCase()Ljava/lang/String;
-
-    move-result-object v10
-
-    invoke-interface {v9, v10}, Ljava/util/Map;->get(Ljava/lang/Object;)Ljava/lang/Object;
-
-    move-result-object v9
-
-    check-cast v9, Ljava/lang/String;
-
-    .line 140
-    if-nez v9, :cond_8c
-
-    .line 141
-    sget-object v9, Lxyz/aethersx2/android/GameDataResolver;->sSerialToTitle:Ljava/util/Map;
-
-    invoke-virtual {v8, v0, v4}, Ljava/lang/String;->replace(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Ljava/lang/String;
-
-    move-result-object v10
-
-    invoke-virtual {v10}, Ljava/lang/String;->toUpperCase()Ljava/lang/String;
-
-    move-result-object v10
-
-    invoke-interface {v9, v10}, Ljava/util/Map;->get(Ljava/lang/Object;)Ljava/lang/Object;
-
-    move-result-object v9
-
-    check-cast v9, Ljava/lang/String;
-
-    .line 143
-    :cond_8c
-    if-eqz v9, :cond_ad
-
-    .line 144
-    new-instance p0, Ljava/lang/StringBuilder;
-
-    invoke-direct {p0}, Ljava/lang/StringBuilder;-><init>()V
-
-    const-string v4, "Resolved via GameListEntry serial ("
-
-    invoke-virtual {p0, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    move-result-object p0
-
-    invoke-virtual {p0, v8}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    move-result-object p0
-
-    invoke-virtual {p0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    move-result-object p0
-
-    invoke-virtual {p0, v9}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    move-result-object p0
-
-    invoke-virtual {p0}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
-
-    move-result-object p0
-
-    invoke-static {v2, p0}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
-
-    .line 145
-    return-object v9
-
-    .line 148
-    :cond_ad
-    invoke-virtual {v7}, Lxyz/aethersx2/android/GameListEntry;->getTitle()Ljava/lang/String;
-
-    move-result-object v7
-
-    .line 149
-    if-eqz v7, :cond_c9
-
-    invoke-virtual {v7}, Ljava/lang/String;->isEmpty()Z
-
-    move-result v8
-
-    if-nez v8, :cond_c9
-
-    .line 150
-    sget-object p0, Lxyz/aethersx2/android/GameDataResolver;->sNormToTitle:Ljava/util/Map;
-
-    invoke-static {v7}, Lxyz/aethersx2/android/GameDataResolver;->normalize(Ljava/lang/String;)Ljava/lang/String;
-
-    move-result-object v4
-
-    invoke-interface {p0, v4}, Ljava/util/Map;->get(Ljava/lang/Object;)Ljava/lang/Object;
-
-    move-result-object p0
-
-    check-cast p0, Ljava/lang/String;
-    :try_end_c5
-    .catchall {:try_start_38 .. :try_end_c5} :catchall_cd
-
-    .line 151
-    if-eqz p0, :cond_c8
-
-    return-object p0
-
-    .line 152
-    :cond_c8
-    return-object v7
-
-    .line 133
-    :cond_c9
-    add-int/lit8 v6, v6, 0x1
-
-    goto/16 :goto_40
-
-    .line 158
-    :catchall_cd
-    move-exception p0
-
-    :cond_ce
-    nop
-
-    .line 160
-    :try_start_cf
-    sget-object p0, Lxyz/aethersx2/android/GameDataResolver;->SERIAL_PATTERN:Ljava/util/regex/Pattern;
-
-    invoke-virtual {p0, p1}, Ljava/util/regex/Pattern;->matcher(Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;
-
-    move-result-object p0
-
-    .line 161
-    invoke-virtual {p0}, Ljava/util/regex/Matcher;->find()Z
+    .line 231
+    invoke-virtual {p1, v3}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
 
     move-result v4
 
-    if-eqz v4, :cond_143
+    if-nez v4, :cond_32
 
-    .line 162
-    const/4 v4, 0x1
+    invoke-virtual {p1, v3}, Ljava/lang/String;->endsWith(Ljava/lang/String;)Z
 
-    invoke-virtual {p0, v4}, Ljava/util/regex/Matcher;->group(I)Ljava/lang/String;
+    move-result v4
 
-    move-result-object v4
+    if-nez v4, :cond_32
 
-    invoke-virtual {v4}, Ljava/lang/String;->toUpperCase()Ljava/lang/String;
+    invoke-virtual {v3, p1}, Ljava/lang/String;->endsWith(Ljava/lang/String;)Z
 
-    move-result-object v4
+    move-result v3
 
-    .line 163
-    const/4 v5, 0x2
+    if-eqz v3, :cond_37
 
-    invoke-virtual {p0, v5}, Ljava/util/regex/Matcher;->group(I)Ljava/lang/String;
+    .line 232
+    :cond_32
+    invoke-static {v2}, Lxyz/aethersx2/android/GameDataResolver;->resolveEntryTitle(Lxyz/aethersx2/android/GameListEntry;)Ljava/lang/String;
+
+    move-result-object p0
+    :try_end_36
+    .catchall {:try_start_c .. :try_end_36} :catchall_3a
+
+    return-object p0
+
+    .line 228
+    :cond_37
+    add-int/lit8 v1, v1, 0x1
+
+    goto :goto_14
+
+    .line 237
+    :catchall_3a
+    move-exception p0
+
+    :cond_3b
+    nop
+
+    .line 239
+    const/4 p0, 0x0
+
+    invoke-static {p0, p0, p1}, Lxyz/aethersx2/android/GameDataResolver;->resolveTitle(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 
     move-result-object p0
 
-    .line 164
-    new-instance v5, Ljava/lang/StringBuilder;
+    return-object p0
 
-    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
+    .line 220
+    :cond_42
+    :goto_42
+    const-string p0, "NetherSX2"
 
-    invoke-virtual {v5, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    return-object p0
+.end method
 
-    move-result-object v5
+.method public static resolveTitle(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+    .registers 8
 
-    invoke-virtual {v5, v0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    .line 147
+    const-string v0, "-"
+
+    const-string v1, ""
+
+    if-eqz p1, :cond_2a
+
+    invoke-virtual {p1}, Ljava/lang/String;->isEmpty()Z
+
+    move-result v2
+
+    if-nez v2, :cond_2a
+
+    .line 148
+    invoke-virtual {p1}, Ljava/lang/String;->toUpperCase()Ljava/lang/String;
+
+    move-result-object p1
+
+    .line 149
+    sget-object v2, Lxyz/aethersx2/android/GameDataResolver;->sSerialToTitle:Ljava/util/Map;
+
+    invoke-interface {v2, p1}, Ljava/util/Map;->get(Ljava/lang/Object;)Ljava/lang/Object;
+
+    move-result-object v2
+
+    check-cast v2, Ljava/lang/String;
+
+    .line 150
+    if-nez v2, :cond_27
+
+    .line 151
+    sget-object v2, Lxyz/aethersx2/android/GameDataResolver;->sSerialToTitle:Ljava/util/Map;
+
+    invoke-virtual {p1, v0, v1}, Ljava/lang/String;->replace(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Ljava/lang/String;
+
+    move-result-object p1
+
+    invoke-interface {v2, p1}, Ljava/util/Map;->get(Ljava/lang/Object;)Ljava/lang/Object;
+
+    move-result-object p1
+
+    move-object v2, p1
+
+    check-cast v2, Ljava/lang/String;
+
+    .line 153
+    :cond_27
+    if-eqz v2, :cond_2a
+
+    .line 154
+    return-object v2
+
+    .line 158
+    :cond_2a
+    if-eqz p2, :cond_2e
+
+    move-object p1, p2
+
+    goto :goto_2f
+
+    :cond_2e
+    move-object p1, v1
+
+    :goto_2f
+    if-eqz p0, :cond_32
+
+    move-object v1, p0
+
+    :cond_32
+    new-instance v2, Ljava/lang/StringBuilder;
+
+    invoke-direct {v2}, Ljava/lang/StringBuilder;-><init>()V
+
+    invoke-virtual {v2, p1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+
+    move-result-object p1
+
+    const-string v2, " "
+
+    invoke-virtual {p1, v2}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+
+    move-result-object p1
+
+    invoke-virtual {p1, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+
+    move-result-object p1
+
+    invoke-virtual {p1}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+
+    move-result-object p1
+
+    .line 159
+    sget-object v1, Lxyz/aethersx2/android/GameDataResolver;->SERIAL_PATTERN:Ljava/util/regex/Pattern;
+
+    invoke-virtual {v1, p1}, Ljava/util/regex/Pattern;->matcher(Ljava/lang/CharSequence;)Ljava/util/regex/Matcher;
+
+    move-result-object p1
+
+    .line 160
+    invoke-virtual {p1}, Ljava/util/regex/Matcher;->find()Z
+
+    move-result v1
+
+    if-eqz v1, :cond_9f
+
+    .line 161
+    const/4 v1, 0x1
+
+    invoke-virtual {p1, v1}, Ljava/util/regex/Matcher;->group(I)Ljava/lang/String;
+
+    move-result-object v1
+
+    invoke-virtual {v1}, Ljava/lang/String;->toUpperCase()Ljava/lang/String;
+
+    move-result-object v1
+
+    .line 162
+    const/4 v2, 0x2
+
+    invoke-virtual {p1, v2}, Ljava/util/regex/Matcher;->group(I)Ljava/lang/String;
+
+    move-result-object p1
+
+    .line 163
+    new-instance v2, Ljava/lang/StringBuilder;
+
+    invoke-direct {v2}, Ljava/lang/StringBuilder;-><init>()V
+
+    invoke-virtual {v2, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+
+    move-result-object v2
+
+    invoke-virtual {v2, v0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
 
     move-result-object v0
 
-    invoke-virtual {v0, p0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    invoke-virtual {v0, p1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
 
     move-result-object v0
 
@@ -1086,150 +1225,130 @@
 
     move-result-object v0
 
+    .line 164
+    new-instance v2, Ljava/lang/StringBuilder;
+
+    invoke-direct {v2}, Ljava/lang/StringBuilder;-><init>()V
+
+    invoke-virtual {v2, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+
+    move-result-object v1
+
+    invoke-virtual {v1, p1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+
+    move-result-object p1
+
+    invoke-virtual {p1}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+
+    move-result-object p1
+
     .line 165
-    new-instance v5, Ljava/lang/StringBuilder;
+    sget-object v1, Lxyz/aethersx2/android/GameDataResolver;->sSerialToTitle:Ljava/util/Map;
 
-    invoke-direct {v5}, Ljava/lang/StringBuilder;-><init>()V
-
-    invoke-virtual {v5, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    move-result-object v4
-
-    invoke-virtual {v4, p0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    move-result-object p0
-
-    invoke-virtual {p0}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
-
-    move-result-object p0
-
-    .line 166
-    sget-object v4, Lxyz/aethersx2/android/GameDataResolver;->sSerialToTitle:Ljava/util/Map;
-
-    invoke-interface {v4, v0}, Ljava/util/Map;->get(Ljava/lang/Object;)Ljava/lang/Object;
-
-    move-result-object v4
-
-    check-cast v4, Ljava/lang/String;
-
-    .line 167
-    if-nez v4, :cond_122
-
-    .line 168
-    sget-object v4, Lxyz/aethersx2/android/GameDataResolver;->sSerialToTitle:Ljava/util/Map;
-
-    invoke-interface {v4, p0}, Ljava/util/Map;->get(Ljava/lang/Object;)Ljava/lang/Object;
-
-    move-result-object p0
-
-    move-object v4, p0
-
-    check-cast v4, Ljava/lang/String;
-
-    .line 170
-    :cond_122
-    if-eqz v4, :cond_143
-
-    .line 171
-    new-instance p0, Ljava/lang/StringBuilder;
-
-    invoke-direct {p0}, Ljava/lang/StringBuilder;-><init>()V
-
-    const-string v5, "Resolved via path serial regex ("
-
-    invoke-virtual {p0, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    move-result-object p0
-
-    invoke-virtual {p0, v0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    move-result-object p0
-
-    invoke-virtual {p0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    move-result-object p0
-
-    invoke-virtual {p0, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    move-result-object p0
-
-    invoke-virtual {p0}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
-
-    move-result-object p0
-
-    invoke-static {v2, p0}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
-
-    .line 172
-    return-object v4
-
-    .line 176
-    :cond_143
-    invoke-static {v3}, Lxyz/aethersx2/android/GameDataResolver;->normalize(Ljava/lang/String;)Ljava/lang/String;
-
-    move-result-object p0
-
-    .line 177
-    invoke-virtual {p0}, Ljava/lang/String;->isEmpty()Z
-
-    move-result v0
-
-    if-nez v0, :cond_1e1
-
-    .line 178
-    sget-object v0, Lxyz/aethersx2/android/GameDataResolver;->sNormToTitle:Ljava/util/Map;
-
-    invoke-interface {v0, p0}, Ljava/util/Map;->get(Ljava/lang/Object;)Ljava/lang/Object;
+    invoke-interface {v1, v0}, Ljava/util/Map;->get(Ljava/lang/Object;)Ljava/lang/Object;
 
     move-result-object v0
 
     check-cast v0, Ljava/lang/String;
 
-    .line 179
-    if-eqz v0, :cond_176
+    .line 166
+    if-nez v0, :cond_9c
 
-    .line 180
-    new-instance v4, Ljava/lang/StringBuilder;
+    .line 167
+    sget-object v0, Lxyz/aethersx2/android/GameDataResolver;->sSerialToTitle:Ljava/util/Map;
 
-    invoke-direct {v4}, Ljava/lang/StringBuilder;-><init>()V
+    invoke-interface {v0, p1}, Ljava/util/Map;->get(Ljava/lang/Object;)Ljava/lang/Object;
 
-    const-string v5, "Resolved via normalized title ("
+    move-result-object p1
 
-    invoke-virtual {v4, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    move-object v0, p1
 
-    move-result-object v4
+    check-cast v0, Ljava/lang/String;
 
-    invoke-virtual {v4, p0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    .line 169
+    :cond_9c
+    if-eqz v0, :cond_9f
 
-    move-result-object p0
-
-    invoke-virtual {p0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    move-result-object p0
-
-    invoke-virtual {p0, v0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    move-result-object p0
-
-    invoke-virtual {p0}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
-
-    move-result-object p0
-
-    invoke-static {v2, p0}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
-
-    .line 181
+    .line 170
     return-object v0
 
-    .line 184
-    :cond_176
-    invoke-virtual {p0}, Ljava/lang/String;->length()I
+    .line 174
+    :cond_9f
+    if-eqz p0, :cond_a9
+
+    invoke-virtual {p0}, Ljava/lang/String;->isEmpty()Z
+
+    move-result p1
+
+    if-nez p1, :cond_a9
+
+    move-object p1, p0
+
+    goto :goto_aa
+
+    :cond_a9
+    move-object p1, p2
+
+    .line 175
+    :goto_aa
+    if-eqz p1, :cond_10b
+
+    .line 176
+    invoke-static {p1}, Lxyz/aethersx2/android/FileHelper;->getFileNameForPath(Ljava/lang/String;)Ljava/lang/String;
+
+    move-result-object v0
+
+    .line 177
+    if-eqz v0, :cond_b9
+
+    invoke-virtual {v0}, Ljava/lang/String;->isEmpty()Z
+
+    move-result v1
+
+    if-nez v1, :cond_b9
+
+    .line 178
+    move-object p1, v0
+
+    .line 180
+    :cond_b9
+    invoke-static {p1}, Lxyz/aethersx2/android/GameDataResolver;->normalize(Ljava/lang/String;)Ljava/lang/String;
+
+    move-result-object p1
+
+    .line 181
+    invoke-virtual {p1}, Ljava/lang/String;->isEmpty()Z
 
     move-result v0
 
-    const/4 v4, 0x5
+    if-nez v0, :cond_10b
 
-    if-lt v0, v4, :cond_1e1
+    .line 182
+    sget-object v0, Lxyz/aethersx2/android/GameDataResolver;->sNormToTitle:Ljava/util/Map;
 
-    .line 185
+    invoke-interface {v0, p1}, Ljava/util/Map;->get(Ljava/lang/Object;)Ljava/lang/Object;
+
+    move-result-object v0
+
+    check-cast v0, Ljava/lang/String;
+
+    .line 183
+    if-eqz v0, :cond_ce
+
+    .line 184
+    return-object v0
+
+    .line 187
+    :cond_ce
+    invoke-virtual {p1}, Ljava/lang/String;->length()I
+
+    move-result v0
+
+    const/4 v1, 0x5
+
+    if-lt v0, v1, :cond_10b
+
+    .line 188
     sget-object v0, Lxyz/aethersx2/android/GameDataResolver;->sNormToTitle:Ljava/util/Map;
 
     invoke-interface {v0}, Ljava/util/Map;->entrySet()Ljava/util/Set;
@@ -1240,143 +1359,79 @@
 
     move-result-object v0
 
-    :goto_187
+    :goto_df
     invoke-interface {v0}, Ljava/util/Iterator;->hasNext()Z
 
-    move-result v5
+    move-result v2
 
-    if-eqz v5, :cond_1e1
+    if-eqz v2, :cond_10b
 
     invoke-interface {v0}, Ljava/util/Iterator;->next()Ljava/lang/Object;
 
-    move-result-object v5
+    move-result-object v2
 
-    check-cast v5, Ljava/util/Map$Entry;
-
-    .line 186
-    invoke-interface {v5}, Ljava/util/Map$Entry;->getKey()Ljava/lang/Object;
-
-    move-result-object v6
-
-    check-cast v6, Ljava/lang/String;
-
-    .line 187
-    invoke-virtual {v6}, Ljava/lang/String;->length()I
-
-    move-result v7
-
-    if-lt v7, v4, :cond_1e0
-
-    invoke-virtual {p0, v6}, Ljava/lang/String;->startsWith(Ljava/lang/String;)Z
-
-    move-result v7
-
-    if-nez v7, :cond_1ab
-
-    invoke-virtual {v6, p0}, Ljava/lang/String;->startsWith(Ljava/lang/String;)Z
-
-    move-result v7
-
-    if-eqz v7, :cond_1e0
-
-    .line 188
-    :cond_1ab
-    invoke-interface {v5}, Ljava/util/Map$Entry;->getValue()Ljava/lang/Object;
-
-    move-result-object v0
-
-    check-cast v0, Ljava/lang/String;
-
-    new-instance v4, Ljava/lang/StringBuilder;
-
-    invoke-direct {v4}, Ljava/lang/StringBuilder;-><init>()V
-
-    const-string v7, "Resolved via prefix match ("
-
-    invoke-virtual {v4, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    move-result-object v4
-
-    invoke-virtual {v4, p0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    move-result-object p0
-
-    const-string v4, " ~ "
-
-    invoke-virtual {p0, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    move-result-object p0
-
-    invoke-virtual {p0, v6}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    move-result-object p0
-
-    invoke-virtual {p0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    move-result-object p0
-
-    invoke-virtual {p0, v0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    move-result-object p0
-
-    invoke-virtual {p0}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
-
-    move-result-object p0
-
-    invoke-static {v2, p0}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
+    check-cast v2, Ljava/util/Map$Entry;
 
     .line 189
-    invoke-interface {v5}, Ljava/util/Map$Entry;->getValue()Ljava/lang/Object;
+    invoke-interface {v2}, Ljava/util/Map$Entry;->getKey()Ljava/lang/Object;
+
+    move-result-object v3
+
+    check-cast v3, Ljava/lang/String;
+
+    .line 190
+    invoke-virtual {v3}, Ljava/lang/String;->length()I
+
+    move-result v4
+
+    if-lt v4, v1, :cond_10a
+
+    invoke-virtual {p1, v3}, Ljava/lang/String;->startsWith(Ljava/lang/String;)Z
+
+    move-result v4
+
+    if-nez v4, :cond_103
+
+    invoke-virtual {v3, p1}, Ljava/lang/String;->startsWith(Ljava/lang/String;)Z
+
+    move-result v3
+
+    if-eqz v3, :cond_10a
+
+    .line 191
+    :cond_103
+    invoke-interface {v2}, Ljava/util/Map$Entry;->getValue()Ljava/lang/Object;
 
     move-result-object p0
 
     check-cast p0, Ljava/lang/String;
-    :try_end_1df
-    .catchall {:try_start_cf .. :try_end_1df} :catchall_1e2
 
     return-object p0
 
-    .line 191
-    :cond_1e0
-    goto :goto_187
-
-    .line 196
-    :cond_1e1
-    goto :goto_1f9
-
-    .line 194
-    :catchall_1e2
-    move-exception p0
-
-    .line 195
-    new-instance v0, Ljava/lang/StringBuilder;
-
-    invoke-direct {v0}, Ljava/lang/StringBuilder;-><init>()V
-
-    const-string v1, "Error resolving game title for "
-
-    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    move-result-object v0
-
-    invoke-virtual {v0, p1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
-
-    move-result-object p1
-
-    invoke-virtual {p1}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
-
-    move-result-object p1
-
-    invoke-static {v2, p1, p0}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+    .line 193
+    :cond_10a
+    goto :goto_df
 
     .line 198
-    :goto_1f9
-    return-object v3
+    :cond_10b
+    if-eqz p0, :cond_114
 
-    .line 117
-    :cond_1fa
-    :goto_1fa
-    const-string p0, "NetherSX2"
+    invoke-virtual {p0}, Ljava/lang/String;->isEmpty()Z
+
+    move-result p1
+
+    if-nez p1, :cond_114
+
+    goto :goto_115
+
+    :cond_114
+    move-object p0, p2
+
+    .line 199
+    :goto_115
+    invoke-static {p0}, Lxyz/aethersx2/android/GameDataResolver;->cleanRaw(Ljava/lang/String;)Ljava/lang/String;
+
+    move-result-object p0
 
     return-object p0
 .end method

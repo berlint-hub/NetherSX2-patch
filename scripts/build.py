@@ -520,7 +520,7 @@ def patch_preserve_user_data_on_reset(work_dir: Path) -> None:
 
 
 def patch_ui_preferences(work_dir: Path, is_mali: bool = False) -> None:
-    """Inject QoL preference switches (Auto Covers, Discord RPC, Gyro to Stick) and defaults into decompiled preference XML files."""
+    """Inject QoL preference switches (Auto Covers, Discord RPC) and defaults into decompiled preference XML files."""
     def set_preference_default(text: str, key: str, new_val: str) -> str:
         def replace_default(m: re.Match) -> str:
             tag = m.group(0)
@@ -592,94 +592,30 @@ def patch_ui_preferences(work_dir: Path, is_mali: bool = False) -> None:
             print(f"  ✓ Injected/configured Discord RPC into {p.name}")
 
     # 3. touchscreen_controller_preferences.xml
-    gyro_controls_touch = """    <SwitchPreferenceCompat app:defaultValue="false"
-                          app:iconSpaceReserved="false"
-                          app:key="Pad/GyroToRightStick"
-                          app:summary="Maps device gyroscope motion to the right analog stick for gyro aiming."
-                          app:title="Gyro to Right Stick" />
-    <SeekBarPreference app:defaultValue="60"
-                       app:dependency="Pad/GyroToRightStick"
-                       app:iconSpaceReserved="false"
-                       app:key="Pad/GyroSensitivity"
-                       app:min="5"
-                       app:seekBarIncrement="5"
-                       app:showSeekBarValue="true"
-                       app:summary="Adjust gyro aiming sensitivity percentage (Default: 60%)"
-                       app:title="Gyro Sensitivity" />
-    <SwitchPreferenceCompat app:defaultValue="false"
-                          app:dependency="Pad/GyroToRightStick"
-                          app:iconSpaceReserved="false"
-                          app:key="Pad/GyroInvertY"
-                          app:summary="Inverts vertical (pitch) axis for gyro aiming."
-                          app:title="Invert Gyro Y-Axis" />"""
     for p in work_dir.rglob("touchscreen_controller_preferences.xml"):
         text = p.read_text(encoding="utf-8")
         orig = text
-        if "Pad/GyroToRightStick" not in text:
-            m = re.search(r'(<SwitchPreferenceCompat[^>]+app:key="TouchscreenController/BindToRightStick"[^>]*/>)', text)
-            if m:
-                text = text[:m.end()] + "\n" + gyro_controls_touch + text[m.end():]
-            else:
-                m_auto = re.search(r'(<SwitchPreferenceCompat[^>]+app:key="TouchscreenController/AutoHide"[^>]*/>)', text)
-                if m_auto:
-                    text = text[:m_auto.end()] + "\n" + gyro_controls_touch + text[m_auto.end():]
-        elif "Pad/GyroSensitivity" not in text:
-            m_gyro = re.search(r'(<SwitchPreferenceCompat[^>]+app:key="Pad/GyroToRightStick"[^>]*/>)', text)
-            if m_gyro:
-                sub_controls = """\n    <SeekBarPreference app:defaultValue="60"
-                       app:dependency="Pad/GyroToRightStick"
-                       app:iconSpaceReserved="false"
-                       app:key="Pad/GyroSensitivity"
-                       app:min="5"
-                       app:seekBarIncrement="5"
-                       app:showSeekBarValue="true"
-                       app:summary="Adjust gyro aiming sensitivity percentage (Default: 60%)"
-                       app:title="Gyro Sensitivity" />
-    <SwitchPreferenceCompat app:defaultValue="false"
-                          app:dependency="Pad/GyroToRightStick"
-                          app:iconSpaceReserved="false"
-                          app:key="Pad/GyroInvertY"
-                          app:summary="Inverts vertical (pitch) axis for gyro aiming."
-                          app:title="Invert Gyro Y-Axis" />"""
-                text = text[:m_gyro.end()] + sub_controls + text[m_gyro.end():]
-
+        if "Pad/GyroToRightStick" in text or "Pad/GyroSensitivity" in text or "Pad/GyroInvertY" in text:
+            text = re.sub(r'\s*<SwitchPreferenceCompat[^>]+app:key="Pad/GyroToRightStick"[^>]*/>', '', text)
+            text = re.sub(r'\s*<SeekBarPreference[^>]+app:key="Pad/GyroSensitivity"[^>]*/>', '', text)
+            text = re.sub(r'\s*<SwitchPreferenceCompat[^>]+app:key="Pad/GyroInvertY"[^>]*/>', '', text)
         text = set_preference_default(text, "TouchscreenController/AutoHide", "true")
         if text != orig:
             p.write_text(text, encoding="utf-8")
-            print(f"  ✓ Injected/configured Gyro to Right Stick and Sensitivity Slider in {p.name}")
+            print(f"  ✓ Configured {p.name}")
 
     # 3b. controller_preferences.xml
-    gyro_category_controller = """  <PreferenceCategory app:iconSpaceReserved="false"
-                      app:title="Motion &amp; Gyro Aiming">
-    <SwitchPreferenceCompat app:defaultValue="false"
-                          app:iconSpaceReserved="false"
-                          app:key="Pad/GyroToRightStick"
-                          app:summary="Maps device gyroscope motion to the right analog stick for gyro aiming."
-                          app:title="Enable Gyro Aiming" />
-    <SeekBarPreference app:defaultValue="60"
-                       app:dependency="Pad/GyroToRightStick"
-                       app:iconSpaceReserved="false"
-                       app:key="Pad/GyroSensitivity"
-                       app:min="5"
-                       app:seekBarIncrement="5"
-                       app:showSeekBarValue="true"
-                       app:summary="Adjust gyro aiming sensitivity percentage (Default: 60%)"
-                       app:title="Gyro Sensitivity" />
-    <SwitchPreferenceCompat app:defaultValue="false"
-                          app:dependency="Pad/GyroToRightStick"
-                          app:iconSpaceReserved="false"
-                          app:key="Pad/GyroInvertY"
-                          app:summary="Inverts vertical (pitch) axis for gyro aiming."
-                          app:title="Invert Gyro Y-Axis" />
-  </PreferenceCategory>"""
     for p in work_dir.rglob("controller_preferences.xml"):
         text = p.read_text(encoding="utf-8")
         orig = text
-        if "Pad/GyroToRightStick" not in text:
-            if "</PreferenceScreen>" in text:
-                text = text.replace("</PreferenceScreen>", gyro_category_controller + "\n</PreferenceScreen>")
-                p.write_text(text, encoding="utf-8")
-                print(f"  ✓ Injected Motion & Gyro Aiming category into {p.name}")
+        if "Motion &amp; Gyro Aiming" in text or "Pad/GyroToRightStick" in text:
+            text = re.sub(r'\s*<PreferenceCategory[^>]+app:title="Motion &amp; Gyro Aiming"[\s\S]*?</PreferenceCategory>', '', text)
+            text = re.sub(r'\s*<SwitchPreferenceCompat[^>]+app:key="Pad/GyroToRightStick"[^>]*/>', '', text)
+            text = re.sub(r'\s*<SeekBarPreference[^>]+app:key="Pad/GyroSensitivity"[^>]*/>', '', text)
+            text = re.sub(r'\s*<SwitchPreferenceCompat[^>]+app:key="Pad/GyroInvertY"[^>]*/>', '', text)
+        if text != orig:
+            p.write_text(text, encoding="utf-8")
+            print(f"  ✓ Cleaned gyro preferences from {p.name}")
 
     # 4. Inject Discord tab into settings_tabs in arrays.xml
     for p in work_dir.rglob("arrays.xml"):
@@ -1151,7 +1087,7 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
     for dex_path in dex_files:
         original_bytes = dex_path.read_bytes()
         dex_md5 = hashlib.md5(original_bytes).hexdigest()
-        cache_key = f"{dex_md5}_{pcsx2_ver}_qol_features_v24_{'mali' if is_mali else 'adreno'}"
+        cache_key = f"{dex_md5}_{pcsx2_ver}_qol_features_v25_{'mali' if is_mali else 'adreno'}"
 
         if cache_key in _DEX_CACHE:
             patched_bytes = _DEX_CACHE[cache_key]
@@ -1616,136 +1552,12 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
             gle_file = smali_out / "xyz" / "aethersx2" / "android" / "GameListEntry.smali"
             if gle_file.exists():
                 gle_txt = gle_file.read_text(encoding="utf-8")
-                orig_get_title = ".method public getTitle()Ljava/lang/String;\\n    .registers 2\\n\\n    iget-object v0, p0, Lxyz/aethersx2/android/GameListEntry;->e:Ljava/lang/String;\\n\\n    return-object v0\\n.end method"
                 new_get_title = """.method public getTitle()Ljava/lang/String;
-    .registers 4
+    .registers 2
 
-    iget-object v0, p0, Lxyz/aethersx2/android/GameListEntry;->e:Ljava/lang/String;
-
-    if-nez v0, :cond_gle_t_not_null
-
-    const-string v0, ""
-
-    return-object v0
-
-    :cond_gle_t_not_null
-    const-string v1, "%20"
-
-    invoke-virtual {v0, v1}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
-
-    move-result v1
-
-    if-eqz v1, :cond_gle_t_url
-
-    const-string v1, "%20"
-
-    const-string v2, " "
-
-    invoke-virtual {v0, v1, v2}, Ljava/lang/String;->replace(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Ljava/lang/String;
+    invoke-static {p0}, Lxyz/aethersx2/android/GameDataResolver;->resolveEntryTitle(Lxyz/aethersx2/android/GameListEntry;)Ljava/lang/String;
 
     move-result-object v0
-
-    :cond_gle_t_url
-    const-string v1, "%"
-
-    invoke-virtual {v0, v1}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
-
-    move-result v1
-
-    if-eqz v1, :cond_gle_t_ext
-
-    :try_start_gle_dec
-    const-string v1, "UTF-8"
-
-    invoke-static {v0, v1}, Ljava/net/URLDecoder;->decode(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-
-    move-result-object v0
-    :try_end_gle_dec
-    .catch Ljava/lang/Exception; {:try_start_gle_dec .. :try_end_gle_dec} :catch_gle_dec
-
-    goto :cond_gle_t_ext
-
-    :catch_gle_dec
-    nop
-
-    :cond_gle_t_ext
-    invoke-virtual {v0}, Ljava/lang/String;->toLowerCase()Ljava/lang/String;
-
-    move-result-object v1
-
-    const-string v2, ".iso"
-
-    invoke-virtual {v1, v2}, Ljava/lang/String;->endsWith(Ljava/lang/String;)Z
-
-    move-result v2
-
-    if-nez v2, :cond_strip_4
-
-    const-string v2, ".chd"
-
-    invoke-virtual {v1, v2}, Ljava/lang/String;->endsWith(Ljava/lang/String;)Z
-
-    move-result v2
-
-    if-nez v2, :cond_strip_4
-
-    const-string v2, ".cso"
-
-    invoke-virtual {v1, v2}, Ljava/lang/String;->endsWith(Ljava/lang/String;)Z
-
-    move-result v2
-
-    if-nez v2, :cond_strip_4
-
-    const-string v2, ".bin"
-
-    invoke-virtual {v1, v2}, Ljava/lang/String;->endsWith(Ljava/lang/String;)Z
-
-    move-result v2
-
-    if-nez v2, :cond_strip_4
-
-    const-string v2, ".gz"
-
-    invoke-virtual {v1, v2}, Ljava/lang/String;->endsWith(Ljava/lang/String;)Z
-
-    move-result v1
-
-    if-eqz v1, :cond_gle_t_done
-
-    const/4 v1, 0x0
-
-    invoke-virtual {v0}, Ljava/lang/String;->length()I
-
-    move-result v2
-
-    add-int/lit8 v2, v2, -0x3
-
-    invoke-virtual {v0, v1, v2}, Ljava/lang/String;->substring(II)Ljava/lang/String;
-
-    move-result-object v0
-
-    goto :cond_gle_t_done
-
-    :cond_strip_4
-    const/4 v1, 0x0
-
-    invoke-virtual {v0}, Ljava/lang/String;->length()I
-
-    move-result v2
-
-    add-int/lit8 v2, v2, -0x4
-
-    invoke-virtual {v0, v1, v2}, Ljava/lang/String;->substring(II)Ljava/lang/String;
-
-    move-result-object v0
-
-    :cond_gle_t_done
-    invoke-virtual {v0}, Ljava/lang/String;->trim()Ljava/lang/String;
-
-    move-result-object v0
-
-    iput-object v0, p0, Lxyz/aethersx2/android/GameListEntry;->e:Ljava/lang/String;
 
     return-object v0
 .end method"""
@@ -2317,7 +2129,7 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
                 if orig_get_reg in gle_txt:
                     gle_txt = gle_txt.replace(orig_get_reg, new_detect_and_get_reg, 1)
                 gle_file.write_text(gle_txt, encoding="utf-8")
-                print(f"  ✓ Patched GameListEntry.smali: clean %20 titles and auto-detect region flags")
+                print(f"  ✓ Patched GameListEntry.smali: resolve canonical titles via PS2.data.json and auto-detect region flags")
 
             # Patch FileHelper.smali: sanitize getFileNameForPath (%20 -> space)
             fh_file = smali_out / "xyz" / "aethersx2" / "android" / "FileHelper.smali"
@@ -2607,13 +2419,16 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
                     print(f"  ✓ Patched Setup Wizard completion in MainActivity.smali to restart process cleanly")
 
                 set_main = "invoke-static {p0}, Lxyz/aethersx2/android/NativeLibrary;->setMainActivity(Lxyz/aethersx2/android/MainActivity;)V\n"
-                if set_main in content and "AutoCoversDownloader" not in content:
-                    content = content.replace(set_main, set_main + "\n    invoke-static {p0}, Lxyz/aethersx2/android/AutoCoversDownloader;->startAutoDownload(Landroid/content/Context;)V\n", 1)
-                    print(f"  ✓ Injected AutoCoversDownloader trigger into MainActivity.smali")
+                if set_main in content:
+                    if "GameDataResolver" not in content:
+                        content = content.replace(set_main, set_main + "\n    invoke-static {p0}, Lxyz/aethersx2/android/GameDataResolver;->ensureLoaded(Landroid/content/Context;)V\n", 1)
+                    if "AutoCoversDownloader" not in content:
+                        content = content.replace(set_main, set_main + "\n    invoke-static {p0}, Lxyz/aethersx2/android/AutoCoversDownloader;->startAutoDownload(Landroid/content/Context;)V\n", 1)
+                    print(f"  ✓ Injected GameDataResolver preloader and AutoCoversDownloader trigger into MainActivity.smali")
 
                 main_activity.write_text(content, encoding="utf-8")
 
-            # 4. Patch EmulationActivity.smali: DiscordRpcManager & GyroToRightStickManager
+            # 4. Patch EmulationActivity.smali: DiscordRpcManager
             emu_act = smali_out / "xyz" / "aethersx2" / "android" / "EmulationActivity.smali"
             if emu_act.exists():
                 ea_content = emu_act.read_text(encoding="utf-8")
@@ -2628,17 +2443,11 @@ def patch_dex_pcsx2_version(work_dir: Path, is_mali: bool = False) -> None:
                     pattern_destroy = r'(\.method public final onDestroy\(\)V\s+\.registers 4\s+)'
                     m_destroy = re.search(pattern_destroy, ea_content)
                     if m_destroy:
-                        repl_destroy = m_destroy.group(1) + 'invoke-static {p0}, Lxyz/aethersx2/android/DiscordRpcManager;->stop(Landroid/content/Context;)V\n\n    invoke-static {}, Lxyz/aethersx2/android/GyroToRightStickManager;->stop()V\n\n    '
+                        repl_destroy = m_destroy.group(1) + 'invoke-static {p0}, Lxyz/aethersx2/android/DiscordRpcManager;->stop(Landroid/content/Context;)V\n\n    '
                         ea_content = ea_content[:m_destroy.start()] + repl_destroy + ea_content[m_destroy.end():]
 
-                    pattern_resume = r'(invoke-super \{p0\}, L[a-z]+/e;->onPostResume\(\)V)'
-                    m_resume = re.search(pattern_resume, ea_content)
-                    if m_resume:
-                        repl_resume = m_resume.group(1) + '\n\n    invoke-static {p0}, Lxyz/aethersx2/android/GyroToRightStickManager;->start(Landroid/content/Context;)V'
-                        ea_content = ea_content[:m_resume.start()] + repl_resume + ea_content[m_resume.end():]
-
                     emu_act.write_text(ea_content, encoding="utf-8")
-                    print(f"  ✓ Injected DiscordRpcManager and GyroToRightStickManager into EmulationActivity.smali")
+                    print(f"  ✓ Injected DiscordRpcManager into EmulationActivity.smali")
 
             # 5. Patch EmulationSurfaceView.smali: ExternalControllerHelper
             esv_file = smali_out / "xyz" / "aethersx2" / "android" / "EmulationSurfaceView.smali"
@@ -2854,7 +2663,7 @@ def inject_scale_multiplier(input_apk: Path, output_apk: Path, work_name: str, i
     # Inject updated PCSX2 GameDB, controller DB, cheats, and strip ad leftovers
     inject_updated_pcsx2_assets(work_dir)
 
-    # Inject QoL preference switches (Auto Covers, Discord RPC, Gyro) and default settings
+    # Inject QoL preference switches (Auto Covers, Discord RPC) and default settings
     patch_ui_preferences(work_dir, is_mali=is_mali)
 
     # Inject dedicated Discord tab resources into work_dir
@@ -3086,8 +2895,8 @@ def verify_all(target_apks: list[Path] | None = None) -> None:
                     raise SystemExit(f"ERROR: classes.dex in {apk.name} missing Check Update releases URL!")
                 if b"DiscordRpcManager" not in dex_bytes:
                     raise SystemExit(f"ERROR: classes.dex in {apk.name} missing DiscordRpcManager!")
-                if b"GyroToRightStickManager" not in dex_bytes:
-                    raise SystemExit(f"ERROR: classes.dex in {apk.name} missing GyroToRightStickManager!")
+                if b"GameDataResolver" not in dex_bytes:
+                    raise SystemExit(f"ERROR: classes.dex in {apk.name} missing GameDataResolver!")
                 if b"ExternalControllerHelper" not in dex_bytes:
                     raise SystemExit(f"ERROR: classes.dex in {apk.name} missing ExternalControllerHelper!")
                 if "res/xml/discord_preferences.xml" not in z.namelist():
