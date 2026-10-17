@@ -63,59 +63,8 @@
 .end method
 
 .method public static startAutoDownload(Landroid/content/Context;)V
-    .registers 3
+    .registers 1
 
-    .line 20
-    if-nez p0, :cond_3
-
-    return-void
-
-    .line 22
-    :cond_3
-    :try_start_3
-    invoke-static {p0}, Landroidx/preference/PreferenceManager;->getDefaultSharedPreferences(Landroid/content/Context;)Landroid/content/SharedPreferences;
-
-    move-result-object p0
-
-    .line 23
-    const-string v0, "UI/AutoDownloadCovers"
-
-    const/4 v1, 0x1
-
-    invoke-interface {p0, v0, v1}, Landroid/content/SharedPreferences;->getBoolean(Ljava/lang/String;Z)Z
-
-    move-result p0
-
-    .line 24
-    if-nez p0, :cond_11
-
-    return-void
-
-    .line 26
-    :cond_11
-    new-instance p0, Lxyz/aethersx2/android/AutoCoversDownloader$1;
-
-    invoke-direct {p0}, Lxyz/aethersx2/android/AutoCoversDownloader$1;-><init>()V
-
-    invoke-static {p0}, Landroid/os/AsyncTask;->execute(Ljava/lang/Runnable;)V
-    :try_end_19
-    .catchall {:try_start_3 .. :try_end_19} :catchall_1a
-
-    .line 39
-    goto :goto_22
-
-    .line 37
-    :catchall_1a
-    move-exception p0
-
-    .line 38
-    const-string v0, "AutoCovers"
-
-    const-string v1, "startAutoDownload error"
-
-    invoke-static {v0, v1, p0}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
-
-    .line 40
-    :goto_22
+    # shortcut: background downloadCovers aborts native JNI due to null progress dialog, manual menu download covers works
     return-void
 .end method
